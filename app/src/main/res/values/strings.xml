@@ -36,4 +36,8 @@
     <string name="capture_enable">فتح الإعدادات</string>
     <string name="capture_on">التقاط الإشعارات مفعّل</string>
     <string name="pending_count">%1$d عملية بانتظار التأكيد</string>
+
+    <string name="sms_off_title">رسائل البنوك غير مقروءة</string>
+    <string name="sms_off_body">بنكان من بنوكك يرسلان العمليات كرسائل نصية فقط. امنح صلاحية قراءة الرسائل ليتم التقاطها.</string>
+    <string name="sms_enable">السماح بقراءة الرسائل</string>
 </resources>

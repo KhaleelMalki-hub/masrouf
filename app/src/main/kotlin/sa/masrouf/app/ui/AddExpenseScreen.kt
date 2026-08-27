@@ -42,6 +42,8 @@ fun AddExpenseScreen(
     viewModel: AddExpenseViewModel,
     captureEnabled: Boolean,
     onEnableCapture: () -> Unit,
+    smsEnabled: Boolean,
+    onEnableSms: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val form by viewModel.form.collectAsStateWithLifecycle()
@@ -62,7 +64,25 @@ fun AddExpenseScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             if (!captureEnabled) {
-                item { CapturePrompt(onEnable = onEnableCapture) }
+                item {
+                    AccessPrompt(
+                        title = stringResource(R.string.capture_off_title),
+                        body = stringResource(R.string.capture_off_body),
+                        action = stringResource(R.string.capture_enable),
+                        onAct = onEnableCapture,
+                    )
+                }
+            }
+
+            if (!smsEnabled) {
+                item {
+                    AccessPrompt(
+                        title = stringResource(R.string.sms_off_title),
+                        body = stringResource(R.string.sms_off_body),
+                        action = stringResource(R.string.sms_enable),
+                        onAct = onEnableSms,
+                    )
+                }
             }
 
             item {
@@ -166,30 +186,28 @@ private fun MonthTotal(text: String, pendingCount: Int) {
 }
 
 /**
- * Shown only while notification access is missing.
+ * Shown while a permission the app needs is missing.
  *
- * Without it the app's whole automatic half is silently inert, and nothing on
- * screen would explain why the bank messages the user can see in their status bar
- * are not turning into transactions.
+ * Without it the automatic half is silently inert, and nothing on screen would
+ * explain why bank messages the user can see arriving are not becoming
+ * transactions. One composable for both permissions, so the two cannot drift into
+ * looking like different kinds of problem.
  */
 @Composable
-private fun CapturePrompt(onEnable: () -> Unit) {
+private fun AccessPrompt(
+    title: String,
+    body: String,
+    action: String,
+    onAct: () -> Unit,
+) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            Text(
-                text = stringResource(R.string.capture_off_title),
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Text(
-                text = stringResource(R.string.capture_off_body),
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            TextButton(onClick = onEnable) {
-                Text(stringResource(R.string.capture_enable))
-            }
+            Text(text = title, style = MaterialTheme.typography.titleMedium)
+            Text(text = body, style = MaterialTheme.typography.bodyMedium)
+            TextButton(onClick = onAct) { Text(action) }
         }
     }
 }

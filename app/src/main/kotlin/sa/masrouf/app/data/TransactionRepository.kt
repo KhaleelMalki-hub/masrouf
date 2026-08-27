@@ -2,6 +2,8 @@ package sa.masrouf.app.data
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import sa.masrouf.core.dedup.DuplicateDetector
+import sa.masrouf.core.dedup.EventSignature
 import sa.masrouf.core.dedup.Fingerprint
 import sa.masrouf.core.model.Direction
 import sa.masrouf.core.model.Source
@@ -11,6 +13,7 @@ import sa.masrouf.core.model.TransactionType
 import sa.masrouf.core.money.Money
 import sa.masrouf.core.text.ArabicText
 import sa.masrouf.core.time.RiyadhTime
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
@@ -22,7 +25,10 @@ import java.util.UUID
  * reading a stored enum name or a raw halala count and reach its own conclusion
  * about what it means.
  */
-class TransactionRepository(private val dao: TransactionDao) {
+class TransactionRepository(
+    private val dao: TransactionDao,
+    private val detector: DuplicateDetector = DuplicateDetector(),
+) {
 
     fun observeRecent(limit: Int = RECENT_LIMIT): Flow<List<Transaction>> =
         dao.observeRecent(limit).map { rows -> rows.map(TransactionEntity::toModel) }
@@ -82,21 +88,57 @@ class TransactionRepository(private val dao: TransactionDao) {
     }
 
     /**
-     * Stores a record the capture pipeline produced.
+     * Stores a record the capture pipeline produced, unless the app already has the
+     * transaction it describes.
      *
-     * @return true when it was written, false when its fingerprint was already
-     *   stored. A notification that Android reposts - an update, a reconnect - must
-     *   not become a second transaction, and the unique index on `fingerprint` is
-     *   what makes that a property of the database rather than of whoever calls it.
+     * @return true when it was written.
+     *
+     * Two different duplicates have to be caught here and only one of them is a
+     * database concern.
+     *
+     * The first is the *same record* arriving again: Android reposting a
+     * notification, or a redelivered SMS. The unique index on `fingerprint` settles
+     * that, which makes it a property of the schema rather than of whoever calls
+     * this.
+     *
+     * The second is the *same purchase* arriving from a different source. A bank
+     * sends the SMS and its app posts a notification for one payment, seconds apart.
+     * Those are two genuinely different records - different source, different text,
+     * different fingerprint - describing one movement of money, and no index can
+     * see it. Counting both silently doubles the month. So neighbours in time are
+     * loaded and handed to [DuplicateDetector], which weighs amount, direction,
+     * card and how far apart they arrived.
      */
-    suspend fun recordCaptured(transaction: Transaction): Boolean =
-        dao.insert(transaction.toEntity()) != -1L
+    suspend fun recordCaptured(transaction: Transaction, accountLast4: String? = null): Boolean {
+        val entity = transaction.toEntity(accountLast4)
+
+        // Wide enough to cover the detector's own widest window, which is a day for
+        // anything involving a statement. Narrower here and the detector would never
+        // be shown the row it was meant to match.
+        val from = transaction.occurredAt.minus(NEIGHBOUR_WINDOW)
+        val until = transaction.occurredAt.plus(NEIGHBOUR_WINDOW)
+        val neighbours = dao.neighbours(from.toEpochMilli(), until.toEpochMilli())
+
+        val result = detector.reconcile(
+            existing = neighbours.map(TransactionEntity::toSignature),
+            incoming = listOf(entity.toSignature()),
+        )
+        // The single incoming record matched something already stored. Kept out
+        // rather than merged: merging fields is a decision that needs a screen and a
+        // user, and inventing one here would overwrite whichever telling was better.
+        if (result.newIncoming.isEmpty()) return false
+
+        return dao.insert(entity) != -1L
+    }
 
     /** How many pending records are waiting for the user to confirm them. */
     fun observePendingCount(): Flow<Int> = dao.observePendingCount()
 
     companion object {
         const val RECENT_LIMIT = 50
+
+        /** How far either side of an incoming record to look for what it may duplicate. */
+        private val NEIGHBOUR_WINDOW: Duration = Duration.ofDays(1)
     }
 }
 
@@ -119,3 +161,18 @@ fun List<Transaction>.spendingTotal(): Money =
     filter { it.status == Status.CONFIRMED }
         .filter { it.direction == Direction.DEBIT && it.type.countsAsSpending }
         .fold(Money.ZERO) { running, transaction -> running + transaction.amount }
+
+/**
+ * The narrow view of a stored row that decides whether two records are one event.
+ *
+ * Built from the entity rather than the model because the card fragment lives only
+ * on the entity - and a signature missing it matches too eagerly, not too little.
+ */
+internal fun TransactionEntity.toSignature(): EventSignature = EventSignature(
+    amount = Money.ofHalalas(amountHalalas),
+    direction = enumValueOf(direction),
+    last4 = accountLast4,
+    occurredAt = Instant.ofEpochMilli(occurredAtMillis),
+    merchantKey = merchantKey,
+    source = enumValueOf(source),
+)

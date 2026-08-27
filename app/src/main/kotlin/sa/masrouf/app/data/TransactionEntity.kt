@@ -57,6 +57,18 @@ data class TransactionEntity(
     @ColumnInfo(name = "occurred_at_millis") val occurredAtMillis: Long,
 
     @ColumnInfo(name = "account_id") val accountId: String?,
+
+    /**
+     * Last four digits of the card the money moved on, when the message revealed
+     * them. The only fragment of an account number ever stored.
+     *
+     * Not on the core [Transaction] model, which has no field for it, but kept here
+     * because [sa.masrouf.core.dedup.DuplicateDetector] treats a missing card as
+     * compatible with any other. Dropping it therefore does not make matching
+     * cautious - it makes it credulous, and two different cards charged the same
+     * amount in the same minute would merge into one record.
+     */
+    @ColumnInfo(name = "account_last4") val accountLast4: String?,
     @ColumnInfo(name = "category_id") val categoryId: String?,
     @ColumnInfo(name = "merchant_raw") val merchantRaw: String?,
     @ColumnInfo(name = "merchant_key") val merchantKey: String?,
@@ -76,13 +88,14 @@ data class TransactionEntity(
     val currency: String,
 )
 
-fun Transaction.toEntity(): TransactionEntity = TransactionEntity(
+fun Transaction.toEntity(accountLast4: String? = null): TransactionEntity = TransactionEntity(
     id = id,
     amountHalalas = amount.halalas,
     direction = direction.name,
     type = type.name,
     occurredAtMillis = occurredAt.toEpochMilli(),
     accountId = accountId,
+    accountLast4 = accountLast4,
     categoryId = categoryId,
     merchantRaw = merchantRaw,
     merchantKey = merchantKey,

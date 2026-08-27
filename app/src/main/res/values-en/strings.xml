@@ -31,4 +31,8 @@
     <string name="capture_enable">Open settings</string>
     <string name="capture_on">Notification capture is on</string>
     <string name="pending_count">%1$d awaiting confirmation</string>
+
+    <string name="sms_off_title">Bank SMS is not being read</string>
+    <string name="sms_off_body">Two of your banks send transactions only as text messages. Grant SMS access so they are captured.</string>
+    <string name="sms_enable">Allow SMS access</string>
 </resources>

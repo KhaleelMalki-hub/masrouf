@@ -7,7 +7,7 @@ statements. Single user, on-device, offline. Not a product, not published.
 
 ```bash
 ./gradlew :core:test              # 140 tests, runs anywhere with a JDK
-./gradlew :app:testDebugUnitTest  # 26 tests, needs the Android SDK
+./gradlew :app:testDebugUnitTest  # 40 tests, needs the Android SDK
 ./gradlew :app:assembleDebug      # needs local.properties with sdk.dir
 ```
 
@@ -41,7 +41,8 @@ core/   pure Kotlin/JVM — no Android dependency, ever
   dedup/      Fingerprint · DuplicateDetector · EventSignature
   statement/  RowAssembler · StatementImporter · SaudiStatements
 app/    Android - Compose, Room, Arabic default with English in values-en
-  capture/    MasroufNotificationListener (thin) → CaptureRecorder (tested)
+  capture/    MasroufNotificationListener · SmsCaptureReceiver (both thin)
+              → SmsAssembly · CaptureRecorder (both tested, no Android)
   data/       TransactionEntity + mappers · TransactionDao · MasroufDatabase
   ui/         AmountInput (tested) · AddExpenseViewModel · AddExpenseScreen
 ```
@@ -106,20 +107,25 @@ app/    Android - Compose, Room, Arabic default with English in values-en
 - `:app` has been run only on the `masrouf35` emulator, never on a physical
   phone. Manual entry, the Room write, the Arabic RTL layout and the monthly
   total recomputing were all confirmed there; nothing else has been.
-- **The listener has never seen a real bank notification.** On the emulator it was
-  proven to bind, receive and refuse a shell-posted notification as
-  `UNKNOWN_SENDER`; that the bank profiles match a real posting package is still
-  only asserted by unit tests against captured message *bodies*. The package names
-  in those tests were inferred, not observed. Check them against a real phone
-  before trusting capture.
+- **Neither capture path has yet seen a real bank message.** What is proven on
+  hardware: the notification listener binds and refuses non-bank notifications; the
+  SMS receiver fires on `SMS_RECEIVED`, extracts the sender, and has messages
+  claimed by the right profile (`alrajhi` and `barq` both, by sender alone).
+  What is not: a complete bank message becoming a stored row on a device. The
+  emulator console cannot inject a newline, and every real bank SMS is multiline,
+  so that last step is covered only by unit tests against the captured fixtures.
+- barq and D360 have no app installed on the phone; their transactions arrive as
+  SMS only. Package names for the apps that *are* installed were read off the
+  device and are pinned in `ObservedBankPackagesTest` - that file should fail when
+  a bank app is renamed.
 - **Nothing confirms a `PENDING` record yet.** Captured transactions are stored and
   counted on screen but are excluded from the monthly total, and there is no screen
   to confirm, edit or delete one - so today capture fills a list the user cannot
   act on.
-- No SMS capture, so `DuplicateDetector` is not wired up. The unique fingerprint
-  index collapses a notification Android reposts, which is the only duplicate that
-  can currently occur; the moment SMS or statement import lands, cross-source
-  reconciliation has to be added or every purchase seen twice becomes two records.
+- Statement import is not wired into the app, so `DuplicateDetector`'s one-day
+  window is exercised only by the message paths. Cross-source reconciliation
+  between SMS and notifications is live and tested; a statement arriving later has
+  never been reconciled against anything.
 - No categories, no accounts, no date picker (a manual record is timestamped when
   it is saved).
 - `ColumnRuler` boundaries in `SaudiStatements` were measured with **pdfplumber's**

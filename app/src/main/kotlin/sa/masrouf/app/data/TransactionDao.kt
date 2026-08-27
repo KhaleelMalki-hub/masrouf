@@ -38,6 +38,19 @@ interface TransactionDao {
     )
     fun observeBetween(fromMillis: Long, untilMillis: Long): Flow<List<TransactionEntity>>
 
+    /**
+     * Everything close enough in time to be the same real-world event, for
+     * reconciliation. One-shot rather than a Flow: this answers a question asked at
+     * the moment of writing, and observing it would invite deciding twice.
+     */
+    @Query(
+        """
+        SELECT * FROM transactions
+        WHERE occurred_at_millis >= :fromMillis AND occurred_at_millis <= :untilMillis
+        """
+    )
+    suspend fun neighbours(fromMillis: Long, untilMillis: Long): List<TransactionEntity>
+
     @Query("SELECT COUNT(*) FROM transactions WHERE fingerprint = :fingerprint")
     suspend fun countByFingerprint(fingerprint: String): Int
 

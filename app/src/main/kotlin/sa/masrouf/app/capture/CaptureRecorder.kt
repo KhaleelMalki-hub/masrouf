@@ -21,8 +21,19 @@ class CaptureRecorder(private val pipeline: CapturePipeline = CapturePipeline())
 
     sealed interface Decision {
 
-        /** Understood. Always [Status.PENDING]; the user confirms it themselves. */
-        data class Store(val transaction: Transaction, val parserId: String) : Decision
+        /**
+         * Understood. Always [Status.PENDING]; the user confirms it themselves.
+         *
+         * @param accountLast4 carried alongside rather than inside [transaction],
+         *   which has no field for it, because deduplication needs it: a missing
+         *   card fragment is treated as compatible with every other, so losing it
+         *   makes matching credulous rather than cautious.
+         */
+        data class Store(
+            val transaction: Transaction,
+            val parserId: String,
+            val accountLast4: String?,
+        ) : Decision
 
         /**
          * Deliberately not stored.
@@ -88,6 +99,7 @@ class CaptureRecorder(private val pipeline: CapturePipeline = CapturePipeline())
                         rawText = draft.rawText ?: message.fullText,
                     ),
                     parserId = outcome.parserId,
+                    accountLast4 = draft.accountLast4,
                 )
             }
         }

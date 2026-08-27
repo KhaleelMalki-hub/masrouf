@@ -75,6 +75,7 @@ dependencies {
 
     testImplementation(testFixtures(project(":core")))
     testImplementation(libs.kotlin.test)
+    testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.platform.launcher)
 }

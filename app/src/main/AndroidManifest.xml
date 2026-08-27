@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!--
+      Two of the accounts this app covers have no Android app on this device, so
+      their transactions arrive only as SMS. The permission is granted at runtime
+      and the app degrades to notification capture alone without it.
+    -->
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+
     <application
         android:name=".MasroufApp"
         android:allowBackup="false"
@@ -23,6 +30,15 @@
           the system and granted by the user in settings, so the app cannot start
           capturing without them having gone there first.
         -->
+        <receiver
+            android:name=".capture.SmsCaptureReceiver"
+            android:exported="true"
+            android:permission="android.permission.BROADCAST_SMS">
+            <intent-filter android:priority="999">
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+        </receiver>
+
         <service
             android:name=".capture.MasroufNotificationListener"
             android:exported="false"
