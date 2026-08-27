@@ -196,6 +196,46 @@ card number: **1887, mada
 لدى Noon One Subscription
 2026-08-26 16:42:55"""
 
+    // ---- Sender identities -------------------------------------------------
+
+    /** SMS sender ids exactly as they appear on the device. */
+    const val SENDER_RAJHI = "AlRajhiBank"
+    const val SENDER_SNB = "SNB-AlAhli"
+    const val SENDER_D360 = "D360 Bank"
+    const val SENDER_BARQ = "barq app"
+
+    data class Sample(val sender: String, val body: String)
+
+    /** Completed transactions paired with the sender that actually sent them. */
+    val COMPLETED_SAMPLES: List<Sample> = listOf(
+        Sample(SENDER_RAJHI, RAJHI_ONLINE_PURCHASE),
+        Sample(SENDER_RAJHI, RAJHI_POS_SHORT),
+        Sample(SENDER_RAJHI, RAJHI_POS_LONG),
+        Sample(SENDER_RAJHI, RAJHI_TRANSFER_IN),
+        Sample(SENDER_RAJHI, RAJHI_CARD_REFUND),
+        Sample(SENDER_RAJHI, RAJHI_CARD_SETTLEMENT),
+        Sample(SENDER_SNB, SNB_ONLINE_PURCHASE),
+        Sample(SENDER_SNB, SNB_TRANSFER_IN),
+        Sample(SENDER_SNB, SNB_TRANSFER_OUT),
+        Sample(SENDER_SNB, SNB_ATM_DEPOSIT),
+        Sample(SENDER_D360, D360_TRANSFER_IN),
+        Sample(SENDER_D360, D360_TRANSFER_OUT),
+        Sample(SENDER_D360, D360_OWN_ACCOUNTS_TRANSFER),
+        Sample(SENDER_BARQ, BARQ_TRANSFER_OUT),
+        Sample(SENDER_BARQ, BARQ_TOPUP_EN),
+        Sample(SENDER_BARQ, BARQ_ONLINE_PURCHASE),
+    )
+
+    /** Rejectable messages paired with their sender. */
+    val REJECTABLE_SAMPLES: List<Sample> = listOf(
+        Sample(SENDER_RAJHI, RAJHI_OTP),
+        Sample(SENDER_SNB, SNB_OTP),
+        Sample(SENDER_SNB, SNB_ACTIVATION_CODE),
+        Sample(SENDER_D360, D360_OTP),
+        Sample(SENDER_BARQ, BARQ_OTP),
+        Sample(SENDER_BARQ, BARQ_DECLINED),
+    )
+
     /** Every message that represents a real, completed movement of money. */
     val COMPLETED_TRANSACTIONS = listOf(
         RAJHI_ONLINE_PURCHASE, RAJHI_POS_SHORT, RAJHI_POS_LONG, RAJHI_TRANSFER_IN,

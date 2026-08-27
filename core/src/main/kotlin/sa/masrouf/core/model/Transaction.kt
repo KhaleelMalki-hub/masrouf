@@ -8,17 +8,47 @@ import java.time.LocalDate
 /** Which way the money moved. Amounts are always stored positive; direction carries the sign. */
 enum class Direction { DEBIT, CREDIT }
 
-/** What kind of movement it was. Drives both categorisation defaults and reporting. */
-enum class TransactionType {
-    PURCHASE,
-    ATM_WITHDRAWAL,
-    TRANSFER_OUT,
-    TRANSFER_IN,
-    BILL_PAYMENT,
-    SALARY,
-    REFUND,
-    FEE,
-    UNKNOWN,
+/**
+ * What kind of movement it was.
+ *
+ * [countsAsSpending] is the single place that decides whether a transaction
+ * belongs in "how much did I spend this month". Scattering that judgement across
+ * screens is how two surfaces end up disagreeing about the same month.
+ */
+enum class TransactionType(val countsAsSpending: Boolean) {
+    PURCHASE(countsAsSpending = true),
+
+    /**
+     * Cash out of an account.
+     *
+     * Not spending: the money moved from one place the user owns to another. What
+     * they then spend it on is recorded separately as cash purchases. Counting the
+     * withdrawal too would charge the same riyals twice.
+     */
+    ATM_WITHDRAWAL(countsAsSpending = false),
+
+    ATM_DEPOSIT(countsAsSpending = false),
+
+    /** Money sent to someone else. Leaves the user's control, so it is spending. */
+    TRANSFER_OUT(countsAsSpending = true),
+
+    TRANSFER_IN(countsAsSpending = false),
+
+    /**
+     * A transfer between two accounts the same person owns
+     * ("تحويل بين حساباتك", or a wallet top-up funded from their own card).
+     *
+     * Never spending. Counting it inflates the month by the full amount while the
+     * money never left the user - and because these are often large round numbers,
+     * the resulting total looks wrong in a way that is hard to trace.
+     */
+    OWN_TRANSFER(countsAsSpending = false),
+
+    BILL_PAYMENT(countsAsSpending = true),
+    SALARY(countsAsSpending = false),
+    REFUND(countsAsSpending = false),
+    FEE(countsAsSpending = true),
+    UNKNOWN(countsAsSpending = false),
 }
 
 /**
