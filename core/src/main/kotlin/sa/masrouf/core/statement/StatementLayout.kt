@@ -93,5 +93,43 @@ object SaudiStatements {
         parseDate = ArabicDates::namedMonth,
     )
 
-    val ALL: List<StatementLayout> = listOf(SNB, AL_RAJHI, D360)
+    /**
+     * barq wallet. Emits no table structure at all, so its rows are rebuilt from
+     * word positions by [RowAssembler] before reaching the importer.
+     *
+     * Column boundaries measured from a real page: date ends at x=46 and the
+     * transaction id begins at x=93, so the edge sits between them, and so on
+     * across the row.
+     */
+    val BARQ = StatementLayout(
+        id = "barq",
+        expectedColumns = 6,
+        dateColumn = 0,
+        // Column 1 is the transaction id, which the importer does not need.
+        descriptionColumn = 2,
+        debitColumn = 3,
+        creditColumn = 4,
+        balanceColumn = 5,
+        parseDate = ArabicDates::namedMonth,
+        visuallyOrdered = false,
+    )
+
+    val BARQ_COLUMNS = ColumnRuler(listOf(70.0, 188.0, 360.0, 425.0, 485.0))
+
+    /** Emirates NBD KSA. Also structureless; dates are written `06Jul26`. */
+    val EMIRATES_NBD = StatementLayout(
+        id = "emirates-nbd",
+        expectedColumns = 5,
+        dateColumn = 0,
+        descriptionColumn = 1,
+        debitColumn = 2,
+        creditColumn = 3,
+        balanceColumn = 4,
+        parseDate = ArabicDates::compactEnglish,
+        visuallyOrdered = false,
+    )
+
+    val EMIRATES_NBD_COLUMNS = ColumnRuler(listOf(98.0, 316.0, 391.0, 470.0))
+
+    val ALL: List<StatementLayout> = listOf(SNB, AL_RAJHI, D360, BARQ, EMIRATES_NBD)
 }

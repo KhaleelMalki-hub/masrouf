@@ -90,6 +90,21 @@ object ArabicDates {
         )
     }
 
+    /** `06Jul26` - no separators, two-digit year. Used by Emirates NBD. */
+    fun compactEnglish(text: String): LocalDate? {
+        val match = COMPACT_ENGLISH.find(prepare(text)) ?: return null
+        val month = ENGLISH_MONTHS[match.groupValues[2].lowercase()] ?: return null
+        // Statements are not archival documents; a two-digit year here is this
+        // century. 2100 will need a different app anyway.
+        return build(
+            year = 2000 + match.groupValues[3].toInt(),
+            month = month,
+            day = match.groupValues[1].toInt(),
+        )
+    }
+
+    private val COMPACT_ENGLISH = Regex("""(\d{1,2})([A-Za-z]{3})(\d{2})(?!\d)""")
+
     private fun monthNumber(name: String): Int? {
         val folded = ArabicText.foldForMatching(name)
         ARABIC_MONTHS[folded]?.let { return it }

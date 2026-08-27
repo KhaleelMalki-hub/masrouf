@@ -211,7 +211,7 @@ class StatementImporter(private val layout: StatementLayout) {
                 direction = direction,
                 type = classify(listOf(typeText, description).joinToString("\n"), direction),
                 description = description,
-                balance = amountOrNull(row.cell(layout.balanceColumn)),
+                balance = balanceOrNull(row.cell(layout.balanceColumn)),
             )
         )
     }
@@ -252,6 +252,20 @@ class StatementImporter(private val layout: StatementLayout) {
         val normalized = ArabicText.normalize(cell)
         val token = AMOUNT_IN_CELL.find(normalized)?.value ?: return null
         return Money.parseOrNull(token)
+    }
+
+    /**
+     * Reads a running balance, honouring the `Cr`/`Dr` suffix Emirates NBD prints
+     * (`500.00Cr`, and `Dr` when the account is overdrawn).
+     *
+     * A balance, unlike a transaction amount, is genuinely signed. Dropping the
+     * suffix would make an overdraft read as a positive balance, and every
+     * reconciliation from that row onward would fail for no visible reason.
+     */
+    private fun balanceOrNull(cell: String): Money? {
+        val amount = amountOrNull(cell) ?: return null
+        val overdrawn = DEBIT_BALANCE_SUFFIX.containsMatchIn(ArabicText.normalize(cell))
+        return if (overdrawn) -amount else amount
     }
 
     // ---- Balance reconciliation --------------------------------------------
@@ -310,6 +324,9 @@ class StatementImporter(private val layout: StatementLayout) {
 
         /** `1,234.56`, `5.00 SAR`, `+ 2,000.00`, `- 16.30` - the number, without its sign. */
         val AMOUNT_IN_CELL = Regex("""\d[\d,]*(?:\.\d{1,2})?""")
+
+        /** A balance written `1,234.56Dr` - an overdrawn, and therefore negative, balance. */
+        val DEBIT_BALANCE_SUFFIX = Regex("""\d\s*DR\b""", RegexOption.IGNORE_CASE)
     }
 }
 
