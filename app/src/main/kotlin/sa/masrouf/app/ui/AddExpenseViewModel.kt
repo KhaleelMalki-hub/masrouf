@@ -69,6 +69,10 @@ class AddExpenseViewModel(
         repository.observeRecent()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    val pendingCount: StateFlow<Int> =
+        repository.observePendingCount()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+
     val monthTotal: StateFlow<Money> =
         repository.observeMonth(RiyadhTime.localDate(Instant.now(clock)))
             .map { it.spendingTotal() }

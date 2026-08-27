@@ -40,4 +40,7 @@ interface TransactionDao {
 
     @Query("SELECT COUNT(*) FROM transactions WHERE fingerprint = :fingerprint")
     suspend fun countByFingerprint(fingerprint: String): Int
+
+    @Query("SELECT COUNT(*) FROM transactions WHERE status = 'PENDING'")
+    fun observePendingCount(): Flow<Int>
 }

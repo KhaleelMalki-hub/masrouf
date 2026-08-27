@@ -30,4 +30,10 @@
     <string name="status_pending">بانتظار التأكيد</string>
 
     <string name="month_total_label">مصروف هذا الشهر</string>
+
+    <string name="capture_off_title">التقاط عمليات البنوك متوقف</string>
+    <string name="capture_off_body">امنح التطبيق صلاحية قراءة الإشعارات ليسجّل عمليات بنوكك تلقائياً. تبقى البيانات على جهازك.</string>
+    <string name="capture_enable">فتح الإعدادات</string>
+    <string name="capture_on">التقاط الإشعارات مفعّل</string>
+    <string name="pending_count">%1$d عملية بانتظار التأكيد</string>
 </resources>

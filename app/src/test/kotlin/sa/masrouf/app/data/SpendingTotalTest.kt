@@ -23,6 +23,8 @@ class SpendingTotalTest {
         riyals: String,
         type: TransactionType,
         direction: Direction = Direction.DEBIT,
+        status: Status = Status.CONFIRMED,
+        source: Source = Source.MANUAL,
     ) = Transaction(
         id = "t-${nextId++}",
         amount = Money.ofMajor(riyals),
@@ -34,8 +36,8 @@ class SpendingTotalTest {
         merchantRaw = null,
         merchantKey = null,
         note = null,
-        source = Source.MANUAL,
-        status = Status.CONFIRMED,
+        source = source,
+        status = status,
         fingerprint = "fp-$nextId",
         rawText = null,
     )
@@ -79,6 +81,35 @@ class SpendingTotalTest {
         ).spendingTotal()
 
         assertEquals(Money.ZERO, total)
+    }
+
+    @Test
+    fun `a captured record waiting for confirmation is not in the total`() {
+        // A parser misreading an amount is a certainty over a long enough period.
+        // A wrong number the user never agreed to is worse than a missing one: it
+        // is a false report they will act on.
+        val total = listOf(
+            record("50.00", TransactionType.PURCHASE),
+            record(
+                "931.64",
+                TransactionType.PURCHASE,
+                status = Status.PENDING,
+                source = Source.NOTIFICATION,
+            ),
+        ).spendingTotal()
+
+        assertEquals(Money.ofMajor("50.00"), total)
+    }
+
+    @Test
+    fun `the same record counts once it has been confirmed`() {
+        // The pending record is withheld, not discarded - otherwise the fix above
+        // would be indistinguishable from dropping captured spending entirely.
+        val total = listOf(
+            record("931.64", TransactionType.PURCHASE, source = Source.NOTIFICATION),
+        ).spendingTotal()
+
+        assertEquals(Money.ofMajor("931.64"), total)
     }
 
     @Test

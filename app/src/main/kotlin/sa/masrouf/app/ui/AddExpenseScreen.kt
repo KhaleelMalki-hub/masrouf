@@ -38,10 +38,16 @@ import sa.masrouf.core.model.Transaction
 import sa.masrouf.core.model.TransactionType
 
 @Composable
-fun AddExpenseScreen(viewModel: AddExpenseViewModel, modifier: Modifier = Modifier) {
+fun AddExpenseScreen(
+    viewModel: AddExpenseViewModel,
+    captureEnabled: Boolean,
+    onEnableCapture: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val form by viewModel.form.collectAsStateWithLifecycle()
     val recent by viewModel.recent.collectAsStateWithLifecycle()
     val monthTotal by viewModel.monthTotal.collectAsStateWithLifecycle()
+    val pendingCount by viewModel.pendingCount.collectAsStateWithLifecycle()
     val currency = stringResource(R.string.currency_sar)
 
     Scaffold(
@@ -55,8 +61,15 @@ fun AddExpenseScreen(viewModel: AddExpenseViewModel, modifier: Modifier = Modifi
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            if (!captureEnabled) {
+                item { CapturePrompt(onEnable = onEnableCapture) }
+            }
+
             item {
-                MonthTotal(text = monthTotal.forDisplay(currency))
+                MonthTotal(
+                    text = monthTotal.forDisplay(currency),
+                    pendingCount = pendingCount,
+                )
             }
 
             item {
@@ -131,7 +144,7 @@ private fun AddExpenseTopBar() {
 }
 
 @Composable
-private fun MonthTotal(text: String) {
+private fun MonthTotal(text: String, pendingCount: Int) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
@@ -139,6 +152,44 @@ private fun MonthTotal(text: String) {
                 style = MaterialTheme.typography.labelLarge,
             )
             Text(text = text, style = MaterialTheme.typography.headlineMedium)
+            // Captured records are not in the total above until the user confirms
+            // them, so the count is shown next to it. Otherwise the total looks
+            // simply wrong to someone who watched the notification arrive.
+            if (pendingCount > 0) {
+                Text(
+                    text = stringResource(R.string.pending_count, pendingCount),
+                    style = MaterialTheme.typography.labelMedium,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Shown only while notification access is missing.
+ *
+ * Without it the app's whole automatic half is silently inert, and nothing on
+ * screen would explain why the bank messages the user can see in their status bar
+ * are not turning into transactions.
+ */
+@Composable
+private fun CapturePrompt(onEnable: () -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.capture_off_title),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                text = stringResource(R.string.capture_off_body),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            TextButton(onClick = onEnable) {
+                Text(stringResource(R.string.capture_enable))
+            }
         }
     }
 }

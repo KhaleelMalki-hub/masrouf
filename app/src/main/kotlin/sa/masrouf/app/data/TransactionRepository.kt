@@ -81,6 +81,20 @@ class TransactionRepository(private val dao: TransactionDao) {
         return transaction
     }
 
+    /**
+     * Stores a record the capture pipeline produced.
+     *
+     * @return true when it was written, false when its fingerprint was already
+     *   stored. A notification that Android reposts - an update, a reconnect - must
+     *   not become a second transaction, and the unique index on `fingerprint` is
+     *   what makes that a property of the database rather than of whoever calls it.
+     */
+    suspend fun recordCaptured(transaction: Transaction): Boolean =
+        dao.insert(transaction.toEntity()) != -1L
+
+    /** How many pending records are waiting for the user to confirm them. */
+    fun observePendingCount(): Flow<Int> = dao.observePendingCount()
+
     companion object {
         const val RECENT_LIMIT = 50
     }
@@ -89,10 +103,19 @@ class TransactionRepository(private val dao: TransactionDao) {
 /**
  * What the user spent over these transactions.
  *
- * Delegates the "does this count" decision to [TransactionType.countsAsSpending]
- * rather than listing types here. Two screens each deciding for themselves is how
- * two surfaces come to disagree about the same month.
+ * Two filters, and both are load-bearing.
+ *
+ * [Status.CONFIRMED] only. A captured record is a parser's reading of a bank
+ * message, and a parser that misreads an amount is a certainty over a long enough
+ * period. Letting a [Status.PENDING] record into this total is the exact failure
+ * `Status` exists to prevent: a number the user never agreed to, presented to them
+ * as fact. They are told how many are waiting instead.
+ *
+ * The "does this count" decision is delegated to [TransactionType.countsAsSpending]
+ * rather than listed here, because two surfaces each deciding for themselves is how
+ * they come to disagree about the same month.
  */
 fun List<Transaction>.spendingTotal(): Money =
-    filter { it.direction == Direction.DEBIT && it.type.countsAsSpending }
+    filter { it.status == Status.CONFIRMED }
+        .filter { it.direction == Direction.DEBIT && it.type.countsAsSpending }
         .fold(Money.ZERO) { running, transaction -> running + transaction.amount }

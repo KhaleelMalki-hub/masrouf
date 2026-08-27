@@ -17,5 +17,20 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!--
+          Reads bank notifications off the status bar. The permission is held by
+          the system and granted by the user in settings, so the app cannot start
+          capturing without them having gone there first.
+        -->
+        <service
+            android:name=".capture.MasroufNotificationListener"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
     </application>
 </manifest>

@@ -25,4 +25,10 @@
     <string name="status_pending">Awaiting confirmation</string>
 
     <string name="month_total_label">Spent this month</string>
+
+    <string name="capture_off_title">Bank capture is off</string>
+    <string name="capture_off_body">Give the app notification access so it records your bank transactions automatically. The data stays on your device.</string>
+    <string name="capture_enable">Open settings</string>
+    <string name="capture_on">Notification capture is on</string>
+    <string name="pending_count">%1$d awaiting confirmation</string>
 </resources>

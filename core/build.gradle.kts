@@ -2,6 +2,11 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
+    // The redacted real bank messages are shared with :app's tests. Exposing them
+    // as test fixtures rather than retyping them there is the point: a second copy
+    // of a captured sample drifts from the original, and a parser tested against a
+    // drifted copy is tested against a guess.
+    `java-test-fixtures`
 }
 
 // Bytecode target is 17 because the Android module consumes this artifact and the

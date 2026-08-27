@@ -7,7 +7,7 @@ statements. Single user, on-device, offline. Not a product, not published.
 
 ```bash
 ./gradlew :core:test              # 140 tests, runs anywhere with a JDK
-./gradlew :app:testDebugUnitTest  # 15 tests, needs the Android SDK
+./gradlew :app:testDebugUnitTest  # 26 tests, needs the Android SDK
 ./gradlew :app:assembleDebug      # needs local.properties with sdk.dir
 ```
 
@@ -19,6 +19,9 @@ arm64 AVD named `masrouf35`:
 $ANDROID_HOME/emulator/emulator -avd masrouf35 -no-window -gpu swiftshader_indirect &
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 adb shell cmd locale set-app-locales sa.masrouf.app --locales ar-SA   # check RTL
+adb shell cmd notification allow_listener \
+  sa.masrouf.app/sa.masrouf.app.capture.MasroufNotificationListener
+adb logcat -s MasroufCapture     # one line per message the listener refused
 ```
 
 `:app` is included in the build **only** when an Android SDK is present (see
@@ -38,6 +41,7 @@ core/   pure Kotlin/JVM — no Android dependency, ever
   dedup/      Fingerprint · DuplicateDetector · EventSignature
   statement/  RowAssembler · StatementImporter · SaudiStatements
 app/    Android - Compose, Room, Arabic default with English in values-en
+  capture/    MasroufNotificationListener (thin) → CaptureRecorder (tested)
   data/       TransactionEntity + mappers · TransactionDao · MasroufDatabase
   ui/         AmountInput (tested) · AddExpenseViewModel · AddExpenseScreen
 ```
@@ -102,8 +106,22 @@ app/    Android - Compose, Room, Arabic default with English in values-en
 - `:app` has been run only on the `masrouf35` emulator, never on a physical
   phone. Manual entry, the Room write, the Arabic RTL layout and the monthly
   total recomputing were all confirmed there; nothing else has been.
-- `:app` has no notification listener yet, no categories, no accounts, and no way
-  to edit or delete a recorded transaction. Manual entry is the only input.
+- **The listener has never seen a real bank notification.** On the emulator it was
+  proven to bind, receive and refuse a shell-posted notification as
+  `UNKNOWN_SENDER`; that the bank profiles match a real posting package is still
+  only asserted by unit tests against captured message *bodies*. The package names
+  in those tests were inferred, not observed. Check them against a real phone
+  before trusting capture.
+- **Nothing confirms a `PENDING` record yet.** Captured transactions are stored and
+  counted on screen but are excluded from the monthly total, and there is no screen
+  to confirm, edit or delete one - so today capture fills a list the user cannot
+  act on.
+- No SMS capture, so `DuplicateDetector` is not wired up. The unique fingerprint
+  index collapses a notification Android reposts, which is the only duplicate that
+  can currently occur; the moment SMS or statement import lands, cross-source
+  reconciliation has to be added or every purchase seen twice becomes two records.
+- No categories, no accounts, no date picker (a manual record is timestamped when
+  it is saved).
 - `ColumnRuler` boundaries in `SaudiStatements` were measured with **pdfplumber's**
   coordinate system. A different PDF extractor on Android may report different x
   values — verify against a real file before trusting barq / Emirates NBD imports.
