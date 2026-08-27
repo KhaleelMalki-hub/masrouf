@@ -33,13 +33,32 @@ object IntentClassifier {
 
     data class Intent(val type: TransactionType, val direction: Direction)
 
-    private data class Rule(
+    private class Rule(
         val type: TransactionType,
         val direction: Direction,
         /** All of these must be present. Stored folded, matched against folded text. */
-        val requiredTokens: List<String>,
+        requiredTokens: List<String>,
     ) {
-        val folded: List<String> = requiredTokens.map { ArabicText.foldForMatching(it) }
+        /**
+         * Arabic tokens are matched as substrings, because they are stems: "حوال"
+         * has to find حوالة, حوالات and الحوالة alike, and Arabic attaches its
+         * prefixes directly to the word.
+         *
+         * Latin tokens are matched as whole words. Substring matching there is
+         * actively wrong: "IN" occurs inside "OUTGOING", so a `Cash in` rule
+         * matched as a substring would claim every outgoing transfer.
+         */
+        private val matchers: List<(String) -> Boolean> = requiredTokens.map { token ->
+            val folded = ArabicText.foldForMatching(token)
+            if (folded.all { it.code < 128 }) {
+                val word = Regex("(?<![A-Z0-9])${Regex.escape(folded)}(?![A-Z0-9])")
+                ({ text: String -> word.containsMatchIn(text) })
+            } else {
+                ({ text: String -> text.contains(folded) })
+            }
+        }
+
+        fun matches(foldedText: String): Boolean = matchers.all { it(foldedText) }
     }
 
     /**
@@ -66,14 +85,34 @@ object IntentClassifier {
 
         Rule(TransactionType.SALARY, Direction.CREDIT, listOf("راتب")),
 
-        Rule(TransactionType.TRANSFER_IN, Direction.CREDIT, listOf("حوالة", "واردة")),
-        Rule(TransactionType.TRANSFER_OUT, Direction.DEBIT, listOf("حوالة", "صادرة")),
+        // Wallet top-ups funded from the user's own card. Not spending: the same
+        // riyals are reported again by the wallet as they are actually spent.
+        Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, listOf("CASH", "IN")),
 
-        // barq sends wallet top-ups in English.
+        // Transfer wording, as stems. Banks insert words into the middle of their
+        // own phrases ("حوالة صادرة محلية", "حوالة محلية صادرة", "حوالات فورية
+        // واردة"), and statements use a different noun than messages do - حوالة in
+        // one, تحويل in the other - so both roots are listed.
+        Rule(TransactionType.TRANSFER_IN, Direction.CREDIT, listOf("حوال", "وارد")),
+        Rule(TransactionType.TRANSFER_IN, Direction.CREDIT, listOf("تحويل", "وارد")),
+        Rule(TransactionType.TRANSFER_OUT, Direction.DEBIT, listOf("حوال", "صادر")),
+        Rule(TransactionType.TRANSFER_OUT, Direction.DEBIT, listOf("تحويل", "صادر")),
+
+        // barq writes in English.
         Rule(TransactionType.TRANSFER_IN, Direction.CREDIT, listOf("MONEY", "ADDED")),
+        Rule(TransactionType.TRANSFER_IN, Direction.CREDIT, listOf("INCOMING", "TRANSFER")),
+        Rule(TransactionType.TRANSFER_OUT, Direction.DEBIT, listOf("OUTGOING", "TRANSFER")),
+        Rule(TransactionType.REFUND, Direction.CREDIT, listOf("CASH", "REWARD")),
 
         Rule(TransactionType.PURCHASE, Direction.DEBIT, listOf("شراء")),
         Rule(TransactionType.PURCHASE, Direction.DEBIT, listOf("PURCHASE")),
+        Rule(TransactionType.PURCHASE, Direction.DEBIT, listOf("CARD", "TRANSACTION")),
+
+        // Last resort: the wording says a transfer happened but not which way
+        // ("عملية تحويل داخلية"). The direction here is a placeholder - a statement
+        // corrects it from its debit/credit column, which is unambiguous.
+        Rule(TransactionType.TRANSFER_OUT, Direction.DEBIT, listOf("حوال")),
+        Rule(TransactionType.TRANSFER_OUT, Direction.DEBIT, listOf("تحويل")),
     )
 
     /**
@@ -83,9 +122,7 @@ object IntentClassifier {
      */
     fun classify(text: String): Intent? {
         val folded = ArabicText.foldForMatching(text)
-        val rule = RULES.firstOrNull { candidate ->
-            candidate.folded.all { token -> folded.contains(token) }
-        } ?: return null
+        val rule = RULES.firstOrNull { it.matches(folded) } ?: return null
         return Intent(rule.type, rule.direction)
     }
 }
