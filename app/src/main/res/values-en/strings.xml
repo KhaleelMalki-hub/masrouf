@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Masrouf</string>
+
+    <string name="add_expense_title">Record an expense</string>
+    <string name="amount_label">Amount</string>
+    <string name="merchant_label">Merchant</string>
+    <string name="note_label">Note</string>
+    <string name="type_label">Type</string>
+    <string name="save">Save</string>
+
+    <string name="currency_sar">SAR</string>
+
+    <string name="type_purchase">Purchase</string>
+    <string name="type_transfer_out">Transfer out</string>
+    <string name="type_bill_payment">Bill payment</string>
+    <string name="type_atm_withdrawal">Cash withdrawal</string>
+    <string name="type_own_transfer">Between my accounts</string>
+
+    <string name="error_amount_required">Enter an amount</string>
+    <string name="error_amount_invalid">Not a valid amount. Riyals and at most two halalas.</string>
+
+    <string name="recent_title">Recent</string>
+    <string name="recent_empty">Nothing recorded yet</string>
+    <string name="status_pending">Awaiting confirmation</string>
+
+    <string name="month_total_label">Spent this month</string>
+</resources>

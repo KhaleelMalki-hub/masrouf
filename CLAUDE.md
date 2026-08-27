@@ -6,8 +6,19 @@ statements. Single user, on-device, offline. Not a product, not published.
 ## Commands
 
 ```bash
-./gradlew :core:test        # 140 tests, runs anywhere with a JDK
-./gradlew :app:assembleDebug   # needs local.properties with sdk.dir
+./gradlew :core:test              # 140 tests, runs anywhere with a JDK
+./gradlew :app:testDebugUnitTest  # 15 tests, needs the Android SDK
+./gradlew :app:assembleDebug      # needs local.properties with sdk.dir
+```
+
+The SDK lives at `/opt/homebrew/share/android-commandlinetools` and the JDK is
+keg-only, so builds need `JAVA_HOME=/opt/homebrew/opt/openjdk@21`. There is an
+arm64 AVD named `masrouf35`:
+
+```bash
+$ANDROID_HOME/emulator/emulator -avd masrouf35 -no-window -gpu swiftshader_indirect &
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+adb shell cmd locale set-app-locales sa.masrouf.app --locales ar-SA   # check RTL
 ```
 
 `:app` is included in the build **only** when an Android SDK is present (see
@@ -26,7 +37,9 @@ core/   pure Kotlin/JVM — no Android dependency, ever
   capture/    MessageGate → ParserRegistry → CapturePipeline · SaudiBanks
   dedup/      Fingerprint · DuplicateDetector · EventSignature
   statement/  RowAssembler · StatementImporter · SaudiStatements
-app/    Android — not written yet
+app/    Android - Compose, Room, Arabic default with English in values-en
+  data/       TransactionEntity + mappers · TransactionDao · MasroufDatabase
+  ui/         AmountInput (tested) · AddExpenseViewModel · AddExpenseScreen
 ```
 
 ## Rules that must not be broken
@@ -68,6 +81,13 @@ app/    Android — not written yet
    no test catches — because the test was invented from the same imagination. This
    has already produced one wrong test in this repo.
 
+9. **A screen that compiles is not a screen that fits.** Layout is checked by
+   running it, because the compiler has no opinion about width. Five type chips in
+   a plain `Row` compiled, passed every unit test, and on a real screen wrapped the
+   fourth chip to one letter per line and pushed the fifth off the edge entirely.
+   Arabic labels are longer than the English ones, so the locale that matters most
+   is the one that breaks first.
+
 ## Privacy
 
 - No server, no account, no external API. Data never leaves the device.
@@ -79,7 +99,11 @@ app/    Android — not written yet
 
 ## Known gaps
 
-- `:app` does not exist.
+- `:app` has been run only on the `masrouf35` emulator, never on a physical
+  phone. Manual entry, the Room write, the Arabic RTL layout and the monthly
+  total recomputing were all confirmed there; nothing else has been.
+- `:app` has no notification listener yet, no categories, no accounts, and no way
+  to edit or delete a recorded transaction. Manual entry is the only input.
 - `ColumnRuler` boundaries in `SaudiStatements` were measured with **pdfplumber's**
   coordinate system. A different PDF extractor on Android may report different x
   values — verify against a real file before trusting barq / Emirates NBD imports.

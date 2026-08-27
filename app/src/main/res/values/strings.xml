@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Arabic is the default locale, not a translation of an English original: this
+  app is used in Arabic, so the untranslated fallback should be the language its
+  user reads. English lives in values-en.
+-->
+<resources>
+    <string name="app_name">مصروف</string>
+
+    <string name="add_expense_title">تسجيل مصروف</string>
+    <string name="amount_label">المبلغ</string>
+    <string name="merchant_label">المتجر</string>
+    <string name="note_label">ملاحظة</string>
+    <string name="type_label">النوع</string>
+    <string name="save">حفظ</string>
+
+    <string name="currency_sar">ر.س</string>
+
+    <string name="type_purchase">شراء</string>
+    <string name="type_transfer_out">تحويل صادر</string>
+    <string name="type_bill_payment">سداد فاتورة</string>
+    <string name="type_atm_withdrawal">سحب نقدي</string>
+    <string name="type_own_transfer">تحويل بين حساباتي</string>
+
+    <string name="error_amount_required">أدخل المبلغ</string>
+    <string name="error_amount_invalid">مبلغ غير صالح. ريالات وهللتان على الأكثر.</string>
+
+    <string name="recent_title">آخر العمليات</string>
+    <string name="recent_empty">لا توجد عمليات بعد</string>
+    <string name="status_pending">بانتظار التأكيد</string>
+
+    <string name="month_total_label">مصروف هذا الشهر</string>
+</resources>
