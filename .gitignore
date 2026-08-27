@@ -1,0 +1,16 @@
+.gradle/
+build/
+*/build/
+local.properties
+.idea/
+*.iml
+.DS_Store
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Never commit real captured data. Fixtures under core/src/test are redacted
+# transcriptions and are committed deliberately; anything dropped here is not.
+/samples/
+*.keystore
+*.jks
