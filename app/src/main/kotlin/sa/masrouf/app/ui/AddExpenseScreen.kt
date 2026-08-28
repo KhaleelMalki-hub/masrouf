@@ -1,6 +1,11 @@
 package sa.masrouf.app.ui
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,6 +14,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,6 +33,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,6 +59,16 @@ import sa.masrouf.core.model.Transaction
 import sa.masrouf.core.model.TransactionType
 import sa.masrouf.core.money.Money
 
+/**
+ * The landing page.
+ *
+ * Reading order is the order of the questions someone actually asks: what have I
+ * spent, what did it go on, what needs me, what did I do recently. Recording an
+ * expense is a button rather than a form parked on the page, because the form was
+ * five fields of empty boxes sitting above the answers - the app looked like data
+ * entry when its job is to have already done the entry for you.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddExpenseScreen(
     viewModel: AddExpenseViewModel,
@@ -60,18 +77,18 @@ fun AddExpenseScreen(
     smsEnabled: Boolean,
     onEnableSms: () -> Unit,
     modifier: Modifier = Modifier,
+    canImportHistory: Boolean = false,
+    onRequestHistoryAccess: () -> Unit = {},
 ) {
     val form by viewModel.form.collectAsStateWithLifecycle()
     val recent by viewModel.recent.collectAsStateWithLifecycle()
     val monthTotal by viewModel.monthTotal.collectAsStateWithLifecycle()
     val pending by viewModel.pending.collectAsStateWithLifecycle()
     val shares by viewModel.monthShares.collectAsStateWithLifecycle()
+    val importState by viewModel.importState.collectAsStateWithLifecycle()
     val currency = stringResource(R.string.currency_sar)
 
-    // Both destructive actions are irreversible and there is no server to restore
-    // from, so both name the record before it goes. Dismiss is the MORE destructive
-    // of the two - it also destroys the original bank message, which cannot be
-    // typed back - so it cannot be the one left unguarded.
+    var entryOpen by remember { mutableStateOf(false) }
     var confirming by remember { mutableStateOf<DestructiveAction?>(null) }
 
     confirming?.let { action ->
@@ -92,6 +109,13 @@ fun AddExpenseScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = { AddExpenseTopBar() },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = { entryOpen = true },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+            ) { Text(stringResource(R.string.add_expense)) }
+        },
     ) { padding ->
         LazyColumn(
             modifier = Modifier
@@ -110,73 +134,33 @@ fun AddExpenseScreen(
             }
 
             item {
-                AmountField(
-                    value = form.typedAmount,
-                    error = form.amountError,
-                    onValueChange = viewModel::onAmountChanged,
+                HistoryActions(
+                    state = importState,
+                    canImport = canImportHistory,
+                    onImport = {
+                        if (canImportHistory) viewModel.importHistory() else onRequestHistoryAccess()
+                    },
+                    onFile = viewModel::fileHistory,
                 )
             }
 
-            item {
-                TypeChips(selected = form.type, onSelect = viewModel::onTypeChanged)
-            }
-
-            item {
-                Column {
+            if (pending.isNotEmpty()) {
+                item {
                     Text(
-                        text = stringResource(R.string.category_prompt),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        text = stringResource(R.string.pending_title),
+                        style = MaterialTheme.typography.titleMedium,
                     )
-                    CategoryChips(
-                        selected = form.category,
-                        onSelect = viewModel::onCategoryChanged,
-                        modifier = Modifier.padding(top = 8.dp),
+                }
+                items(pending, key = { it.id }) { transaction ->
+                    ReceiptSlip(
+                        transaction = transaction,
+                        currencyLabel = currency,
+                        onConfirm = { categoryId -> viewModel.confirm(transaction.id, categoryId) },
+                        onDismiss = { confirming = DestructiveAction.Dismiss(transaction) },
                     )
                 }
             }
 
-            item {
-                OutlinedTextField(
-                    value = form.merchant,
-                    onValueChange = viewModel::onMerchantChanged,
-                    label = { Text(stringResource(R.string.merchant_label)) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-
-            item {
-                OutlinedTextField(
-                    value = form.note,
-                    onValueChange = viewModel::onNoteChanged,
-                    label = { Text(stringResource(R.string.note_label)) },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-
-            item {
-                Button(
-                    onClick = viewModel::save,
-                    // Filled, not a text link: this is the action the whole app exists
-                    // for, and it was previously the faintest control on the screen.
-                    // Still enabled when the amount is invalid, so that pressing it is
-                    // what reveals the reason - a dead button explains nothing.
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 56.dp),
-                ) {
-                    Text(stringResource(R.string.save))
-                }
-            }
-
-            item { HorizontalDivider() }
-
-            // Below the entry form deliberately. Ungranted, both prompts render,
-            // and above the form they pushed Save off the bottom of a first launch -
-            // the one screen where the user has never seen the app work.
             if (!captureEnabled) {
                 item {
                     AccessPrompt(
@@ -199,34 +183,11 @@ fun AddExpenseScreen(
                 }
             }
 
-
-            if (pending.isNotEmpty()) {
-                item {
-                    Text(
-                        text = stringResource(R.string.pending_title),
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                }
-                item {
-                    Text(
-                        text = stringResource(R.string.pending_explain),
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                }
-                items(pending, key = { it.id }) { transaction ->
-                    ReceiptSlip(
-                        transaction = transaction,
-                        currencyLabel = currency,
-                        onConfirm = { categoryId -> viewModel.confirm(transaction.id, categoryId) },
-                        onDismiss = { confirming = DestructiveAction.Dismiss(transaction) },
-                    )
-                }
-                item { HorizontalDivider() }
-            }
+            item { HorizontalDivider() }
 
             item {
                 Text(
-                    text = stringResource(R.string.recent_title),
+                    text = stringResource(R.string.history_all),
                     style = MaterialTheme.typography.titleMedium,
                 )
             }
@@ -242,14 +203,156 @@ fun AddExpenseScreen(
                     )
                 }
             }
+
+            // Clearance for the floating button, which would otherwise sit on the
+            // last row of the history.
+            item { Spacer(Modifier.height(72.dp)) }
         }
+    }
+
+    if (entryOpen) {
+        ModalBottomSheet(
+            onDismissRequest = { entryOpen = false },
+            containerColor = Sadu.GroundRaised,
+        ) {
+            EntrySheet(
+                form = form,
+                onAmountChanged = viewModel::onAmountChanged,
+                onTypeChanged = viewModel::onTypeChanged,
+                onCategoryChanged = viewModel::onCategoryChanged,
+                onMerchantChanged = viewModel::onMerchantChanged,
+                onNoteChanged = viewModel::onNoteChanged,
+                onSave = {
+                    viewModel.save()
+                    entryOpen = false
+                },
+            )
+        }
+    }
+}
+
+/**
+ * The two things that can be done to a whole history at once.
+ *
+ * Both are one-off in practice, so they are a quiet row rather than a permanent
+ * fixture - and both report what they did, because an action over hundreds of
+ * records that says nothing afterwards is indistinguishable from one that failed.
+ */
+@Composable
+private fun HistoryActions(
+    state: AddExpenseViewModel.ImportState,
+    canImport: Boolean,
+    onImport: () -> Unit,
+    onFile: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TextButton(
+                onClick = onImport,
+                enabled = state !is AddExpenseViewModel.ImportState.Running,
+                modifier = Modifier.heightIn(min = 48.dp),
+            ) { Text(stringResource(R.string.import_history)) }
+            TextButton(
+                onClick = onFile,
+                modifier = Modifier.heightIn(min = 48.dp),
+            ) { Text(stringResource(R.string.file_history)) }
+        }
+
+        val note = when (state) {
+            is AddExpenseViewModel.ImportState.Running ->
+                stringResource(R.string.import_running, state.examined.toString())
+            is AddExpenseViewModel.ImportState.Done ->
+                if (state.stored == 0) {
+                    stringResource(R.string.import_none)
+                } else {
+                    stringResource(
+                        R.string.import_done,
+                        state.stored.toString(),
+                        state.examined.toString(),
+                    )
+                }
+            is AddExpenseViewModel.ImportState.Filed ->
+                stringResource(R.string.file_history_done, state.count.toString())
+            AddExpenseViewModel.ImportState.Idle ->
+                if (canImport) null else stringResource(R.string.import_history_body)
+        }
+        note?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+/** The entry form, now a sheet rather than the page itself. */
+@Composable
+private fun EntrySheet(
+    form: AddExpenseState,
+    onAmountChanged: (String) -> Unit,
+    onTypeChanged: (TransactionType) -> Unit,
+    onCategoryChanged: (Category?) -> Unit,
+    onMerchantChanged: (String) -> Unit,
+    onNoteChanged: (String) -> Unit,
+    onSave: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 32.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        AmountField(
+            value = form.typedAmount,
+            error = form.amountError,
+            onValueChange = onAmountChanged,
+        )
+        TypeChips(selected = form.type, onSelect = onTypeChanged)
+
+        Text(
+            text = stringResource(R.string.category_prompt),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        CategoryChips(selected = form.category, onSelect = onCategoryChanged)
+
+        OutlinedTextField(
+            value = form.merchant,
+            onValueChange = onMerchantChanged,
+            label = { Text(stringResource(R.string.merchant_label)) },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedTextField(
+            value = form.note,
+            onValueChange = onNoteChanged,
+            label = { Text(stringResource(R.string.note_label)) },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Button(
+            onClick = onSave,
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 56.dp),
+        ) { Text(stringResource(R.string.save)) }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddExpenseTopBar() {
-    TopAppBar(title = { Text(stringResource(R.string.add_expense_title)) })
+    TopAppBar(
+        title = { Text(stringResource(R.string.dashboard_title)) },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = Sadu.Ground,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+        ),
+    )
 }
 
 @Composable
@@ -444,77 +547,6 @@ val TransactionType.labelRes: Int
  * question being asked is whether that reading is right. There is no edit here on
  * purpose: a wrong amount is dismissed and typed in by hand, which keeps the one
  * number the user vouched for a number they actually entered.
- */
-@Composable
-private fun PendingRow(
-    transaction: Transaction,
-    currencyLabel: String,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
-) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = transaction.merchantRaw
-                        ?: stringResource(transaction.type.labelRes),
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-                SignedAmount(
-                    transaction = transaction,
-                    currencyLabel = currencyLabel,
-                    style = MaterialTheme.typography.titleMedium,
-                )
-            }
-            Text(
-                text = "${transaction.dayLabel()} · ${stringResource(transaction.source.labelRes)}",
-                style = MaterialTheme.typography.labelSmall,
-            )
-            // Confirming is the common case and dismissing the exception, so they
-            // must not look alike. Identical adjacent buttons are read as a pair of
-            // equals, which is how the destructive one gets tapped by mistake.
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                FilledTonalButton(
-                    onClick = onConfirm,
-                    modifier = Modifier.heightIn(min = 48.dp),
-                ) { Text(stringResource(R.string.confirm)) }
-                TextButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.heightIn(min = 48.dp),
-                ) { Text(stringResource(R.string.dismiss)) }
-            }
-        }
-    }
-}
-
-/** Where a record came from, so the user knows which message to check it against. */
-@get:StringRes
-private val Source.labelRes: Int
-    get() = when (this) {
-        Source.SMS -> R.string.source_sms
-        Source.NOTIFICATION -> R.string.source_notification
-        // Neither can appear in the pending list: manual records are confirmed on
-        // entry, and statement import is not wired into the app.
-        Source.MANUAL, Source.STATEMENT -> R.string.source_notification
-    }
-
-/**
- * The amount, carrying its direction.
- *
- * Money is stored unsigned with [Direction] holding the sign, so a row printing the
- * bare amount shows a 300 SAR refund and a 300 SAR purchase identically. The month
- * total excludes the refund correctly, and the list then contradicts the total in a
- * way the user has no way to resolve.
  */
 @Composable
 fun SignedAmount(

@@ -19,6 +19,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import sa.masrouf.app.capture.MasroufNotificationListener
+import sa.masrouf.app.capture.SmsInbox
 import sa.masrouf.app.ui.AddExpenseScreen
 import sa.masrouf.app.ui.AddExpenseViewModel
 import sa.masrouf.app.ui.MasroufTheme
@@ -39,17 +40,28 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MasroufTheme {
-                val viewModel: AddExpenseViewModel =
-                    viewModel(factory = AddExpenseViewModel.Factory(repository))
+                val viewModel: AddExpenseViewModel = viewModel(
+                    factory = AddExpenseViewModel.Factory(
+                        repository = repository,
+                        // Passed as a function so the ViewModel never holds a
+                        // ContentResolver, and so the import is testable without one.
+                        readInbox = { SmsInbox(contentResolver).read() },
+                    ),
+                )
 
                 var captureEnabled by remember {
                     mutableStateOf(MasroufNotificationListener.isEnabled(this))
                 }
                 var smsEnabled by remember { mutableStateOf(hasSmsPermission()) }
+                var canReadInbox by remember { mutableStateOf(hasReadSmsPermission()) }
 
                 val requestSms = rememberLauncherForActivityResult(
                     ActivityResultContracts.RequestPermission(),
                 ) { granted -> smsEnabled = granted }
+
+                val requestReadSms = rememberLauncherForActivityResult(
+                    ActivityResultContracts.RequestPermission(),
+                ) { granted -> canReadInbox = granted }
 
                 // Both are re-read on every resume rather than once. Notification
                 // access is granted in another app entirely, and either permission
@@ -58,6 +70,7 @@ class MainActivity : ComponentActivity() {
                 LifecycleResumeEffect(Unit) {
                     captureEnabled = MasroufNotificationListener.isEnabled(this@MainActivity)
                     smsEnabled = hasSmsPermission()
+                    canReadInbox = hasReadSmsPermission()
                     onPauseOrDispose { }
                 }
 
@@ -69,12 +82,17 @@ class MainActivity : ComponentActivity() {
                     },
                     smsEnabled = smsEnabled,
                     onEnableSms = { requestSms.launch(Manifest.permission.RECEIVE_SMS) },
+                    canImportHistory = canReadInbox,
+                    onRequestHistoryAccess = { requestReadSms.launch(Manifest.permission.READ_SMS) },
                 )
             }
         }
     }
 
-    private fun hasSmsPermission(): Boolean =
-        ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS) ==
-            PackageManager.PERMISSION_GRANTED
+    private fun hasSmsPermission(): Boolean = granted(Manifest.permission.RECEIVE_SMS)
+
+    private fun hasReadSmsPermission(): Boolean = granted(Manifest.permission.READ_SMS)
+
+    private fun granted(permission: String): Boolean =
+        ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
 }

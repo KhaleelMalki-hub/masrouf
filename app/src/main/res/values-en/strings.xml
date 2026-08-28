@@ -69,4 +69,16 @@
     <string name="category_shopping">Shopping</string>
     <string name="category_transfers">Transfers</string>
     <string name="category_other">Other</string>
+    <string name="dashboard_title">Masrouf</string>
+    <string name="greeting_month">%1$s</string>
+    <string name="add_expense">Record an expense</string>
+    <string name="import_history">Read older bank messages</string>
+    <string name="import_history_body">Reads your text messages once and pulls your bank transactions out of them. Personal messages are read, ignored, and never stored.</string>
+    <string name="import_running">Reading… %1$s messages</string>
+    <string name="import_done">Added %1$s transactions from %2$s messages</string>
+    <string name="import_none">No new transactions in your messages</string>
+    <string name="file_history">File what\'s unfiled</string>
+    <string name="file_history_done">Filed %1$s transactions</string>
+    <string name="nothing_pending">Everything confirmed</string>
+    <string name="history_all">All transactions</string>
 </resources>

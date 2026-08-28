@@ -8,6 +8,14 @@
     -->
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
 
+    <!--
+      Reads the existing inbox once, to recover the history that predates the app.
+      Separate from RECEIVE_SMS on purpose: that one only sees messages arriving
+      from now on, and the two banks with no app have years of transactions that
+      exist nowhere else. Nothing is stored unless a bank parser recognises it.
+    -->
+    <uses-permission android:name="android.permission.READ_SMS" />
+
     <application
         android:name=".MasroufApp"
         android:allowBackup="false"

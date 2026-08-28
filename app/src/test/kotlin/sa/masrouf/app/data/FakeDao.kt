@@ -55,6 +55,9 @@ class FakeDao : TransactionDao {
         return 1
     }
 
+    override suspend fun uncategorised(): List<TransactionEntity> =
+        state.value.filter { it.categoryId == null }
+
     override suspend fun delete(id: String): Int {
         val target = state.value.firstOrNull { it.id == id } ?: return 0
         state.value = state.value - target

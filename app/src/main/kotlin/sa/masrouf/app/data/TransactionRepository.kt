@@ -8,6 +8,7 @@ import sa.masrouf.core.dedup.DuplicateDetector
 import sa.masrouf.core.dedup.EventSignature
 import sa.masrouf.core.dedup.Fingerprint
 import sa.masrouf.core.model.Category
+import sa.masrouf.core.model.CategoryGuess
 import sa.masrouf.core.model.Direction
 import sa.masrouf.core.model.SaudiCategories
 import sa.masrouf.core.model.Source
@@ -176,6 +177,25 @@ class TransactionRepository(
      */
     suspend fun setCategory(id: String, categoryId: String?): Boolean =
         dao.setCategory(id, categoryId) == 1
+
+    /**
+     * Files every uncategorised record whose merchant is recognised.
+     *
+     * For the history that predates categories existing. It only ever fills a gap:
+     * a record the user already filed is never touched, and one whose merchant is
+     * not recognised is left unfiled rather than swept into "other".
+     *
+     * @return how many were filed.
+     */
+    suspend fun fileUncategorised(): Int {
+        var filed = 0
+        dao.uncategorised().forEach { row ->
+            val model = runCatching { row.toModel() }.getOrNull() ?: return@forEach
+            val guess = CategoryGuess.suggest(model.merchantRaw, model.type) ?: return@forEach
+            if (dao.setCategory(row.id, guess.id) == 1) filed++
+        }
+        return filed
+    }
 
     /**
      * Confirms a record and files it in one write.

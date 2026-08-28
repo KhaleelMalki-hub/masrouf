@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import sa.masrouf.app.capture.HistoryImport
 import sa.masrouf.app.data.TransactionRepository
 import sa.masrouf.app.data.categoryShares
 import sa.masrouf.app.data.spendingTotal
@@ -78,7 +79,19 @@ data class AddExpenseState(
 class AddExpenseViewModel(
     private val repository: TransactionRepository,
     private val clock: Clock = Clock.system(RiyadhTime.ZONE),
+    private val readInbox: (suspend () -> List<sa.masrouf.core.capture.RawMessage>)? = null,
 ) : ViewModel() {
+
+    /** What the one-off history import is doing, for the dashboard to report. */
+    sealed interface ImportState {
+        data object Idle : ImportState
+        data class Running(val examined: Int) : ImportState
+        data class Done(val stored: Int, val examined: Int) : ImportState
+        data class Filed(val count: Int) : ImportState
+    }
+
+    private val _importState = MutableStateFlow<ImportState>(ImportState.Idle)
+    val importState: StateFlow<ImportState> = _importState.asStateFlow()
 
     private val _form = MutableStateFlow(AddExpenseState())
     val form: StateFlow<AddExpenseState> = _form.asStateFlow()
@@ -156,6 +169,43 @@ class AddExpenseViewModel(
         viewModelScope.launch { repository.confirmWithCategory(id, categoryId) }
     }
 
+    /**
+     * Reads the SMS inbox once and pulls past bank transactions out of it.
+     *
+     * Everything it finds lands PENDING, like any capture - a backfill that
+     * silently added hundreds of confirmed rows would put numbers the user has
+     * never seen into their totals.
+     */
+    fun importHistory() {
+        val read = readInbox ?: return
+        if (_importState.value is ImportState.Running) return
+
+        viewModelScope.launch {
+            _importState.value = ImportState.Running(0)
+            val report = runCatching {
+                val messages = read()
+                HistoryImport(repository).run(messages) { examined, _ ->
+                    _importState.value = ImportState.Running(examined)
+                }
+            }.getOrNull()
+
+            _importState.value = report
+                ?.let { ImportState.Done(stored = it.stored, examined = it.examined) }
+                ?: ImportState.Idle
+        }
+    }
+
+    /** Files every unfiled record whose merchant is recognised. */
+    fun fileHistory() {
+        viewModelScope.launch {
+            _importState.value = ImportState.Filed(repository.fileUncategorised())
+        }
+    }
+
+    fun clearImportState() {
+        _importState.value = ImportState.Idle
+    }
+
     /** Refiles a record the user categorised wrongly the first time. */
     fun setCategory(id: String, categoryId: String?) {
         viewModelScope.launch { repository.setCategory(id, categoryId) }
@@ -215,9 +265,12 @@ class AddExpenseViewModel(
         }
     }
 
-    class Factory(private val repository: TransactionRepository) : ViewModelProvider.Factory {
+    class Factory(
+        private val repository: TransactionRepository,
+        private val readInbox: (suspend () -> List<sa.masrouf.core.capture.RawMessage>)? = null,
+    ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-            AddExpenseViewModel(repository) as T
+            AddExpenseViewModel(repository, readInbox = readInbox) as T
     }
 }

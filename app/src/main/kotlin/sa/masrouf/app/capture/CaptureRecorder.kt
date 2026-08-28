@@ -3,6 +3,7 @@ package sa.masrouf.app.capture
 import sa.masrouf.core.capture.CapturePipeline
 import sa.masrouf.core.capture.RawMessage
 import sa.masrouf.core.dedup.Fingerprint
+import sa.masrouf.core.model.CategoryGuess
 import sa.masrouf.core.model.Source
 import sa.masrouf.core.model.Status
 import sa.masrouf.core.model.Transaction
@@ -85,7 +86,13 @@ class CaptureRecorder(private val pipeline: CapturePipeline = CapturePipeline())
                         type = draft.type,
                         occurredAt = draft.occurredAt,
                         accountId = null,
-                        categoryId = null,
+                        // A suggestion, not a decision. It lands on a PENDING
+                        // record the user is already being asked to look at, the
+                        // chips on the slip show what was guessed, and an
+                        // unrecognised merchant leaves it null rather than
+                        // defaulting to "other" - so the strip keeps showing what
+                        // is genuinely unexamined.
+                        categoryId = CategoryGuess.suggest(draft.merchantRaw, draft.type)?.id,
                         merchantRaw = draft.merchantRaw,
                         merchantKey = draft.merchantRaw
                             ?.let(ArabicText::normalizeMerchant)

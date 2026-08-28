@@ -7,7 +7,7 @@ statements. Single user, on-device, offline. Not a product, not published.
 
 ```bash
 ./gradlew :core:test              # 140 tests, runs anywhere with a JDK
-./gradlew :app:testDebugUnitTest  # 67 tests, needs the Android SDK
+./gradlew :app:testDebugUnitTest  # 75 tests, needs the Android SDK
 ./gradlew :app:assembleDebug      # needs local.properties with sdk.dir
 ```
 
@@ -48,6 +48,7 @@ core/   pure Kotlin/JVM — no Android dependency, ever
   text/       ArabicText (normalise SMS text) · VisualOrder (undo PDF layout)
   money/      Money — integer halalas
   model/      Transaction, TransactionDraft, enums · SaudiCategories
+              CategoryGuess - merchant to category, refuses to guess amounts
   time/       RiyadhTime · ArabicDates
   capture/    MessageGate → ParserRegistry → CapturePipeline · SaudiBanks
   dedup/      Fingerprint · DuplicateDetector · EventSignature
@@ -55,6 +56,8 @@ core/   pure Kotlin/JVM — no Android dependency, ever
 app/    Android - Compose, Room, Arabic default with English in values-en
   capture/    MasroufNotificationListener · SmsCaptureReceiver (both thin)
               → SmsAssembly · CaptureRecorder (both tested, no Android)
+              SmsInbox (reads the existing inbox) → HistoryImport (backfill,
+              same pipeline, same gate, everything lands PENDING)
   data/       TransactionEntity + mappers · TransactionDao · MasroufDatabase
               TransactionRepository - the only route to storage, and where
               cross-source reconciliation runs under a lock

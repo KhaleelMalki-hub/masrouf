@@ -111,4 +111,8 @@ interface TransactionDao {
      */
     @Query("UPDATE transactions SET category_id = :categoryId WHERE id = :id")
     suspend fun setCategory(id: String, categoryId: String?): Int
+
+    /** Everything with no category yet, for a one-off backfill over the history. */
+    @Query("SELECT * FROM transactions WHERE category_id IS NULL")
+    suspend fun uncategorised(): List<TransactionEntity>
 }

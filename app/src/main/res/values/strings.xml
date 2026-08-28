@@ -86,4 +86,16 @@
     <string name="category_shopping">تسوق</string>
     <string name="category_transfers">تحويلات</string>
     <string name="category_other">أخرى</string>
+    <string name="dashboard_title">مصروف</string>
+    <string name="greeting_month">شهر %1$s</string>
+    <string name="add_expense">سجّل مصروف</string>
+    <string name="import_history">اقرأ رسائل البنك القديمة</string>
+    <string name="import_history_body">يقرأ التطبيق رسائلك النصية مرة وحدة ويستخرج عمليات بنوكك منها. الرسائل الشخصية تُقرأ وتُهمل ولا تُحفظ.</string>
+    <string name="import_running">يقرأ… %1$s رسالة</string>
+    <string name="import_done">أُضيفت %1$s عملية من %2$s رسالة</string>
+    <string name="import_none">ما فيه عمليات جديدة في رسائلك</string>
+    <string name="file_history">صنّف اللي بلا تصنيف</string>
+    <string name="file_history_done">صُنّفت %1$s عملية</string>
+    <string name="nothing_pending">كل شي مؤكّد</string>
+    <string name="history_all">كل العمليات</string>
 </resources>
