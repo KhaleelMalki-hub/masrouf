@@ -100,11 +100,37 @@ object IntentClassifier {
 
         Rule(TransactionType.BILL_PAYMENT, Direction.DEBIT, listOf("سداد")),
 
+        // ---- AlAhli's older template family -------------------------------
+        //
+        // NCB/AlAhli wrote a different vocabulary from the SNB templates already
+        // handled above, and 87% of a real 3,361-message corpus matched no rule at
+        // all. These come from that corpus, most specific first.
+
+        // "مدفوعات بطاقة ائتمانية" - settling the credit card. Not spending: the
+        // purchases that built the balance were counted when they happened.
+        Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, listOf("مدفوعات", "بطاق", "ائتمان")),
+
+        // "إيداع في بطاقة 4007*" and "تمت عملية إيداع في بطاقاتك الائتمانية" -
+        // money going ONTO a card. Credit, and never spending.
+        Rule(TransactionType.TRANSFER_IN, Direction.CREDIT, listOf("ايداع", "بطاق")),
+
+        // "سحب مبلغ 299.25 SAR بطاقة 9552* من SHBABIK RESTAURANT" - a card
+        // purchase, despite the word سحب. The card is what distinguishes it from
+        // the account withdrawal below, and it must be tested first.
+        Rule(TransactionType.PURCHASE, Direction.DEBIT, listOf("سحب", "بطاق")),
+
         Rule(TransactionType.ATM_DEPOSIT, Direction.CREDIT, listOf("ايداع", "صراف")),
         // Monthly profit paid into a savings account. Income, not spending.
         Rule(TransactionType.TRANSFER_IN, Direction.CREDIT, listOf("ايداع", "ارباح")),
         Rule(TransactionType.ATM_WITHDRAWAL, Direction.DEBIT, listOf("سحب", "صراف")),
         Rule(TransactionType.ATM_WITHDRAWAL, Direction.DEBIT, listOf("سحب", "نقدي")),
+
+        // "سحب من حساب104*010 مبلغSAR1500 ... الرصيد المتاح" - money leaving the
+        // account with no card and no merchant named. Classified as a withdrawal
+        // because that is what سحب says and there is nothing else to go on; it is
+        // therefore not counted as spending, which errs toward a total that is too
+        // low rather than one that invents purchases. The user can refile it.
+        Rule(TransactionType.ATM_WITHDRAWAL, Direction.DEBIT, listOf("سحب", "حساب")),
 
         Rule(TransactionType.SALARY, Direction.CREDIT, listOf("راتب")),
 
@@ -136,6 +162,16 @@ object IntentClassifier {
         // whole word, so it cannot fire inside another word.
         Rule(TransactionType.PURCHASE, Direction.DEBIT, listOf("POS")),
         Rule(TransactionType.PURCHASE, Direction.DEBIT, listOf("CARD", "TRANSACTION")),
+
+        // AlAhli also writes the account inline, with no word for it at all:
+        // "سحب من 010*104مبلغSAR1500". Last-resort forms, reached only after every
+        // rule above has declined - in particular after سحب+بطاقة, so a card
+        // purchase is never demoted to a withdrawal by these.
+        //
+        // Safe as a bare stem only because the gate now refuses the bank's own
+        // marketing: "السحب الأسبوعي" is a prize draw and would otherwise land here.
+        Rule(TransactionType.ATM_WITHDRAWAL, Direction.DEBIT, listOf("سحب")),
+        Rule(TransactionType.TRANSFER_IN, Direction.CREDIT, listOf("ايداع")),
 
         // Last resort: the wording says a transfer happened but not which way
         // ("عملية تحويل داخلية"). The direction here is a placeholder - a statement

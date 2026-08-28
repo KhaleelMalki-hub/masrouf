@@ -75,6 +75,20 @@ class BankMessageParser(private val profile: BankProfile) : MessageParser {
         val intent = IntentClassifier.classify(text)
             ?: return ParseResult.Failed(id, "no recognised intent")
 
+        // Refused before the amount is even looked for. A message priced in another
+        // currency usually still quotes a SAR balance, and the extractor happily
+        // returns that: "سحب مبلغ 1058.66 AED ... الصرف المتبقي 6127.16 SAR" was
+        // read as 6127.16 riyals spent. Not a rounding error, a different number
+        // with a different meaning - the balance, recorded as a purchase. 159 such
+        // messages in one real inbox.
+        //
+        // This app stores integer halalas of SAR and has nowhere to put a currency,
+        // so the honest outcome is a refusal that stays visible in the
+        // NotUnderstood count until the model can hold one.
+        if (FOREIGN_AMOUNT.containsMatchIn(text)) {
+            return ParseResult.Failed(id, "amount in a foreign currency")
+        }
+
         val amount = AmountExtractor.extractOrNull(text)
             ?: return ParseResult.Failed(id, "no amount found")
 
@@ -138,6 +152,18 @@ class BankMessageParser(private val profile: BankProfile) : MessageParser {
      * parser has been measured against real captured messages.
      */
     private fun confidenceOf(party: String?): Float = if (party != null) 0.9f else 0.7f
+
+    /**
+     * A number carrying a currency this app cannot store.
+     *
+     * Matched on either side, because banks write both "USD 1" and "1058.66 AED".
+     * SAR and SR are deliberately absent: those are the currency the app is in.
+     */
+    private val FOREIGN_AMOUNT = Regex(
+        """(?:\b(?:USD|AED|EUR|GBP|KWD|BHD|QAR|OMR|JOD|EGP|TRY|CNY|JPY|CHF|CAD|AUD|INR|PKR)\b\s*[\d.,]+""" +
+            """|[\d.,]+\s*\b(?:USD|AED|EUR|GBP|KWD|BHD|QAR|OMR|JOD|EGP|TRY|CNY|JPY|CHF|CAD|AUD|INR|PKR)\b)""",
+        RegexOption.IGNORE_CASE,
+    )
 
     private fun firstMatch(patterns: List<Regex>, text: String): String? {
         for (pattern in patterns) {

@@ -27,6 +27,52 @@ package sa.masrouf.core.fixtures
  */
 object RealMessages {
 
+    // ---- AlAhli, older template family --------------------------------------
+    //
+    // NCB/AlAhli wrote a different vocabulary from the SNB templates elsewhere in
+    // this file, and 87% of a real 3,361-message corpus matched no rule. Captured
+    // from that corpus; balances invented, account masks kept as the bank writes
+    // them, merchants kept because they are what the merchant patterns are tested
+    // against.
+
+    /** A card purchase, despite opening with سحب. The card and merchant identify it. */
+    const val ALAHLI_CARD_PURCHASE = """سحب مبلغ 299.25 SAR
+بطاقة 9552*
+من SHBABIK RESTAURANT
+في 01/15 12:18
+الصرف المتبقي 10000.00 SAR"""
+
+    /** Settling the credit card. Not spending. */
+    const val ALAHLI_CARD_SETTLEMENT = """مدفوعات بطاقة ائتمانية
+مبلغ 4900.51 ريال
+حساب 104*010
+في  01/15 12:34
+الرصيد 10000.00"""
+
+    /** Money going onto a card. Credit. */
+    const val ALAHLI_CARD_TOPUP = """إيداع في بطاقة 4007*
+مبلغ 4900.51
+في 01/15
+الصرف المتبقي 10000.00 SAR"""
+
+    /** Money leaving the account, no card and no merchant named. */
+    const val ALAHLI_ACCOUNT_WITHDRAWAL =
+        """سحب من حساب104*010 مبلغSAR1500 في2026/07/27 08:56 الرصيد المتاح 10000.00"""
+
+    /**
+     * A foreign-currency purchase that also quotes a SAR balance.
+     *
+     * The case the parser must REFUSE. Before the currency guard the extractor
+     * returned 6127.16 - the remaining balance - as the amount spent, turning a
+     * 1058.66 AED purchase into a fabricated four-figure riyal transaction. 159
+     * messages of this shape in one inbox.
+     */
+    const val ALAHLI_FOREIGN_PURCHASE = """سحب مبلغ 1058.66 AED
+بطاقة 6000*
+من MUMZWORLD FZ LLC
+في 11/22 21:02
+الصرف المتبقي 6127.16 SAR"""
+
     // ---- Emirates NBD ------------------------------------------------------
     //
     // Captured from the owner's inbox. Names replaced, balances invented, card
