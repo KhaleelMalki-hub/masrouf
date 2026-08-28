@@ -1,6 +1,7 @@
 package sa.masrouf.core.model
 
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 import org.junit.jupiter.api.Test
 
@@ -166,5 +167,18 @@ class CategoryGuessTest {
                     spelling,
                 )
             }
+    }
+
+    /**
+     * Two shops whose names begin the same way, filed apart.
+     *
+     * A rule keyed on "AL NOOR" would have filed a laundry as healthcare. The
+     * keyword carries the letter the card network cuts at, which is the only thing
+     * in the message that distinguishes them.
+     */
+    @Test
+    fun `al noor the pharmacy is not al noor the laundry`() {
+        assertEquals(SaudiCategories.HEALTH, CategoryGuess.forMerchant("Al Noor T"))
+        assertNotEquals(SaudiCategories.HEALTH, CategoryGuess.forMerchant("Noor AlMa"))
     }
 }

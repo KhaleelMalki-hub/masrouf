@@ -98,6 +98,11 @@ object CategoryGuess {
         // Health
         "PHARMACY" to SaudiCategories.HEALTH,
         "NAHDI" to SaudiCategories.HEALTH,
+        // صيدلية النور. The trailing letter is deliberate: it is where the card
+        // network cuts the name, and it is what separates this pharmacy from
+        // "Noor AlMaabadi", a laundry with 28 records of its own. "AL NOOR"
+        // alone would file both.
+        "AL NOOR T" to SaudiCategories.HEALTH,
         "DAWAA" to SaudiCategories.HEALTH,
         "POLYCLINI" to SaudiCategories.HEALTH,
         "CLINIC" to SaudiCategories.HEALTH,
