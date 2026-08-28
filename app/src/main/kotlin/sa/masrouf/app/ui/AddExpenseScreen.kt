@@ -26,7 +26,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -127,7 +126,7 @@ fun AddExpenseScreen(
         ) {
             item {
                 MonthPanel(
-                    total = monthTotal.forDisplay(currency),
+                    total = monthTotal.toPlainString(),
                     shares = shares,
                     currencyLabel = currency,
                     pendingCount = pending.size,
@@ -180,12 +179,13 @@ fun AddExpenseScreen(
                 }
             }
 
-            item { HorizontalDivider() }
+            item { SaduBand() }
 
             item {
                 Text(
-                    text = stringResource(R.string.history_all),
-                    style = MaterialTheme.typography.titleMedium,
+                    text = stringResource(R.string.history_all).uppercase(),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
@@ -410,10 +410,23 @@ private fun MonthPanel(
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Text(
-                text = total,
-                style = MoneyStyle.merge(MaterialTheme.typography.displaySmall),
-            )
+            // Amount and currency set separately rather than as one string. At
+            // display size the joined form wraps, and "ر.س" alone on the next line
+            // reads as a second number rather than as a unit. The currency is also
+            // not the information here - it never changes - so it takes the
+            // smaller size and sits on the number's baseline.
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text(
+                    text = total,
+                    style = MoneyStyle.merge(MaterialTheme.typography.displayMedium),
+                )
+                Text(
+                    text = currencyLabel,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 8.dp, bottom = 6.dp),
+                )
+            }
             if (pendingCount > 0) {
                 Text(
                     text = pluralStringResource(
@@ -428,6 +441,8 @@ private fun MonthPanel(
         }
 
         MonthStrip(bands = bands)
+
+        if (bands.isNotEmpty()) SaduBand()
 
         if (bands.isEmpty()) {
             Text(
@@ -626,7 +641,13 @@ private fun TransactionRow(
             TextButton(
                 onClick = onDelete,
                 modifier = Modifier.heightIn(min = 48.dp),
-            ) { Text(stringResource(R.string.delete)) }
+            ) {
+                Text(
+                    text = "\u00D7",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }

@@ -59,6 +59,12 @@ private val PlexArabic = FontFamily(
 
 private val SaduTypography = Typography().run {
     copy(
+        // The total is the one thing on the page worth setting large. Tight
+        // tracking so a five-figure number still reads as one object rather than
+        // as a row of digits.
+        displayMedium = displayMedium.copy(
+            fontFamily = PlexArabic, fontWeight = FontWeight.Bold, letterSpacing = (-1.5).sp,
+        ),
         displaySmall = displaySmall.copy(
             fontFamily = PlexArabic, fontWeight = FontWeight.Bold, letterSpacing = (-1).sp,
         ),
@@ -70,7 +76,11 @@ private val SaduTypography = Typography().run {
         bodyMedium = bodyMedium.copy(fontFamily = PlexArabic),
         bodySmall = bodySmall.copy(fontFamily = PlexArabic),
         labelLarge = labelLarge.copy(fontFamily = PlexArabic, fontWeight = FontWeight.Medium),
-        labelMedium = labelMedium.copy(fontFamily = PlexArabic, fontWeight = FontWeight.Medium),
+        // Section labels sit well below the thing they label, widely tracked, so
+        // they read as captions rather than as competing headings.
+        labelMedium = labelMedium.copy(
+            fontFamily = PlexArabic, fontWeight = FontWeight.Medium, letterSpacing = 1.2.sp,
+        ),
         labelSmall = labelSmall.copy(
             fontFamily = PlexArabic, fontWeight = FontWeight.Medium, letterSpacing = 0.6.sp,
         ),

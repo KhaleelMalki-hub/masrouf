@@ -1,5 +1,8 @@
 package sa.masrouf.app.ui
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -14,6 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -70,17 +75,26 @@ fun MonthStrip(
         return
     }
 
+    // One orchestrated moment rather than scattered effects: the bands grow from
+    // nothing the first time the month is drawn, which is what a strip being woven
+    // looks like. Keyed on the shape of the data, so it replays when the month
+    // changes and stays still while the user is only scrolling.
+    val woven = remember(bands.map { it.colour to it.amount.halalas }) { Animatable(0f) }
+    LaunchedEffect(woven) {
+        woven.animateTo(1f, animationSpec = tween(durationMillis = 620, easing = FastOutSlowInEasing))
+    }
+
     Canvas(
         modifier = modifier
             .fillMaxWidth()
             .height(STRIP_HEIGHT)
             .semantics { if (description.isNotEmpty()) contentDescription = description },
     ) {
-        drawStrip(bands, total)
+        drawStrip(bands, total, woven.value)
     }
 }
 
-private fun DrawScope.drawStrip(bands: List<Band>, total: Long) {
+private fun DrawScope.drawStrip(bands: List<Band>, total: Long, progress: Float) {
     val gap = GAP_PX
     val usable = size.width - gap * (bands.size - 1).coerceAtLeast(0)
     // Canvas coordinates are always left-to-right, but a strip is read the way the
@@ -98,10 +112,12 @@ private fun DrawScope.drawStrip(bands: List<Band>, total: Long) {
         if (width <= 0f) return
 
         val left = if (rightToLeft) size.width - consumed - width else consumed
+        val grown = size.height * progress
         drawRoundRect(
             color = band.colour,
-            topLeft = Offset(left, 0f),
-            size = Size(width, size.height),
+            // Grows from the baseline up, the direction a weft is beaten in.
+            topLeft = Offset(left, size.height - grown),
+            size = Size(width, grown),
             cornerRadius = CornerRadius(CORNER_PX, CORNER_PX),
         )
         consumed += width + gap
@@ -178,7 +194,7 @@ private fun BandRow(
     }
 }
 
-private val STRIP_HEIGHT = 56.dp
+private val STRIP_HEIGHT = 76.dp
 private val SWATCH_WIDTH = 4.dp
 private val SWATCH_HEIGHT = 20.dp
 private const val GAP_PX = 3f
