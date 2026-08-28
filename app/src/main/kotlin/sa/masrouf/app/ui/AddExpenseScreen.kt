@@ -203,7 +203,8 @@ fun AddExpenseScreen(
                 onSwitchLanguage = onSwitchLanguage,
                 themeMode = themeMode,
                 onThemeModeChange = onThemeModeChange,
-                importRunning = importState is AddExpenseViewModel.ImportState.Running,
+                importRunning = importState is AddExpenseViewModel.ImportState.Running ||
+                    importState is AddExpenseViewModel.ImportState.Refiling,
                 onImportHistory = {
                     if (canImportHistory) viewModel.importHistory() else onRequestHistoryAccess()
                 },
@@ -430,6 +431,7 @@ private fun MoreMenu(
             )
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.refile_all)) },
+                enabled = !importRunning,
                 onClick = {
                     onRefileAll()
                     open = false
@@ -450,6 +452,8 @@ private fun ImportStatus(state: AddExpenseViewModel.ImportState) {
     val text = when (state) {
         is AddExpenseViewModel.ImportState.Running ->
             stringResource(R.string.import_running, state.examined.toString())
+
+        AddExpenseViewModel.ImportState.Refiling -> stringResource(R.string.refile_running)
         is AddExpenseViewModel.ImportState.Done ->
             if (state.stored == 0) {
                 stringResource(R.string.import_none)

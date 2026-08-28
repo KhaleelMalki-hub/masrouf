@@ -34,6 +34,19 @@ class TransactionRepository(
     private val dao: TransactionDao,
     private val detector: DuplicateDetector = DuplicateDetector(),
     private val rules: MerchantRuleDao? = null,
+    /**
+     * Runs a block as one database transaction.
+     *
+     * Passed in rather than taken as a `RoomDatabase`, so the repository stays
+     * constructible from a fake DAO in a test with no Android at all. The default
+     * runs the block as it is, which is what those tests want: each write commits
+     * on its own and the assertions read them back one by one.
+     *
+     * It exists for the backfill. Filing 18,334 records as 18,334 separate
+     * transactions took two and a half minutes on a real history, with the screen
+     * showing nothing the whole time; as one transaction it is seconds.
+     */
+    private val inTransaction: suspend (suspend () -> Unit) -> Unit = { block -> block() },
 ) {
 
     /**
@@ -248,6 +261,11 @@ class TransactionRepository(
         return fileUncategorised()
     }
 
+    // A single transaction around both halves would be tidier, but the clear and
+    // the re-file are independently correct: interrupted between them the history
+    // is unfiled, which the ordinary backfill fixes, and never half-filed under two
+    // different rule sets.
+
     /**
      * Files every uncategorised record whose merchant is recognised.
      *
@@ -262,12 +280,14 @@ class TransactionRepository(
         // and are never a guess.
         val learned = rules?.all().orEmpty().associate { it.merchantKey to it.categoryId }
         var filed = 0
-        dao.uncategorised().forEach { row ->
-            val model = runCatching { row.toModel() }.getOrNull() ?: return@forEach
-            val category = row.merchantKey?.let(learned::get)
-                ?: CategoryGuess.suggest(model.merchantRaw, model.type)?.id
-                ?: return@forEach
-            if (dao.setCategory(row.id, category, CategorySource.AUTOMATIC.name) == 1) filed++
+        inTransaction {
+            dao.uncategorised().forEach { row ->
+                val model = runCatching { row.toModel() }.getOrNull() ?: return@forEach
+                val category = row.merchantKey?.let(learned::get)
+                    ?: CategoryGuess.suggest(model.merchantRaw, model.type)?.id
+                    ?: return@forEach
+                if (dao.setCategory(row.id, category, CategorySource.AUTOMATIC.name) == 1) filed++
+            }
         }
         return filed
     }

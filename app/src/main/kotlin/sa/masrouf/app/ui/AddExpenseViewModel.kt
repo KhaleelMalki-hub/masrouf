@@ -92,6 +92,9 @@ class AddExpenseViewModel(
     sealed interface ImportState {
         data object Idle : ImportState
         data class Running(val examined: Int) : ImportState
+
+        /** Re-filing the whole history. No count: it is one database transaction. */
+        data object Refiling : ImportState
         data class Done(val stored: Int, val examined: Int) : ImportState
         data class Filed(val count: Int) : ImportState
         data class Confirmed(val count: Int) : ImportState
@@ -353,7 +356,9 @@ class AddExpenseViewModel(
      * category the user chose is kept.
      */
     fun refileEverything() {
+        if (_importState.value is ImportState.Refiling) return
         viewModelScope.launch {
+            _importState.value = ImportState.Refiling
             _importState.value = ImportState.Filed(repository.refileAll())
         }
     }

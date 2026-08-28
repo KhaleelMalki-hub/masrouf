@@ -49,7 +49,49 @@ abstract class MasroufDatabase : RoomDatabase() {
                     "UPDATE transactions SET category_source = 'AUTOMATIC' " +
                         "WHERE category_id IS NOT NULL"
                 )
+                renameMerchantRuleColumns(db)
             }
+        }
+
+        /**
+         * Repairs a `merchant_rules` created by the first spelling of version 3.
+         *
+         * Version 3 was installed on two devices with `merchantKey`/`categoryId`,
+         * then the migration that creates the table was edited in place to the
+         * snake_case names the rest of the schema uses. Editing a migration that
+         * has already run does not re-run it: both devices kept the old columns and
+         * Room refused to open the database at all, with "Migration didn't properly
+         * handle: merchant_rules".
+         *
+         * So version 3 exists in two shapes and this has to recognise both. The
+         * rows are the user's own filing decisions and are carried across rather
+         * than dropped, even though the table happened to be nearly empty when this
+         * was found.
+         */
+        private fun renameMerchantRuleColumns(db: SupportSQLiteDatabase) {
+            val isLegacy = db.query("PRAGMA table_info(merchant_rules)").use { columns ->
+                val name = columns.getColumnIndexOrThrow("name")
+                generateSequence { if (columns.moveToNext()) columns.getString(name) else null }
+                    .any { it == "merchantKey" }
+            }
+            if (!isLegacy) return
+
+            db.execSQL("ALTER TABLE merchant_rules RENAME TO merchant_rules_legacy")
+            db.execSQL(
+                """
+                CREATE TABLE merchant_rules (
+                    merchant_key TEXT NOT NULL PRIMARY KEY,
+                    category_id TEXT NOT NULL
+                )
+                """
+            )
+            db.execSQL(
+                """
+                INSERT INTO merchant_rules (merchant_key, category_id)
+                SELECT merchantKey, categoryId FROM merchant_rules_legacy
+                """
+            )
+            db.execSQL("DROP TABLE merchant_rules_legacy")
         }
 
         private val MIGRATION_2_3 = object : Migration(2, 3) {

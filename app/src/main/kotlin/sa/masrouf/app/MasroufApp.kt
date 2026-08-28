@@ -1,5 +1,6 @@
 package sa.masrouf.app
 
+import androidx.room.withTransaction
 import android.app.Application
 import sa.masrouf.app.data.MasroufDatabase
 import sa.masrouf.app.data.Preferences
@@ -16,5 +17,9 @@ class MasroufApp : Application() {
 
     val database: MasroufDatabase by lazy { MasroufDatabase.open(this) }
     val preferences: Preferences by lazy { Preferences(this) }
-    val transactions: TransactionRepository by lazy { TransactionRepository(database.transactions(), rules = database.merchantRules()) }
+    val transactions: TransactionRepository by lazy { TransactionRepository(
+            dao = database.transactions(),
+            rules = database.merchantRules(),
+            inTransaction = { block -> database.withTransaction(block) },
+        ) }
 }

@@ -136,4 +136,5 @@
     <string name="category_education">مدارس وتعليم</string>
     <string name="category_fees">رسوم وأجور</string>
     <string name="category_housing">رسوم شهرية (سكن)</string>
+    <string name="refile_running">يعيد التصنيف…</string>
 </resources>
