@@ -69,6 +69,10 @@ object CategoryGuess {
 
         // Transport
         "PETROMIN" to SaudiCategories.TRANSPORT,
+        // مغسلة نور المعبدي washes cars, not clothes. It has to sit above the
+        // LAUNDRY rule further down, which files clothes laundries as "other" and
+        // had already filed this one there.
+        "NOOR ALMA" to SaudiCategories.TRANSPORT,
         "ALDREES" to SaudiCategories.TRANSPORT,
         "SASCO" to SaudiCategories.TRANSPORT,
         "PETRO" to SaudiCategories.TRANSPORT,
