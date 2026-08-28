@@ -104,4 +104,9 @@
     <string name="theme_system">تلقائي</string>
     <string name="theme_light">فاتح</string>
     <string name="theme_dark">داكن</string>
+    <string name="entry_title">مصروف جديد</string>
+    <string name="entry_details">تفاصيل</string>
+    <string name="entry_details_hide">إخفاء التفاصيل</string>
+    <string name="entry_close">إغلاق</string>
+    <string name="amount_hint">0.00</string>
 </resources>

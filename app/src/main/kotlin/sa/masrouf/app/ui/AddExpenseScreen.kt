@@ -6,6 +6,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,6 +20,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -236,10 +243,16 @@ fun AddExpenseScreen(
     if (entryOpen) {
         ModalBottomSheet(
             onDismissRequest = { entryOpen = false },
+            // Fully expanded on open. The half-height state gives the content no
+            // spare room, so the pinned save button sat below the screen edge - and
+            // a half-open sheet also hides the category row, which is the second
+            // decision this screen exists to collect.
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         ) {
             EntrySheet(
                 form = form,
+                currencyLabel = currency,
                 onAmountChanged = viewModel::onAmountChanged,
                 onTypeChanged = viewModel::onTypeChanged,
                 onCategoryChanged = viewModel::onCategoryChanged,
@@ -309,10 +322,27 @@ private fun HistoryActions(
     }
 }
 
-/** The entry form, now a sheet rather than the page itself. */
+/**
+ * Recording an expense by hand.
+ *
+ * The app is measured against doing this in about five seconds, and the previous
+ * version could not: five equally-weighted fields, no keyboard until you tapped
+ * one, and the save button below the fold. Everything here follows from that
+ * number.
+ *
+ * The amount is the screen. It is the only required field, it is focused with the
+ * keypad already up, and it is set at display size so there is no question where
+ * to look. Everything else has a usable default.
+ *
+ * Merchant and note are behind a disclosure. They are genuinely optional - the
+ * captured records that make up most of this app's data already carry a merchant -
+ * and two more text fields in the primary path is what turns five seconds into
+ * fifteen.
+ */
 @Composable
 private fun EntrySheet(
     form: AddExpenseState,
+    currencyLabel: String,
     onAmountChanged: (String) -> Unit,
     onTypeChanged: (TransactionType) -> Unit,
     onCategoryChanged: (Category?) -> Unit,
@@ -320,50 +350,176 @@ private fun EntrySheet(
     onNoteChanged: (String) -> Unit,
     onSave: () -> Unit,
 ) {
+    val focus = remember { FocusRequester() }
+    var detailsOpen by remember { mutableStateOf(false) }
+
+    // The keypad is up before the sheet has finished settling, so the first thing
+    // the user does is type a number rather than aim at a field.
+    LaunchedEffect(Unit) { focus.requestFocus() }
+
+    // Bounded height, not wrap-content. A sheet that sizes to its content has no
+    // spare space for `weight` to divide, so the pinned button was pushed below
+    // the screen edge - pinned in the code and invisible in the app.
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp)
-            .padding(bottom = 32.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+            .fillMaxHeight(0.85f),
     ) {
-        AmountField(
-            value = form.typedAmount,
-            error = form.amountError,
-            onValueChange = onAmountChanged,
-        )
-        TypeChips(selected = form.type, onSelect = onTypeChanged)
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.entry_title),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
 
-        Text(
-            text = stringResource(R.string.category_prompt),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        CategoryChips(selected = form.category, onSelect = onCategoryChanged)
+            AmountHero(
+                value = form.typedAmount,
+                error = form.amountError,
+                currencyLabel = currencyLabel,
+                focusRequester = focus,
+                onValueChange = onAmountChanged,
+            )
 
-        OutlinedTextField(
-            value = form.merchant,
-            onValueChange = onMerchantChanged,
-            label = { Text(stringResource(R.string.merchant_label)) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        OutlinedTextField(
-            value = form.note,
-            onValueChange = onNoteChanged,
-            label = { Text(stringResource(R.string.note_label)) },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            modifier = Modifier.fillMaxWidth(),
-        )
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                SheetLabel(stringResource(R.string.category_prompt))
+                CategoryChips(selected = form.category, onSelect = onCategoryChanged)
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                SheetLabel(stringResource(R.string.type_label))
+                TypeChips(selected = form.type, onSelect = onTypeChanged)
+            }
+
+            TextButton(
+                onClick = { detailsOpen = !detailsOpen },
+                modifier = Modifier.heightIn(min = 48.dp),
+            ) {
+                Text(
+                    stringResource(
+                        if (detailsOpen) R.string.entry_details_hide else R.string.entry_details
+                    )
+                )
+            }
+
+            if (detailsOpen) {
+                OutlinedTextField(
+                    value = form.merchant,
+                    onValueChange = onMerchantChanged,
+                    label = { Text(stringResource(R.string.merchant_label)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                OutlinedTextField(
+                    value = form.note,
+                    onValueChange = onNoteChanged,
+                    label = { Text(stringResource(R.string.note_label)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+
+        // Pinned, never scrolled past. The previous sheet put this below two text
+        // fields, so completing the task required scrolling a form the user had
+        // already finished with.
         Button(
             onClick = onSave,
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(top = 12.dp, bottom = 28.dp)
                 .heightIn(min = 56.dp),
         ) { Text(stringResource(R.string.save)) }
     }
+}
+
+/**
+ * The amount, set at the size of the decision it represents.
+ *
+ * A borderless field rather than an outlined box: a box says "one of several
+ * inputs", and this is the input. The currency sits beside it at label size
+ * because it never changes and is not the information.
+ */
+@Composable
+private fun AmountHero(
+    value: String,
+    error: AddExpenseState.AmountError?,
+    currencyLabel: String,
+    focusRequester: FocusRequester,
+    onValueChange: (String) -> Unit,
+) {
+    Column {
+        Row(verticalAlignment = Alignment.Bottom) {
+            BasicTextField(
+                value = value,
+                onValueChange = onValueChange,
+                singleLine = true,
+                textStyle = MoneyStyle.merge(MaterialTheme.typography.displaySmall).copy(
+                    color = if (error != null) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    },
+                ),
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                // Decimal rather than Number: the halala separator has to be typeable.
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Decimal,
+                    imeAction = ImeAction.Done,
+                ),
+                modifier = Modifier
+                    .weight(1f)
+                    .focusRequester(focusRequester),
+                decorationBox = { inner ->
+                    if (value.isEmpty()) {
+                        Text(
+                            text = stringResource(R.string.amount_hint),
+                            style = MoneyStyle.merge(MaterialTheme.typography.displaySmall),
+                            color = MaterialTheme.colorScheme.outline,
+                        )
+                    }
+                    inner()
+                },
+            )
+            Text(
+                text = currencyLabel,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 8.dp, bottom = 6.dp),
+            )
+        }
+        HorizontalDivider(
+            color = if (error != null) {
+                MaterialTheme.colorScheme.error
+            } else {
+                MaterialTheme.colorScheme.outlineVariant
+            },
+        )
+        error?.let {
+            Text(
+                text = stringResource(it.messageRes),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(top = 6.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun SheetLabel(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -593,11 +749,9 @@ private val AddExpenseState.AmountError.messageRes: Int
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun TypeChips(selected: TransactionType, onSelect: (TransactionType) -> Unit) {
+    // No label of its own: the caller supplies one, the way it does for the
+    // category row. Owning it here printed the heading twice.
     Column {
-        Text(
-            text = stringResource(R.string.type_label),
-            style = MaterialTheme.typography.labelLarge,
-        )
         // FlowRow, not Row. A plain Row gives every chip an equal share of a width
         // that five of them do not fit in, and Compose resolves that by wrapping the
         // text inside each chip - one letter per line - and dropping what still does

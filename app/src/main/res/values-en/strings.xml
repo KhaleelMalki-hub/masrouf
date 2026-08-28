@@ -87,4 +87,9 @@
     <string name="theme_system">Auto</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
+    <string name="entry_title">New expense</string>
+    <string name="entry_details">Details</string>
+    <string name="entry_details_hide">Hide details</string>
+    <string name="entry_close">Close</string>
+    <string name="amount_hint">0.00</string>
 </resources>
