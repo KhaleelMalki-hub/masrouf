@@ -80,4 +80,14 @@ interface TransactionDao {
      */
     @Query("DELETE FROM transactions WHERE id = :id AND status = 'PENDING'")
     suspend fun dismiss(id: String): Int
+
+    /**
+     * Deletes a record outright, whatever its status.
+     *
+     * Unguarded, unlike [dismiss], because this is the user deliberately removing
+     * something they can see on screen rather than a background path acting on an
+     * id it was handed.
+     */
+    @Query("DELETE FROM transactions WHERE id = :id")
+    suspend fun delete(id: String): Int
 }

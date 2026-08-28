@@ -50,6 +50,12 @@ class FakeDao : TransactionDao {
         return 1
     }
 
+    override suspend fun delete(id: String): Int {
+        val target = state.value.firstOrNull { it.id == id } ?: return 0
+        state.value = state.value - target
+        return 1
+    }
+
     private fun update(id: String, change: (TransactionEntity) -> TransactionEntity): Int {
         val target = state.value.firstOrNull { it.id == id && it.status == Status.PENDING.name }
             ?: return 0

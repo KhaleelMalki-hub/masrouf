@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -24,6 +25,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -52,6 +56,22 @@ fun AddExpenseScreen(
     val monthTotal by viewModel.monthTotal.collectAsStateWithLifecycle()
     val pending by viewModel.pending.collectAsStateWithLifecycle()
     val currency = stringResource(R.string.currency_sar)
+
+    // Deletion is irreversible and there is no server to restore from, so the
+    // record being removed is named on screen before it goes.
+    var pendingDeletion by remember { mutableStateOf<Transaction?>(null) }
+
+    pendingDeletion?.let { target ->
+        DeleteConfirmation(
+            transaction = target,
+            currencyLabel = currency,
+            onConfirm = {
+                viewModel.delete(target.id)
+                pendingDeletion = null
+            },
+            onCancel = { pendingDeletion = null },
+        )
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -91,30 +111,6 @@ fun AddExpenseScreen(
                     text = monthTotal.forDisplay(currency),
                     pendingCount = pending.size,
                 )
-            }
-
-            if (pending.isNotEmpty()) {
-                item {
-                    Text(
-                        text = stringResource(R.string.pending_title),
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                }
-                item {
-                    Text(
-                        text = stringResource(R.string.pending_explain),
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                }
-                items(pending, key = { it.id }) { transaction ->
-                    PendingRow(
-                        transaction = transaction,
-                        currencyLabel = currency,
-                        onConfirm = { viewModel.confirm(transaction.id) },
-                        onDismiss = { viewModel.dismiss(transaction.id) },
-                    )
-                }
-                item { HorizontalDivider() }
             }
 
             item {
@@ -164,6 +160,30 @@ fun AddExpenseScreen(
 
             item { HorizontalDivider() }
 
+            if (pending.isNotEmpty()) {
+                item {
+                    Text(
+                        text = stringResource(R.string.pending_title),
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                }
+                item {
+                    Text(
+                        text = stringResource(R.string.pending_explain),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+                items(pending, key = { it.id }) { transaction ->
+                    PendingRow(
+                        transaction = transaction,
+                        currencyLabel = currency,
+                        onConfirm = { viewModel.confirm(transaction.id) },
+                        onDismiss = { viewModel.dismiss(transaction.id) },
+                    )
+                }
+                item { HorizontalDivider() }
+            }
+
             item {
                 Text(
                     text = stringResource(R.string.recent_title),
@@ -175,7 +195,11 @@ fun AddExpenseScreen(
                 item { Text(stringResource(R.string.recent_empty)) }
             } else {
                 items(recent, key = { it.id }) { transaction ->
-                    TransactionRow(transaction = transaction, currencyLabel = currency)
+                    TransactionRow(
+                        transaction = transaction,
+                        currencyLabel = currency,
+                        onDelete = { pendingDeletion = transaction },
+                    )
                 }
             }
         }
@@ -359,7 +383,7 @@ private fun PendingRow(
                 )
             }
             Text(
-                text = stringResource(transaction.source.labelRes),
+                text = "${transaction.dayLabel()} · ${stringResource(transaction.source.labelRes)}",
                 style = MaterialTheme.typography.labelSmall,
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -382,7 +406,11 @@ private val Source.labelRes: Int
     }
 
 @Composable
-private fun TransactionRow(transaction: Transaction, currencyLabel: String) {
+private fun TransactionRow(
+    transaction: Transaction,
+    currencyLabel: String,
+    onDelete: () -> Unit,
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -395,6 +423,12 @@ private fun TransactionRow(transaction: Transaction, currencyLabel: String) {
                     ?: stringResource(transaction.type.labelRes),
                 style = MaterialTheme.typography.bodyLarge,
             )
+            Text(
+                // Without a date every row looks like it happened today, and a
+                // total the user is checking cannot be traced back to a day.
+                text = transaction.dayLabel(),
+                style = MaterialTheme.typography.labelSmall,
+            )
             if (transaction.status == Status.PENDING) {
                 Text(
                     text = stringResource(R.string.status_pending),
@@ -402,9 +436,43 @@ private fun TransactionRow(transaction: Transaction, currencyLabel: String) {
                 )
             }
         }
-        Text(
-            text = transaction.amount.forDisplay(currencyLabel),
-            style = MaterialTheme.typography.bodyLarge,
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = transaction.amount.forDisplay(currencyLabel),
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            TextButton(onClick = onDelete) { Text(stringResource(R.string.delete)) }
+        }
     }
+}
+
+/**
+ * Names what is about to be deleted before deleting it.
+ *
+ * The amount and day are shown rather than a generic "are you sure": the mistake
+ * this guards against is deleting the wrong row, which a yes/no question about an
+ * unnamed record cannot prevent.
+ */
+@Composable
+private fun DeleteConfirmation(
+    transaction: Transaction,
+    currencyLabel: String,
+    onConfirm: () -> Unit,
+    onCancel: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onCancel,
+        title = { Text(stringResource(R.string.delete_title)) },
+        text = {
+            Text(
+                stringResource(
+                    R.string.delete_body,
+                    transaction.amount.forDisplay(currencyLabel),
+                    transaction.dayLabel(),
+                )
+            )
+        },
+        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.delete)) } },
+        dismissButton = { TextButton(onClick = onCancel) { Text(stringResource(R.string.cancel)) } },
+    )
 }

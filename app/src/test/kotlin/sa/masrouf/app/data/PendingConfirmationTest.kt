@@ -107,8 +107,24 @@ class PendingConfirmationTest {
     }
 
     @Test
+    fun `deleting removes a confirmed record and takes it out of the total`() = runTest {
+        // Unlike dismiss, this is not guarded on status: it is the user removing
+        // something they can see, which includes records they already confirmed.
+        val record = captured()
+        repository.recordCaptured(record, "2383")
+        repository.confirm(record.id)
+        assertEquals(Money.ofMajor("931.64"), monthTotal())
+
+        assertTrue(repository.delete(record.id))
+
+        assertEquals(Money.ZERO, monthTotal())
+        assertEquals(0, dao.rows.size)
+    }
+
+    @Test
     fun `acting on an id that was never stored reports failure`() = runTest {
         assertFalse(repository.confirm("no-such-id"))
         assertFalse(repository.dismiss("no-such-id"))
+        assertFalse(repository.delete("no-such-id"))
     }
 }

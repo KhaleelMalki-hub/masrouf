@@ -151,6 +151,19 @@ class TransactionRepository(
     /** The user rejected a captured record - a misparse, or a message that was not theirs. */
     suspend fun dismiss(id: String): Boolean = dao.dismiss(id) == 1
 
+    /**
+     * Removes a record the user no longer wants, confirmed or not.
+     *
+     * There is no undo and no server to restore from, so the screen asks before
+     * calling this.
+     *
+     * ponytail: delete-and-retype is the whole correction story for now. It costs
+     * the original message text on a captured record, which is the one thing that
+     * cannot be typed back - if correcting a near-miss becomes routine, this should
+     * become an edit that keeps `rawText` and records what was changed.
+     */
+    suspend fun delete(id: String): Boolean = dao.delete(id) == 1
+
     companion object {
         const val RECENT_LIMIT = 50
 

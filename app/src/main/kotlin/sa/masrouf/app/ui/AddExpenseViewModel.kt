@@ -109,6 +109,11 @@ class AddExpenseViewModel(
         viewModelScope.launch { repository.dismiss(id) }
     }
 
+    /** The user removed a record from their history. Asked for on screen first. */
+    fun delete(id: String) {
+        viewModelScope.launch { repository.delete(id) }
+    }
+
     /**
      * Saves, if the amount is valid.
      *

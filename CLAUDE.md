@@ -7,7 +7,7 @@ statements. Single user, on-device, offline. Not a product, not published.
 
 ```bash
 ./gradlew :core:test              # 140 tests, runs anywhere with a JDK
-./gradlew :app:testDebugUnitTest  # 46 tests, needs the Android SDK
+./gradlew :app:testDebugUnitTest  # 50 tests, needs the Android SDK
 ./gradlew :app:assembleDebug      # needs local.properties with sdk.dir
 ```
 
@@ -130,10 +130,10 @@ app/    Android - Compose, Room, Arabic default with English in values-en
   SMS only. Package names for the apps that *are* installed were read off the
   device and are pinned in `ObservedBankPackagesTest` - that file should fail when
   a bank app is renamed.
-- A pending record can be confirmed or dismissed, but not **edited**. A misread
-  amount is dismissed and typed in by hand, which is deliberate - it keeps every
-  number the user vouched for a number they actually entered - but it makes
-  correcting a near-miss more work than it should be.
+- Nothing can be **edited**. A wrong record is deleted and typed again, which is
+  deliberate for a captured one - it keeps every number the user vouched for a
+  number they actually entered - but deleting a captured record also destroys its
+  `rawText`, the one thing that cannot be typed back.
 - Dismissing deletes the row, which frees its fingerprint, so an identical message
   redelivered later reappears. It needs the same second on the device clock, so it
   is rare; closing it properly means a `REJECTED` value on the core `Status` enum.

@@ -52,4 +52,11 @@
     <string name="dismiss">تجاهل</string>
     <string name="source_sms">رسالة نصية</string>
     <string name="source_notification">إشعار</string>
+
+    <string name="delete">حذف</string>
+    <string name="cancel">إلغاء</string>
+    <string name="delete_title">حذف هذه العملية؟</string>
+    <!-- %1$s is the amount already formatted, %2$s the day. Both are passed as text
+         so neither is re-formatted with the locale's own digits. -->
+    <string name="delete_body">سيُحذف مبلغ %1$s بتاريخ %2$s نهائياً. لا يمكن التراجع.</string>
 </resources>

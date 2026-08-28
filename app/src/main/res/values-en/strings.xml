@@ -42,4 +42,9 @@
     <string name="dismiss">Dismiss</string>
     <string name="source_sms">SMS</string>
     <string name="source_notification">Notification</string>
+
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete_title">Delete this transaction?</string>
+    <string name="delete_body">%1$s on %2$s will be removed permanently. This cannot be undone.</string>
 </resources>
