@@ -96,4 +96,12 @@
     <string name="confirm_all_title">Confirm every transaction?</string>
     <string name="confirm_all_body">%1$s transactions will be confirmed at once and enter their months\' totals. You can delete any that are wrong afterwards.</string>
     <string name="confirm_all_done">Confirmed %1$s transactions</string>
+    <string name="search_hint">Search a merchant</string>
+    <string name="filter_clear">Clear filter</string>
+    <string name="compare_less">%1$s less than last month</string>
+    <string name="compare_more">%1$s more than last month</string>
+    <string name="compare_same">About the same as last month</string>
+    <string name="compare_none">No earlier month to compare</string>
+    <string name="results_none">Nothing matches</string>
+    <string name="showing_category">%1$s only</string>
 </resources>

@@ -106,6 +106,9 @@ fun AddExpenseScreen(
     val earliestMonth by viewModel.earliestMonth.collectAsStateWithLifecycle()
     val monthRows by viewModel.monthTransactions.collectAsStateWithLifecycle()
     val monthsWithData by viewModel.monthsWithData.collectAsStateWithLifecycle()
+    val query by viewModel.query.collectAsStateWithLifecycle()
+    val categoryFilter by viewModel.categoryFilter.collectAsStateWithLifecycle()
+    val previousTotal by viewModel.previousMonthTotal.collectAsStateWithLifecycle()
     val importState by viewModel.importState.collectAsStateWithLifecycle()
     val currency = stringResource(R.string.currency_sar)
 
@@ -214,6 +217,9 @@ fun AddExpenseScreen(
                     onPrevious = viewModel::showPreviousMonth,
                     onNext = viewModel::showNextMonth,
                     onPickMonth = { pickingMonth = true },
+                    previousTotal = previousTotal,
+                    activeFilter = categoryFilter,
+                    onToggleCategory = viewModel::toggleCategoryFilter,
                 )
             }
 
@@ -287,8 +293,28 @@ fun AddExpenseScreen(
                 )
             }
 
+            item {
+                HistoryFilters(
+                    query = query,
+                    onQueryChange = viewModel::onQueryChanged,
+                    activeFilter = categoryFilter,
+                    onClear = viewModel::clearFilters,
+                )
+            }
+
             if (monthRows.isEmpty()) {
-                item { Text(stringResource(R.string.month_empty)) }
+                item {
+                    Text(
+                        text = stringResource(
+                            if (query.isNotBlank() || categoryFilter != null) {
+                                R.string.results_none
+                            } else {
+                                R.string.month_empty
+                            }
+                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             } else {
                 items(monthRows, key = { it.id }) { transaction ->
                     TransactionRow(
@@ -720,6 +746,9 @@ private fun MonthPanel(
     onPrevious: () -> Unit,
     onNext: () -> Unit,
     onPickMonth: () -> Unit,
+    previousTotal: Money?,
+    activeFilter: Category?,
+    onToggleCategory: (Category?) -> Unit,
 ) {
     val uncategorised = stringResource(R.string.uncategorised)
     val bands = shares.map { (category, amount) ->
@@ -762,6 +791,7 @@ private fun MonthPanel(
                     modifier = Modifier.padding(start = 8.dp, bottom = 6.dp),
                 )
             }
+            MonthComparison(current = total, previous = previousTotal, currencyLabel = currencyLabel)
             if (pendingCount > 0) {
                 Text(
                     text = pluralStringResource(
@@ -784,7 +814,12 @@ private fun MonthPanel(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         } else {
-            BandLegend(bands = bands, currencyLabel = currencyLabel)
+            BandLegend(
+                bands = bands,
+                currencyLabel = currencyLabel,
+                selected = activeFilter,
+                onSelect = onToggleCategory,
+            )
         }
     }
 }
@@ -1116,3 +1151,87 @@ private fun DestructiveConfirmation(
  * bulk action would only invite skipping the review the queue exists for.
  */
 private const val BULK_CONFIRM_THRESHOLD = 10
+
+/**
+ * How this month compares with the one before it.
+ *
+ * A total on its own does not say whether the month was normal. This is the
+ * cheapest thing that turns the number into information, and it is one line rather
+ * than a second chart because the question it answers is one bit wide: more, or
+ * less.
+ */
+@Composable
+private fun MonthComparison(current: String, previous: Money?, currencyLabel: String) {
+    if (previous == null) return
+    val currentValue = runCatching {
+        java.math.BigDecimal(current.replace(",", ""))
+    }.getOrNull() ?: return
+
+    val previousValue = previous.toBigDecimal()
+    val difference = currentValue.subtract(previousValue)
+    val magnitude = Money.ofMajor(difference.abs())
+
+    // Under one percent of the previous month is noise, not a change worth a
+    // sentence. Naming a 12-riyal swing on a 60,000-riyal month as a difference
+    // would train the user to ignore the line entirely.
+    val negligible = previousValue.signum() != 0 &&
+        difference.abs().multiply(java.math.BigDecimal(100)) < previousValue.abs()
+
+    Text(
+        text = when {
+            negligible -> stringResource(R.string.compare_same)
+            difference.signum() < 0 ->
+                stringResource(R.string.compare_less, magnitude.forDisplay(currencyLabel))
+            else ->
+                stringResource(R.string.compare_more, magnitude.forDisplay(currencyLabel))
+        },
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+/**
+ * Narrowing the month's list.
+ *
+ * With 22,000 records across the history, a list you cannot search is a list
+ * nobody can answer a question with. The category chip is set by tapping a legend
+ * row rather than by a second control, because the legend already names every
+ * category and repeating them in a filter menu would be the same list twice.
+ */
+@Composable
+private fun HistoryFilters(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    activeFilter: Category?,
+    onClear: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            placeholder = { Text(stringResource(R.string.search_hint)) },
+            singleLine = true,
+            shape = RoundedCornerShape(14.dp),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        if (activeFilter != null || query.isNotBlank()) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                activeFilter?.let {
+                    Text(
+                        text = stringResource(R.string.showing_category, stringResource(it.labelRes)),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+                TextButton(
+                    onClick = onClear,
+                    modifier = Modifier.heightIn(min = 48.dp),
+                ) { Text(stringResource(R.string.filter_clear)) }
+            }
+        }
+    }
+}

@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -22,6 +23,7 @@ import sa.masrouf.core.model.Status
 import sa.masrouf.core.model.Transaction
 import sa.masrouf.core.model.TransactionType
 import sa.masrouf.core.money.Money
+import sa.masrouf.core.text.ArabicText
 import sa.masrouf.core.time.RiyadhTime
 import java.time.Clock
 import java.time.Instant
@@ -141,12 +143,65 @@ class AddExpenseViewModel(
         repository.observeEarliestMonth()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
+    /** A merchant substring the user is looking for, or blank for everything. */
+    private val _query = MutableStateFlow("")
+    val query: StateFlow<String> = _query.asStateFlow()
+
+    /** A category the list is narrowed to, set by tapping its row in the legend. */
+    private val _categoryFilter = MutableStateFlow<Category?>(null)
+    val categoryFilter: StateFlow<Category?> = _categoryFilter.asStateFlow()
+
+    fun onQueryChanged(value: String) { _query.value = value }
+
+    /** Tapping the same category again clears the filter, so it is its own undo. */
+    fun toggleCategoryFilter(category: Category?) {
+        _categoryFilter.value = if (_categoryFilter.value?.id == category?.id) null else category
+    }
+
+    fun clearFilters() {
+        _query.value = ""
+        _categoryFilter.value = null
+    }
+
     /** Everything confirmed in the selected month, newest first. */
-    val monthTransactions: StateFlow<List<Transaction>> =
+    private val confirmedThisMonth: StateFlow<List<Transaction>> =
         _selectedMonth
             .flatMapLatest { month -> repository.observeMonth(month) }
             .map { rows -> rows.filter { it.status == Status.CONFIRMED } }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /**
+     * The month's records after the search box and the category filter.
+     *
+     * With 22,000 transactions across 146 months, a list with no way to narrow it
+     * is a list nobody can answer a question with. Matching is on the folded
+     * merchant key, the same normalisation deduplication uses, so a search finds a
+     * merchant however the bank happened to spell it that day.
+     */
+    val monthTransactions: StateFlow<List<Transaction>> =
+        combine(confirmedThisMonth, _query, _categoryFilter) { rows, query, category ->
+            val needle = ArabicText.foldForMatching(query).trim()
+            rows.asSequence()
+                .filter { category == null || it.categoryId == category.id }
+                .filter { row ->
+                    needle.isEmpty() ||
+                        ArabicText.foldForMatching(row.merchantRaw.orEmpty()).contains(needle) ||
+                        ArabicText.foldForMatching(row.note.orEmpty()).contains(needle)
+                }
+                .toList()
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /**
+     * What the previous month came to, for comparison.
+     *
+     * A month's total on its own says nothing about whether it was a normal month.
+     * The comparison is the cheapest thing that turns a number into information.
+     */
+    val previousMonthTotal: StateFlow<Money?> =
+        _selectedMonth
+            .flatMapLatest { month -> repository.observeMonth(month.minusMonths(1)) }
+            .map { rows -> rows.takeIf { it.isNotEmpty() }?.spendingTotal() }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun showPreviousMonth() {
         val earliest = earliestMonth.value ?: return

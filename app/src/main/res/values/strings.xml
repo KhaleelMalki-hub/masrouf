@@ -113,4 +113,12 @@
     <string name="confirm_all_title">تأكيد كل العمليات؟</string>
     <string name="confirm_all_body">سيتم تأكيد %1$s عملية دفعة واحدة ودخولها في مجاميع شهورها. تقدر تحذف أي عملية غلط بعدين.</string>
     <string name="confirm_all_done">تم تأكيد %1$s عملية</string>
+    <string name="search_hint">ابحث عن متجر</string>
+    <string name="filter_clear">إلغاء التصفية</string>
+    <string name="compare_less">أقل بـ %1$s عن الشهر الماضي</string>
+    <string name="compare_more">أكثر بـ %1$s عن الشهر الماضي</string>
+    <string name="compare_same">مثل الشهر الماضي تقريباً</string>
+    <string name="compare_none">لا مقارنة، ما فيه شهر قبله</string>
+    <string name="results_none">ما فيه نتيجة</string>
+    <string name="showing_category">%1$s فقط</string>
 </resources>

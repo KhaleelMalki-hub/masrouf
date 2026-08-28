@@ -5,6 +5,7 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
@@ -150,6 +151,8 @@ private fun EmptyStrip(modifier: Modifier) {
 fun BandLegend(
     bands: List<Band>,
     currencyLabel: String,
+    selected: Category?,
+    onSelect: (Category?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val largest = bands.maxOfOrNull { it.amount.halalas }?.takeIf { it > 0L } ?: 1L
@@ -163,6 +166,8 @@ fun BandLegend(
                 colour = band.colour,
                 name = band.label,
                 amount = band.amount.forDisplay(currencyLabel),
+                selected = band.category?.id != null && band.category.id == selected?.id,
+                onClick = { onSelect(band.category) },
                 // Each row is filled to its share of the LARGEST band, not of the
                 // month. Against the month total the small categories would all be
                 // slivers indistinguishable from each other, and the point of the
@@ -180,12 +185,24 @@ private fun BandRow(
     name: String,
     amount: String,
     fraction: Float,
+    selected: Boolean,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(3.dp)),
+            .clip(RoundedCornerShape(6.dp))
+            // The legend already names every category, so it is also the filter.
+            // A separate filter menu would be the same list printed twice.
+            .clickable(onClick = onClick)
+            .then(
+                if (selected) {
+                    Modifier.background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                } else {
+                    Modifier
+                }
+            ),
     ) {
         // The proportion, drawn behind the text rather than beside it. A swatch
         // tells you which colour a category is; this tells you how big it is
