@@ -73,13 +73,30 @@ object IntentClassifier {
         // every other rule's standard, but it is not spending.
         Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, listOf("تحويل", "بين", "حساباتك")),
 
+        // English wording for the same thing, and it has to precede the generic
+        // transfer rules below: every one of these messages also says "Transfer".
+        Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, listOf("TRANSFER", "BETWEEN", "ACCOUNTS")),
+        Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, listOf("INTERNAL", "TRANSFER")),
+
+        // Paying off your own credit card. Not spending: the purchases that built
+        // the balance were already counted when they happened, and counting the
+        // payment too charges the same riyals twice.
+        Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, listOf("CREDIT", "CARD", "PAYMENT")),
+
         Rule(TransactionType.REFUND, Direction.CREDIT, listOf("استرداد")),
         Rule(TransactionType.REFUND, Direction.CREDIT, listOf("REFUND")),
+        // A reversal - the bank undoing its own entry. Money comes back, so it is
+        // a credit, and it must be tested before شراء because the message repeats
+        // the original purchase's wording.
+        Rule(TransactionType.REFUND, Direction.CREDIT, listOf("عكس", "عملي")),
+        Rule(TransactionType.REFUND, Direction.CREDIT, listOf("استرجاع")),
 
         // "بطاقة فيزا:سداد" - paying off a credit card.
         Rule(TransactionType.BILL_PAYMENT, Direction.DEBIT, listOf("سداد")),
 
         Rule(TransactionType.ATM_DEPOSIT, Direction.CREDIT, listOf("ايداع", "صراف")),
+        // Monthly profit paid into a savings account. Income, not spending.
+        Rule(TransactionType.TRANSFER_IN, Direction.CREDIT, listOf("ايداع", "ارباح")),
         Rule(TransactionType.ATM_WITHDRAWAL, Direction.DEBIT, listOf("سحب", "صراف")),
         Rule(TransactionType.ATM_WITHDRAWAL, Direction.DEBIT, listOf("سحب", "نقدي")),
 
@@ -99,6 +116,9 @@ object IntentClassifier {
         Rule(TransactionType.TRANSFER_OUT, Direction.DEBIT, listOf("تحويل", "صادر")),
 
         // barq writes in English.
+        Rule(TransactionType.BILL_PAYMENT, Direction.DEBIT, listOf("BILL", "PAYMENT")),
+        Rule(TransactionType.TRANSFER_OUT, Direction.DEBIT, listOf("LOCAL", "TRANSFER")),
+
         Rule(TransactionType.TRANSFER_IN, Direction.CREDIT, listOf("MONEY", "ADDED")),
         Rule(TransactionType.TRANSFER_IN, Direction.CREDIT, listOf("INCOMING", "TRANSFER")),
         Rule(TransactionType.TRANSFER_OUT, Direction.DEBIT, listOf("OUTGOING", "TRANSFER")),
@@ -106,6 +126,9 @@ object IntentClassifier {
 
         Rule(TransactionType.PURCHASE, Direction.DEBIT, listOf("شراء")),
         Rule(TransactionType.PURCHASE, Direction.DEBIT, listOf("PURCHASE")),
+        // AlRajhi's English point-of-sale template says only "PoS". Matched as a
+        // whole word, so it cannot fire inside another word.
+        Rule(TransactionType.PURCHASE, Direction.DEBIT, listOf("POS")),
         Rule(TransactionType.PURCHASE, Direction.DEBIT, listOf("CARD", "TRANSACTION")),
 
         // Last resort: the wording says a transfer happened but not which way

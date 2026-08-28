@@ -28,6 +28,9 @@ object SaudiBanks {
         merchantPatterns = listOf(
             Regex("""(?m)^لدى\s*:?\s*(.+)$"""),
             Regex("""(?m)^التاجر\s*:?\s*(.+)$"""),
+            // The English templates ("PoS", "Purchase") name the merchant after
+            // "At:". Seen 38 times in a real corpus.
+            Regex("""(?m)^At\s*:\s*(.+)$"""),
             // A line beginning with lam directly followed by a name. The two
             // negative lookaheads keep it off "لدى..." (handled above) and off
             // "لـ3016", the destination account of an incoming transfer, which
@@ -40,6 +43,9 @@ object SaudiBanks {
         cardPatterns = listOf(
             Regex("""عبر\s*(\d{4})"""),
             Regex("""بطاقة\s*:?\s*\**\s*(\d{4})"""),
+            // English templates: "By:1335 ;Visa" and "Card:1335 ;Visa".
+            Regex("""(?m)^By\s*:\s*(\d{4})"""),
+            Regex("""(?m)^Card\s*:\s*(\d{4})"""),
         ),
         ownWalletMerchants = OWN_WALLETS,
     )

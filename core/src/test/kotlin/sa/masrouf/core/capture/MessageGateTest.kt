@@ -88,4 +88,25 @@ class MessageGateTest {
         )
         assertTrue(!MessageGate.allows(message(RealMessages.RAJHI_OTP)))
     }
+
+    @Test
+    fun `the password wording is refused, not only the code wording`() {
+        // From a real corpus: 88 messages used this wording and the gate passed
+        // every one. Nothing stored them because no parser could read them yet -
+        // and "no parser can read it" is not a control over a credential.
+        val message = RawMessage(
+            body = RealMessages.RAJHI_OTP_PASSWORD_WORDING,
+            receivedAt = Instant.parse("2026-08-28T09:00:00Z"),
+            sender = "AlRajhiBank",
+        )
+
+        val decision = MessageGate.evaluate(message)
+
+        assertTrue(decision is MessageGate.Decision.Reject)
+        assertEquals(
+            MessageGate.Rejection.ONE_TIME_PASSWORD,
+            (decision as MessageGate.Decision.Reject).reason,
+        )
+        assertTrue(MessageGate.mustNotPersistBody(message))
+    }
 }

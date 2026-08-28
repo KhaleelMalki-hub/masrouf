@@ -29,6 +29,77 @@ object RealMessages {
 
     // ---- AlRajhiBank -------------------------------------------------------
 
+    // The English templates. Found by running 5,074 real AlRajhi messages through
+    // the pipeline: 182 transactions were being missed because only the Arabic
+    // wordings were known. Names replaced, balances invented, amounts and card
+    // fragments kept.
+
+    /** Point of sale, English. The merchant follows "At:" and the card "By:". */
+    const val RAJHI_POS_ENGLISH = """PoS
+By:1335 ;Visa
+Amount:SAR 339
+At:MERCHANT NAME
+Balance:SAR 10000.00
+Date:23-9-15 23:19"""
+
+    /** A reversal - the bank undoing its own entry, so the money comes back. */
+    const val RAJHI_REVERSAL = """عكس عملية
+بطاقة:2383;فيزا
+مبلغ:1 SAR
+لدى:MYSR*Jahe
+رصيد:10000.00 SAR
+17/4/26 10:31"""
+
+    /** Between the user's own accounts. Not spending. */
+    const val RAJHI_INTERNAL_TRANSFER = """Internal Transfer
+Amount:SAR 27.23
+To:3016
+From:RECIPIENT NAME
+Date:23-11-25 16:28"""
+
+    /** Out to someone else, with a separate fee line. */
+    const val RAJHI_LOCAL_TRANSFER = """Local Transfer
+Bank:SNB
+From:3016
+Amount:SAR 20000
+To:RECIPIENT NAME
+Fees:SAR 1.15
+Ref:0000000000000000
+Date:23-11-28 18:20"""
+
+    /**
+     * Paying off the card. Not spending - the purchases that built the balance
+     * were counted when they happened.
+     */
+    const val RAJHI_CREDIT_CARD_PAYMENT = """Credit Card:Payment
+Card:1335 ;Visa
+Amount:SAR 700
+Balance:SAR 10000.00
+Date:23-11-30 12:22"""
+
+    /** Monthly profit on a savings account. Income. */
+    const val RAJHI_SAVINGS_PROFIT = """ايداع:الأرباح الشهرية لحساب الادخار
+مبلغ:.04 SAR
+إلى:0111
+1/2/26 05:47"""
+
+    /**
+     * An international purchase, priced in a foreign currency.
+     *
+     * Kept as a fixture for the case the parser must REFUSE. The amount is USD and
+     * this app stores integer halalas of SAR; reading "1" as one riyal would be a
+     * fabricated number, and the balance line would be worse. It stays
+     * NotUnderstood until the model can hold a currency.
+     */
+    const val RAJHI_INTERNATIONAL_PURCHASE = """شراء دولي
+بطاقة:7404 ;فيزا
+مبلغ:USD 1
+لدى:GOOGLE*CH
+دولة:USA
+رصيد:SAR 10000.00
+في:25-6-4 20:33"""
+
+
     /** Online card purchase. Note the balance line carrying a much larger amount. */
     const val RAJHI_ONLINE_PURCHASE = """شراء إنترنت بـSR 931.64
 عبر2383;فيزا
@@ -75,6 +146,14 @@ object RealMessages {
      * authorises, and arrives seconds before the real confirmation for that same
      * purchase. Must never be parsed and must never be stored.
      */
+    /**
+     * A second one-time-password wording, found only by running a real corpus
+     * through the gate. The code is redacted; the wording is exact.
+     */
+    const val RAJHI_OTP_PASSWORD_WORDING = """كلمة مرور لمرة واحدة
+رمز: 000000
+لـ :سداد الفواتير -تطبيق المباشر"""
+
     const val RAJHI_OTP = """ننصح بعدم مشاركة الرمز لحمايتك من الاحتيال
 الرمز:000000
 بطاقة:*2383

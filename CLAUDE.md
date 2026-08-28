@@ -6,7 +6,7 @@ statements. Single user, on-device, offline. Not a product, not published.
 ## Commands
 
 ```bash
-./gradlew :core:test              # 140 tests, runs anywhere with a JDK
+./gradlew :core:test              # 157 tests, runs anywhere with a JDK
 ./gradlew :app:testDebugUnitTest  # 75 tests, needs the Android SDK
 ./gradlew :app:assembleDebug      # needs local.properties with sdk.dir
 ```
@@ -181,5 +181,12 @@ app/    Android - Compose, Room, Arabic default with English in values-en
   values — verify against a real file before trusting barq / Emirates NBD imports.
 - barq and Emirates NBD row layouts are validated against a handful of rows, not
   a whole file.
-- No salary, bill-payment or ATM-withdrawal message samples yet; those parsers
-  will report `NotUnderstood` until samples exist.
+- International purchases (`شراء دولي`) are refused, not parsed. The amount is in a
+  foreign currency and `Money` is integer halalas of SAR; reading "USD 1" as one
+  riyal would fabricate a number and picking up the SAR balance line would be
+  worse. 29 in a 5,074-message corpus. Closing it means letting the model hold a
+  currency, not loosening the parser.
+- The AlRajhi parser was measured against a real 5,074-message corpus: 4,033
+  captured, 608 refused as one-time passwords, 369 with no recognised intent
+  (almost all genuinely not transactions - login notices, marketing, OneCard
+  vouchers), 52 with no amount. The remaining gaps are listed above.

@@ -60,6 +60,15 @@ object MessageGate {
         "رمزالتحقق",
         "الرقم السري لمره واحده",
         "الرقم السري لمرة واحدة",
+        // Found in a real corpus of 5,074 AlRajhi messages: 88 of them carried a
+        // live code under this wording and the gate did not stop a single one.
+        // They were saved only by no parser understanding them yet - which is luck,
+        // not a control, and the luck runs out the moment the parser improves.
+        "كلمة مرور لمرة واحدة",
+        "كلمة مرور صالحة لمرة واحدة",
+        "كلمه مرور لمره واحده",
+        "لا تفصح عن كلمة المرور",
+        "لا تفصح عن كلمه المرور",
         "رمز التفعيل",
         "لا تشارك",
         "لاتشارك",
