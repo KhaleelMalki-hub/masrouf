@@ -28,6 +28,9 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -83,6 +86,8 @@ fun AddExpenseScreen(
     canImportHistory: Boolean = false,
     onRequestHistoryAccess: () -> Unit = {},
     onSwitchLanguage: () -> Unit = {},
+    themeMode: ThemeMode = ThemeMode.System,
+    onThemeModeChange: (ThemeMode) -> Unit = {},
 ) {
     val form by viewModel.form.collectAsStateWithLifecycle()
     val recent by viewModel.recent.collectAsStateWithLifecycle()
@@ -112,7 +117,13 @@ fun AddExpenseScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = { AddExpenseTopBar(onSwitchLanguage = onSwitchLanguage) },
+        topBar = {
+            AddExpenseTopBar(
+                onSwitchLanguage = onSwitchLanguage,
+                themeMode = themeMode,
+                onThemeModeChange = onThemeModeChange,
+            )
+        },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { entryOpen = true },
@@ -183,7 +194,7 @@ fun AddExpenseScreen(
                 }
             }
 
-            item { SaduBand() }
+            item { HorizontalDivider() }
 
             item {
                 Text(
@@ -225,7 +236,7 @@ fun AddExpenseScreen(
     if (entryOpen) {
         ModalBottomSheet(
             onDismissRequest = { entryOpen = false },
-            containerColor = Sadu.GroundRaised,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         ) {
             EntrySheet(
                 form = form,
@@ -357,10 +368,15 @@ private fun EntrySheet(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AddExpenseTopBar(onSwitchLanguage: () -> Unit) {
+private fun AddExpenseTopBar(
+    onSwitchLanguage: () -> Unit,
+    themeMode: ThemeMode,
+    onThemeModeChange: (ThemeMode) -> Unit,
+) {
     TopAppBar(
         title = { Text(stringResource(R.string.dashboard_title)) },
         actions = {
+            ThemeMenu(mode = themeMode, onSelect = onThemeModeChange)
             // The label is the language you would switch TO, not the one you are
             // in: a control that names the current state reads as a status, and
             // people tap it expecting nothing to happen.
@@ -375,12 +391,63 @@ private fun AddExpenseTopBar(onSwitchLanguage: () -> Unit) {
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Sadu.Ground,
+            containerColor = MaterialTheme.colorScheme.surface,
             titleContentColor = MaterialTheme.colorScheme.onSurface,
             actionIconContentColor = MaterialTheme.colorScheme.primary,
         ),
     )
 }
+
+/**
+ * Auto, light, dark.
+ *
+ * A menu rather than a cycling button: three states cannot be cycled through
+ * predictably, and "auto" is not a stop on a line between the other two - it is a
+ * different kind of answer, which a list can show and a toggle cannot.
+ */
+@Composable
+private fun ThemeMenu(mode: ThemeMode, onSelect: (ThemeMode) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+
+    Box {
+        TextButton(
+            onClick = { open = true },
+            modifier = Modifier.heightIn(min = 48.dp),
+        ) {
+            Text(
+                text = stringResource(mode.labelRes),
+                style = MaterialTheme.typography.labelLarge,
+            )
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            ThemeMode.entries.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(option.labelRes)) },
+                    onClick = {
+                        onSelect(option)
+                        open = false
+                    },
+                    trailingIcon = {
+                        if (option == mode) {
+                            Text(
+                                text = "\u2713",
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    },
+                )
+            }
+        }
+    }
+}
+
+@get:StringRes
+private val ThemeMode.labelRes: Int
+    get() = when (this) {
+        ThemeMode.System -> R.string.theme_system
+        ThemeMode.Light -> R.string.theme_light
+        ThemeMode.Dark -> R.string.theme_dark
+    }
 
 @Composable
 private fun MonthPanel(
@@ -395,7 +462,7 @@ private fun MonthPanel(
             category = category,
             label = category?.let { stringResource(it.labelRes) } ?: uncategorised,
             amount = amount,
-            colour = category?.band ?: UncategorisedBand,
+            colour = bandColour(category),
         )
     }
 
@@ -404,7 +471,7 @@ private fun MonthPanel(
             .fillMaxWidth()
             .padding(top = 8.dp)
             .clip(RoundedCornerShape(6.dp))
-            .background(Sadu.GroundRaised)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -446,8 +513,6 @@ private fun MonthPanel(
 
         MonthStrip(bands = bands)
 
-        if (bands.isNotEmpty()) SaduBand()
-
         if (bands.isEmpty()) {
             Text(
                 text = stringResource(R.string.month_empty),
@@ -479,7 +544,7 @@ private fun AccessPrompt(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(4.dp))
-            .background(Sadu.GroundRaised)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
@@ -636,7 +701,7 @@ private fun TransactionRow(
                 .padding(vertical = 8.dp)
                 .size(width = 3.dp, height = 34.dp)
                 .clip(RoundedCornerShape(2.dp))
-                .background(category?.band ?: UncategorisedBand),
+                .background(bandColour(category)),
         )
         Column(
             modifier = Modifier

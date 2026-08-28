@@ -127,6 +127,9 @@ private fun DrawScope.drawStrip(bands: List<Band>, total: Long, progress: Float)
 
 @Composable
 private fun EmptyStrip(modifier: Modifier) {
+    // Present rather than absent, so an empty month reads as "nothing yet" and
+    // not as a component that failed to load.
+    val empty = MaterialTheme.colorScheme.surfaceContainerHighest
     Canvas(
         modifier = modifier
             .fillMaxWidth()
@@ -135,7 +138,7 @@ private fun EmptyStrip(modifier: Modifier) {
         // The unwoven loom: present, so the strip's absence reads as "nothing yet"
         // rather than as a component that failed to load.
         drawRoundRect(
-            color = Sadu.Loom,
+            color = empty,
             size = size,
             cornerRadius = CornerRadius(CORNER_PX, CORNER_PX),
         )

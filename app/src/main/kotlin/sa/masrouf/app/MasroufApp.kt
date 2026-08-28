@@ -2,6 +2,7 @@ package sa.masrouf.app
 
 import android.app.Application
 import sa.masrouf.app.data.MasroufDatabase
+import sa.masrouf.app.data.Preferences
 import sa.masrouf.app.data.TransactionRepository
 
 /**
@@ -14,5 +15,6 @@ import sa.masrouf.app.data.TransactionRepository
 class MasroufApp : Application() {
 
     val database: MasroufDatabase by lazy { MasroufDatabase.open(this) }
+    val preferences: Preferences by lazy { Preferences(this) }
     val transactions: TransactionRepository by lazy { TransactionRepository(database.transactions()) }
 }

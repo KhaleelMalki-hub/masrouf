@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -50,8 +51,10 @@ fun CategoryChips(
                 onClick = { onSelect(if (isSelected) null else category) },
                 label = { Text(stringResource(category.labelRes)) },
                 colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = category.band,
-                    selectedLabelColor = Sadu.Ground,
+                    // The category's own dye, so choosing one is the same colour
+                    // event as seeing it in the strip.
+                    selectedContainerColor = bandColour(category),
+                    selectedLabelColor = MaterialTheme.colorScheme.surface,
                 ),
                 modifier = Modifier.heightIn(min = 48.dp),
             )

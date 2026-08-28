@@ -83,4 +83,8 @@
     <string name="history_all">All transactions</string>
     <string name="language_toggle">ع</string>
     <string name="language_switch">Switch language</string>
+    <string name="theme_switch">Theme</string>
+    <string name="theme_system">Auto</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
 </resources>

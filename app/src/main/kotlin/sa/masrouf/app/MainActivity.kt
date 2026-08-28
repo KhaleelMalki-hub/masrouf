@@ -14,6 +14,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,23 +30,48 @@ import sa.masrouf.app.capture.SmsInbox
 import sa.masrouf.app.ui.AddExpenseScreen
 import sa.masrouf.app.ui.AddExpenseViewModel
 import sa.masrouf.app.ui.MasroufTheme
+import sa.masrouf.app.ui.ThemeMode
 
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Both system bars drawn dark over the wool ground. The default
-        // enableEdgeToEdge() picks a light scrim, which left a white slab under an
-        // otherwise dark screen.
-        enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
-        )
+        enableEdgeToEdge()
 
-        val repository = (application as MasroufApp).transactions
+        val app = application as MasroufApp
+        val repository = app.transactions
+        val preferences = app.preferences
 
         setContent {
-            MasroufTheme {
+            // Read once from storage, then owned by the composition. The setter
+            // writes through, so the choice survives a restart.
+            var themeMode by remember { mutableStateOf(preferences.themeMode) }
+
+            // The system bars follow the APP's theme, not the phone's. The default
+            // enableEdgeToEdge() reads the system setting, so forcing the app dark
+            // on a light phone left a white navigation bar under a dark screen.
+            val dark = when (themeMode) {
+                ThemeMode.System -> isSystemInDarkTheme()
+                ThemeMode.Light -> false
+                ThemeMode.Dark -> true
+            }
+            SideEffect {
+                val transparent = android.graphics.Color.TRANSPARENT
+                enableEdgeToEdge(
+                    statusBarStyle = if (dark) {
+                        SystemBarStyle.dark(transparent)
+                    } else {
+                        SystemBarStyle.light(transparent, transparent)
+                    },
+                    navigationBarStyle = if (dark) {
+                        SystemBarStyle.dark(transparent)
+                    } else {
+                        SystemBarStyle.light(transparent, transparent)
+                    },
+                )
+            }
+
+            MasroufTheme(mode = themeMode) {
                 val viewModel: AddExpenseViewModel = viewModel(
                     factory = AddExpenseViewModel.Factory(
                         repository = repository,
@@ -90,6 +117,11 @@ class MainActivity : ComponentActivity() {
                     canImportHistory = canReadInbox,
                     onRequestHistoryAccess = { requestReadSms.launch(Manifest.permission.READ_SMS) },
                     onSwitchLanguage = ::toggleLanguage,
+                    themeMode = themeMode,
+                    onThemeModeChange = { chosen ->
+                        themeMode = chosen
+                        preferences.themeMode = chosen
+                    },
                 )
             }
         }

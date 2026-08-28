@@ -1,8 +1,10 @@
 package sa.masrouf.app.ui
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
@@ -13,33 +15,90 @@ import androidx.compose.ui.unit.sp
 import sa.masrouf.app.R
 
 /**
- * The palette is taken from سدو - Sadu, the Bedouin weaving of the peninsula:
- * bands of madder red, saffron and undyed wool laid across a dark wool ground.
+ * Which theme the user wants, independent of what the phone is doing.
  *
- * It is a deliberate move away from the teal-on-near-black that every Saudi
- * finance app currently wears. It also earns its place rather than decorating:
- * a month of spending is a set of proportions, which is exactly what a woven band
- * is, so the categories can be the bands and the strip can be read as a strip.
+ * [System] is the default because the two situations this app is used in are both
+ * common - Riyadh daylight and a dark room at night - and the phone already knows
+ * which one it is in. The explicit options exist because the phone is sometimes
+ * wrong about that, and because the choice is one tap either way.
  */
-object Sadu {
-    /** Dark wool ground. Warm, not the blue-black of a default dark theme. */
-    val Ground = Color(0xFF14110F)
-    val GroundRaised = Color(0xFF1E1A17)
-    val Loom = Color(0xFF2C2622)
+enum class ThemeMode { System, Light, Dark }
 
-    /** Undyed wool. The reading colour. */
-    val Bone = Color(0xFFEDE4D4)
-    val BoneDim = Color(0xFF9C9184)
+/**
+ * Material 3 colour, generated from one seed rather than picked per role.
+ *
+ * Seed `#2E5AAC`, a considered blue. Not M3's baseline purple, which reads as a
+ * template nobody touched, and not the teal of the app this one was explicitly
+ * designed against.
+ *
+ * Both schemes are complete. An earlier release shipped dark only, on the
+ * reasoning that the palette looked better dark - which is an aesthetic argument
+ * for a decision that should come from where the screen is actually read, and the
+ * answer there is "outdoors, in the sun, often".
+ */
+private val LightScheme = lightColorScheme(
+    primary = Color(0xFF3A5FA8),
+    onPrimary = Color(0xFFFFFFFF),
+    primaryContainer = Color(0xFFD9E2FF),
+    onPrimaryContainer = Color(0xFF001945),
+    secondary = Color(0xFF575E71),
+    onSecondary = Color(0xFFFFFFFF),
+    secondaryContainer = Color(0xFFDBE2F9),
+    onSecondaryContainer = Color(0xFF141B2C),
+    tertiary = Color(0xFF715573),
+    onTertiary = Color(0xFFFFFFFF),
+    tertiaryContainer = Color(0xFFFCD7FC),
+    onTertiaryContainer = Color(0xFF29132D),
+    error = Color(0xFFBA1A1A),
+    onError = Color(0xFFFFFFFF),
+    errorContainer = Color(0xFFFFDAD6),
+    onErrorContainer = Color(0xFF410002),
+    background = Color(0xFFFBF8FF),
+    onBackground = Color(0xFF1A1B21),
+    surface = Color(0xFFFBF8FF),
+    onSurface = Color(0xFF1A1B21),
+    surfaceVariant = Color(0xFFE1E2EC),
+    onSurfaceVariant = Color(0xFF44464F),
+    surfaceContainerLowest = Color(0xFFFFFFFF),
+    surfaceContainerLow = Color(0xFFF5F2FA),
+    surfaceContainer = Color(0xFFEFECF4),
+    surfaceContainerHigh = Color(0xFFE9E7EF),
+    surfaceContainerHighest = Color(0xFFE3E1E9),
+    outline = Color(0xFF757780),
+    outlineVariant = Color(0xFFC5C6D0),
+)
 
-    val Madder = Color(0xFFC24B3A)
-    val Saffron = Color(0xFFD9A441)
-    val Indigo = Color(0xFF4C6A9E)
-    val Palm = Color(0xFF6E8F5E)
-    val Clay = Color(0xFF9C6B4E)
-    val Dusk = Color(0xFF7A5C86)
-    val Sand = Color(0xFFB9A88C)
-    val Ash = Color(0xFF6B625A)
-}
+private val DarkScheme = darkColorScheme(
+    primary = Color(0xFFAEC6FF),
+    onPrimary = Color(0xFF05306B),
+    primaryContainer = Color(0xFF22468E),
+    onPrimaryContainer = Color(0xFFD9E2FF),
+    secondary = Color(0xFFBFC6DC),
+    onSecondary = Color(0xFF293042),
+    secondaryContainer = Color(0xFF3F4759),
+    onSecondaryContainer = Color(0xFFDBE2F9),
+    tertiary = Color(0xFFDFBBDF),
+    onTertiary = Color(0xFF402743),
+    tertiaryContainer = Color(0xFF583D5A),
+    onTertiaryContainer = Color(0xFFFCD7FC),
+    error = Color(0xFFFFB4AB),
+    onError = Color(0xFF690005),
+    errorContainer = Color(0xFF93000A),
+    onErrorContainer = Color(0xFFFFDAD6),
+    background = Color(0xFF121318),
+    onBackground = Color(0xFFE3E1E9),
+    surface = Color(0xFF121318),
+    onSurface = Color(0xFFE3E1E9),
+    surfaceVariant = Color(0xFF44464F),
+    onSurfaceVariant = Color(0xFFC5C6D0),
+    surfaceContainerLowest = Color(0xFF0D0E13),
+    surfaceContainerLow = Color(0xFF1A1B21),
+    surfaceContainer = Color(0xFF1E1F25),
+    surfaceContainerHigh = Color(0xFF292A30),
+    surfaceContainerHighest = Color(0xFF34343B),
+    outline = Color(0xFF8F909A),
+    outlineVariant = Color(0xFF45464F),
+)
 
 /**
  * IBM Plex Sans Arabic, bundled.
@@ -57,79 +116,51 @@ private val PlexArabic = FontFamily(
     Font(R.font.plex_arabic_bold, FontWeight.Bold),
 )
 
-private val SaduTypography = Typography().run {
+/** The M3 scale, with every role set in Plex Arabic so nothing falls back. */
+private val MasroufTypography = Typography().run {
     copy(
-        // The total is the one thing on the page worth setting large. Tight
-        // tracking so a five-figure number still reads as one object rather than
-        // as a row of digits.
+        displayLarge = displayLarge.copy(fontFamily = PlexArabic),
         displayMedium = displayMedium.copy(
             fontFamily = PlexArabic, fontWeight = FontWeight.Bold, letterSpacing = (-1.5).sp,
         ),
-        displaySmall = displaySmall.copy(
-            fontFamily = PlexArabic, fontWeight = FontWeight.Bold, letterSpacing = (-1).sp,
-        ),
+        displaySmall = displaySmall.copy(fontFamily = PlexArabic, fontWeight = FontWeight.Bold),
+        headlineLarge = headlineLarge.copy(fontFamily = PlexArabic),
         headlineMedium = headlineMedium.copy(fontFamily = PlexArabic, fontWeight = FontWeight.SemiBold),
         headlineSmall = headlineSmall.copy(fontFamily = PlexArabic, fontWeight = FontWeight.SemiBold),
         titleLarge = titleLarge.copy(fontFamily = PlexArabic, fontWeight = FontWeight.SemiBold),
         titleMedium = titleMedium.copy(fontFamily = PlexArabic, fontWeight = FontWeight.Medium),
+        titleSmall = titleSmall.copy(fontFamily = PlexArabic, fontWeight = FontWeight.Medium),
         bodyLarge = bodyLarge.copy(fontFamily = PlexArabic),
         bodyMedium = bodyMedium.copy(fontFamily = PlexArabic),
         bodySmall = bodySmall.copy(fontFamily = PlexArabic),
         labelLarge = labelLarge.copy(fontFamily = PlexArabic, fontWeight = FontWeight.Medium),
-        // Section labels sit well below the thing they label, widely tracked, so
-        // they read as captions rather than as competing headings.
         labelMedium = labelMedium.copy(
-            fontFamily = PlexArabic, fontWeight = FontWeight.Medium, letterSpacing = 1.2.sp,
+            fontFamily = PlexArabic, fontWeight = FontWeight.Medium, letterSpacing = 0.8.sp,
         ),
-        labelSmall = labelSmall.copy(
-            fontFamily = PlexArabic, fontWeight = FontWeight.Medium, letterSpacing = 0.6.sp,
-        ),
+        labelSmall = labelSmall.copy(fontFamily = PlexArabic, fontWeight = FontWeight.Medium),
     )
 }
 
-/** The amount, wherever it appears. Tabular so columns of money line up. */
+/** The amount, wherever it appears. Tracking tightened so figures read as one object. */
 val MoneyStyle: TextStyle = TextStyle(
     fontFamily = PlexArabic,
     fontWeight = FontWeight.SemiBold,
     letterSpacing = (-0.3).sp,
 )
 
-private val SaduScheme = darkColorScheme(
-    primary = Sadu.Saffron,
-    onPrimary = Sadu.Ground,
-    primaryContainer = Sadu.Madder,
-    onPrimaryContainer = Sadu.Bone,
-    secondary = Sadu.Sand,
-    onSecondary = Sadu.Ground,
-    secondaryContainer = Sadu.Loom,
-    onSecondaryContainer = Sadu.Bone,
-    tertiary = Sadu.Palm,
-    onTertiary = Sadu.Ground,
-    background = Sadu.Ground,
-    onBackground = Sadu.Bone,
-    surface = Sadu.Ground,
-    onSurface = Sadu.Bone,
-    surfaceVariant = Sadu.GroundRaised,
-    onSurfaceVariant = Sadu.BoneDim,
-    outline = Sadu.Loom,
-    outlineVariant = Sadu.Loom,
-    error = Sadu.Madder,
-    onError = Sadu.Bone,
-)
-
-/**
- * One scheme, dark only.
- *
- * Not an oversight: the palette is a dark wool ground with dyed bands on it, and a
- * light inversion of that is a different artefact, not the same design in another
- * mode. Committing to one look and executing it is better than shipping two
- * half-considered ones.
- */
 @Composable
-fun MasroufTheme(content: @Composable () -> Unit) {
+fun MasroufTheme(
+    mode: ThemeMode = ThemeMode.System,
+    content: @Composable () -> Unit,
+) {
+    val dark = when (mode) {
+        ThemeMode.System -> isSystemInDarkTheme()
+        ThemeMode.Light -> false
+        ThemeMode.Dark -> true
+    }
     MaterialTheme(
-        colorScheme = SaduScheme,
-        typography = SaduTypography,
+        colorScheme = if (dark) DarkScheme else LightScheme,
+        typography = MasroufTypography,
         content = content,
     )
 }

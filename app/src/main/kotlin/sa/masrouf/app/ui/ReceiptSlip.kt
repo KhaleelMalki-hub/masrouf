@@ -67,7 +67,7 @@ fun ReceiptSlip(
         modifier = modifier
             .fillMaxWidth()
             .clip(TornEdgeShape())
-            .background(Sadu.GroundRaised)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .padding(top = 16.dp, bottom = 24.dp)
             // One node for the whole slip: a screen reader should hear the record,
             // not eleven fragments it has to assemble before it can act on them.
@@ -142,13 +142,13 @@ private fun BankWords(raw: String, modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(3.dp))
-            .background(Sadu.Ground)
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
             .padding(horizontal = 12.dp, vertical = 10.dp),
     ) {
         Text(
             text = stringResource(R.string.bank_said),
             style = MaterialTheme.typography.labelSmall,
-            color = Sadu.Ash,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text(
             text = raw.trim(),
