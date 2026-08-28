@@ -29,6 +29,17 @@ object RealMessages {
 
     // ---- AlRajhiBank -------------------------------------------------------
 
+    /**
+     * A prize-draw advertisement from the bank's own sender.
+     *
+     * Captured on the owner's phone, where it was stored as a 0.00 SAR cash
+     * withdrawal: `السحب` contains `سحب` and `النقدية` contains `نقدي`, which are
+     * both tokens of the ATM rule. Kept as the case the gate must refuse.
+     */
+    const val RAJHI_PRIZE_DRAW_ADVERT = """باقي على السحب الأسبوعي ثلاث أيام
+ضاعف ادخاراتك في حساب المليون الادخاري لزيادة فرصك للفوز بالجائزة النقدية 10،000 ريال."""
+
+
     // The English templates. Found by running 5,074 real AlRajhi messages through
     // the pipeline: 182 transactions were being missed because only the Arabic
     // wordings were known. Names replaced, balances invented, amounts and card

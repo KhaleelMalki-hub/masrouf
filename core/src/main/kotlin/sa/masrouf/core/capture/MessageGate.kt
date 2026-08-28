@@ -79,6 +79,34 @@ object MessageGate {
         "VERIFICATION CODE",
     )
 
+    /**
+     * Phrases that mark a message as an advertisement rather than a transaction.
+     *
+     * The bank's own marketing arrives from the bank's own sender, so a parser
+     * claims it and then reads whatever it can. One real example, captured on the
+     * owner's phone: a prize-draw advert became a cash withdrawal, because Arabic
+     * tokens are matched as stems and `السحب` (the draw) contains `سحب` while
+     * `النقدية` (the cash prize) contains `نقدي` - both tokens of the ATM rule,
+     * present in a sentence about a raffle.
+     *
+     * [Rejection.NOT_FINANCIAL] existed from the beginning with nothing behind it.
+     * This is what it was for.
+     */
+    private val MARKETING_MARKERS = listOf(
+        "الجائزة",
+        "جائزة",
+        "للفوز",
+        "بالفوز",
+        "فرصك",
+        "اربح",
+        "السحب الأسبوعي",
+        "السحب الاسبوعي",
+        "عرض خاص",
+        "استبيان",
+        "شاركنا",
+        "خصم يصل",
+    )
+
     /** Phrases that mark a transaction as not completed. */
     private val DECLINED_MARKERS = listOf(
         "عملية مرفوضة",
@@ -108,6 +136,12 @@ object MessageGate {
 
         DECLINED_MARKERS.firstOrNull { folded.contains(ArabicText.foldForMatching(it)) }
             ?.let { return Decision.Reject(Rejection.DECLINED, it) }
+
+        // Last, because a real transaction never contains these and a rejection
+        // here must not shadow the two above, which are about safety rather than
+        // about noise.
+        MARKETING_MARKERS.firstOrNull { folded.contains(ArabicText.foldForMatching(it)) }
+            ?.let { return Decision.Reject(Rejection.NOT_FINANCIAL, it) }
 
         return Decision.Allow
     }

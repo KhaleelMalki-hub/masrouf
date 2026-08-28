@@ -113,4 +113,18 @@ class RajhiEnglishTemplatesTest {
     fun `a voucher code is not a transaction`() {
         assertNull((parse(RealMessages.RAJHI_POS_ENGLISH) as? CapturePipeline.Outcome.NotUnderstood))
     }
+
+    @Test
+    fun `a prize-draw advert is not a cash withdrawal`() {
+        // Captured on a real phone, where it was stored as a 0.00 SAR withdrawal.
+        // Arabic tokens match as stems, so "السحب" (the draw) contains "سحب" and
+        // "النقدية" (the cash prize) contains "نقدي" - both tokens of the ATM
+        // rule, in a sentence about a raffle.
+        val outcome = parse(RealMessages.RAJHI_PRIZE_DRAW_ADVERT)
+
+        val rejected = assertIs<CapturePipeline.Outcome.Rejected>(outcome)
+        assertEquals(MessageGate.Rejection.NOT_FINANCIAL, rejected.reason)
+        // Marketing is noise, not a credential: the body may still be logged.
+        assertEquals(false, rejected.bodyIsSensitive)
+    }
 }

@@ -78,6 +78,13 @@ class BankMessageParser(private val profile: BankProfile) : MessageParser {
         val amount = AmountExtractor.extractOrNull(text)
             ?: return ParseResult.Failed(id, "no amount found")
 
+        // Zero is not an amount a bank moves. Reaching here with one means the
+        // extractor matched a number that was not the transaction's - a prize
+        // figure in an advert, a fee line on a message with no principal - and a
+        // zero-riyal transaction in the user's history is a row that explains
+        // nothing and can never be reconciled against a statement.
+        if (amount.money.isZero) return ParseResult.Failed(id, "amount was zero")
+
         val isMerchantBearing =
             intent.type == TransactionType.PURCHASE || intent.type == TransactionType.REFUND
 

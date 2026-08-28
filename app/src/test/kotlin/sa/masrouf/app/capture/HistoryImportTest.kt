@@ -102,7 +102,11 @@ class HistoryImportTest {
     fun `a message from a known bank that cannot be read is counted, not stored`() = runTest {
         // The signal worth watching: a bank whose template changed. It has to be
         // visible as a number rather than vanishing into "not a bank".
-        val report = import.run(listOf(sms("عرض خاص من مصرفك اليوم", "AlRajhiBank", 10)))
+        // A login notice: from the bank, no transaction in it, and not marketing -
+        // marketing is now refused by the gate, which is a different outcome.
+        val report = import.run(
+            listOf(sms("تم تسجيل الدخول إلى حسابك من جهاز جديد", "AlRajhiBank", 10))
+        )
 
         assertEquals(1, report.notUnderstood)
         assertEquals(0, report.stored)
