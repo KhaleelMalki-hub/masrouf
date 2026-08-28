@@ -55,6 +55,20 @@ class TransactionRepository(
         millis?.let { RiyadhTime.localDate(Instant.ofEpochMilli(it)).withDayOfMonth(1) }
     }
 
+    /**
+     * The months that actually contain something, newest first.
+     *
+     * The '+3 hours' in the query is Riyadh's offset, applied in SQL so the
+     * grouping matches what [RiyadhTime] would decide row by row. Saudi Arabia has
+     * no daylight saving, which is the only reason a fixed offset is safe here.
+     */
+    fun observeMonthsWithData(): Flow<List<LocalDate>> =
+        dao.observeMonthsWithData().map { keys ->
+            keys.mapNotNull { key ->
+                runCatching { LocalDate.parse(key + "-01") }.getOrNull()
+            }
+        }
+
     /** Everything belonging to a Riyadh calendar month, newest first. */
     fun observeMonth(anyDayInMonth: LocalDate): Flow<List<Transaction>> {
         val first = anyDayInMonth.withDayOfMonth(1)

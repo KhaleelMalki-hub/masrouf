@@ -135,6 +135,22 @@ interface TransactionDao {
     @Query("SELECT MIN(occurred_at_millis) FROM transactions")
     fun observeEarliest(): Flow<Long?>
 
+    /**
+     * Every Riyadh month that has at least one record, newest first.
+     *
+     * A real history spans 146 months, so the picker cannot offer a flat range and
+     * hope: it has to show which months are worth opening. Grouped in SQL rather
+     * than by loading 22,000 rows to find out.
+     */
+    @Query(
+        """
+        SELECT DISTINCT strftime('%Y-%m', occurred_at_millis/1000, 'unixepoch', '+3 hours') AS month
+        FROM transactions
+        ORDER BY month DESC
+        """
+    )
+    fun observeMonthsWithData(): Flow<List<String>>
+
     /** Everything with no category yet, for a one-off backfill over the history. */
     @Query("SELECT * FROM transactions WHERE category_id IS NULL")
     suspend fun uncategorised(): List<TransactionEntity>

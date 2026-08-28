@@ -105,12 +105,31 @@ fun AddExpenseScreen(
     val selectedMonth by viewModel.selectedMonth.collectAsStateWithLifecycle()
     val earliestMonth by viewModel.earliestMonth.collectAsStateWithLifecycle()
     val monthRows by viewModel.monthTransactions.collectAsStateWithLifecycle()
+    val monthsWithData by viewModel.monthsWithData.collectAsStateWithLifecycle()
     val importState by viewModel.importState.collectAsStateWithLifecycle()
     val currency = stringResource(R.string.currency_sar)
 
     var entryOpen by remember { mutableStateOf(false) }
     var confirming by remember { mutableStateOf<DestructiveAction?>(null) }
     var confirmingAll by remember { mutableStateOf(false) }
+    var pickingMonth by remember { mutableStateOf(false) }
+
+    if (pickingMonth) {
+        ModalBottomSheet(
+            onDismissRequest = { pickingMonth = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        ) {
+            MonthPicker(
+                selected = selectedMonth,
+                monthsWithData = monthsWithData,
+                onPick = { month ->
+                    viewModel.showMonth(month)
+                    pickingMonth = false
+                },
+            )
+        }
+    }
 
     if (confirmingAll) {
         AlertDialog(
@@ -186,7 +205,7 @@ fun AddExpenseScreen(
             item {
                 MonthPanel(
                     month = selectedMonth,
-                    total = monthTotal.toPlainString(),
+                    total = monthTotal.grouped(),
                     shares = shares,
                     currencyLabel = currency,
                     pendingCount = pending.size,
@@ -194,6 +213,7 @@ fun AddExpenseScreen(
                     canGoForward = selectedMonth.isBefore(viewModel.currentMonth),
                     onPrevious = viewModel::showPreviousMonth,
                     onNext = viewModel::showNextMonth,
+                    onPickMonth = { pickingMonth = true },
                 )
             }
 
@@ -699,6 +719,7 @@ private fun MonthPanel(
     canGoForward: Boolean,
     onPrevious: () -> Unit,
     onNext: () -> Unit,
+    onPickMonth: () -> Unit,
 ) {
     val uncategorised = stringResource(R.string.uncategorised)
     val bands = shares.map { (category, amount) ->
@@ -725,6 +746,7 @@ private fun MonthPanel(
             canGoForward = canGoForward,
             onPrevious = onPrevious,
             onNext = onNext,
+            onPickMonth = onPickMonth,
         )
 
         Column {
@@ -782,16 +804,26 @@ private fun MonthNavigator(
     canGoForward: Boolean,
     onPrevious: () -> Unit,
     onNext: () -> Unit,
+    onPickMonth: () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = month.monthLabel(),
-            style = MaterialTheme.typography.titleMedium,
-        )
+        // The label is the way into the picker. Arrows are for the month either
+        // side; anything further than that is a jump, and with 146 months in a
+        // real history the arrows alone are 145 taps to the beginning.
+        TextButton(
+            onClick = onPickMonth,
+            modifier = Modifier.heightIn(min = 48.dp),
+        ) {
+            Text(
+                text = month.monthLabel() + "  \u25BE",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
         Row {
             TextButton(
                 onClick = onPrevious,

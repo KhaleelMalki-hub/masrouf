@@ -66,6 +66,17 @@ class FakeDao : TransactionDao {
     override fun observeEarliest(): Flow<Long?> =
         state.map { rows -> rows.minOfOrNull { it.occurredAtMillis } }
 
+    override fun observeMonthsWithData(): Flow<List<String>> = state.map { rows ->
+        rows.map {
+            java.time.Instant.ofEpochMilli(it.occurredAtMillis)
+                .atZone(java.time.ZoneId.of("Asia/Riyadh"))
+                .toLocalDate()
+                .withDayOfMonth(1)
+                .toString()
+                .substring(0, 7)
+        }.distinct().sortedDescending()
+    }
+
     override suspend fun uncategorised(): List<TransactionEntity> =
         state.value.filter { it.categoryId == null }
 

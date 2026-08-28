@@ -126,6 +126,17 @@ class AddExpenseViewModel(
      * Paging stops here rather than running backwards for ever through empty
      * months, which reads as data loss rather than as the end of the record.
      */
+    /** Every month that has something in it, for the picker. */
+    val monthsWithData: StateFlow<List<LocalDate>> =
+        repository.observeMonthsWithData()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /** Jumps straight to a month, for the picker. Bounded like the arrows are. */
+    fun showMonth(month: LocalDate) {
+        val first = month.withDayOfMonth(1)
+        if (!first.isAfter(currentMonth)) _selectedMonth.value = first
+    }
+
     val earliestMonth: StateFlow<LocalDate?> =
         repository.observeEarliestMonth()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
