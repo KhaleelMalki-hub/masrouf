@@ -57,7 +57,29 @@ object SaudiBanks {
      */
     val SNB = BankProfile(
         id = "snb",
-        senderIds = setOf("SNB ALAHLI", "SNBALAHLI", "SNB", "ALAHLI"),
+        // No bare "SNB". Sender ids are matched as substrings of the folded
+        // origin, and "SNB" is a substring of "EMIRATESNBD" - which meant every
+        // Emirates NBD message was claimed by this profile and parsed with SNB's
+        // patterns. Found by running a real 499-message corpus, where it looked
+        // like success: 248 of them "captured", under the wrong bank, with the
+        // card fragment silently dropped because the formats differ.
+        //
+        // The real senders are "SNB-AlAhli", "AlahliSMS" and "AlAhliSMS", which
+        // fold to strings containing "SNB ALAHLI" or "ALAHLI", so nothing is lost.
+        // "SNB NEO" rather than a bare "SNB". Sender ids are matched as substrings
+        // of the folded origin, and "SNB" is a substring of "EMIRATESNBD" - which
+        // meant every Emirates NBD message was claimed by this profile and parsed
+        // with SNB's patterns. Found on a real 499-message corpus, where it looked
+        // like success: 248 "captured", under the wrong bank, with the card
+        // fragment dropped because the two banks mask it differently.
+        //
+        // Whole-word matching would be the structural fix and does not work here:
+        // folding turns "com.snb.neo" into "COM SNB NEO", where SNB is a word, but
+        // it turns "com.alrajhiretailapp" into "COM ALRAJHIRETAILAPP", where
+        // ALRAJHI is only a prefix. So the packages are named instead, and
+        // ObservedBankPackagesTest reads them off a real device to keep this list
+        // honest.
+        senderIds = setOf("SNB ALAHLI", "SNBALAHLI", "SNB NEO", "ALAHLI"),
         merchantPatterns = listOf(
             Regex("""(?m)^من\s+(?![*\d])(.+)$"""),
             Regex("""(?m)^لدى\s*:?\s*(.+)$"""),
@@ -109,7 +131,31 @@ object SaudiBanks {
         ),
     )
 
-    val ALL: List<BankProfile> = listOf(AL_RAJHI, SNB, D360, BARQ)
+    /**
+     * Emirates NBD. Its Saudi messages mix Arabic and English templates and mask
+     * the card as `XX9994` rather than with an asterisk, so it needs its own card
+     * patterns even though the surrounding wording resembles SNB's.
+     */
+    val EMIRATES_NBD = BankProfile(
+        id = "enbd",
+        senderIds = setOf("EMIRATESNBD", "ENBD"),
+        merchantPatterns = listOf(
+            Regex("""(?m)^لدى\s*:?\s*(.+)$"""),
+            Regex("""(?m)^At\s*:\s*(.+)$""", RegexOption.IGNORE_CASE),
+        ),
+        counterpartyPatterns = listOf(
+            Regex("""(?m)^From\s*:\s*(.+)$""", RegexOption.IGNORE_CASE),
+            Regex("""(?m)^(?:الى|إلى)\s*:?\s*(.+)$"""),
+        ),
+        cardPatterns = listOf(
+            // "بطاقة: فيزا الائتمانية XX9994" and "to Account: XX8101" - the digits
+            // follow an XX mask with words in between, which the asterisk-shaped
+            // patterns used by the other banks do not reach.
+            Regex("""XX\s*(\d{4})""", RegexOption.IGNORE_CASE),
+        ),
+    )
+
+    val ALL: List<BankProfile> = listOf(AL_RAJHI, SNB, D360, BARQ, EMIRATES_NBD)
 
     /** A registry covering every sender the app understands. */
     fun registry(): ParserRegistry = ParserRegistry(ALL.map(::BankMessageParser))

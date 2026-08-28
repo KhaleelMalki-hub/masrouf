@@ -91,7 +91,13 @@ object IntentClassifier {
         Rule(TransactionType.REFUND, Direction.CREDIT, listOf("عكس", "عملي")),
         Rule(TransactionType.REFUND, Direction.CREDIT, listOf("استرجاع")),
 
-        // "بطاقة فيزا:سداد" - paying off a credit card.
+        // Paying off a credit card, in Arabic. Must precede the bare سداد rule
+        // below, which would otherwise call it a bill payment and count it as
+        // spending - charging the same riyals twice, once when each purchase on
+        // the card happened and again when the balance was settled. The English
+        // wording of the same event is handled above.
+        Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, listOf("بطاق", "ائتمان", "سداد")),
+
         Rule(TransactionType.BILL_PAYMENT, Direction.DEBIT, listOf("سداد")),
 
         Rule(TransactionType.ATM_DEPOSIT, Direction.CREDIT, listOf("ايداع", "صراف")),

@@ -27,6 +27,45 @@ package sa.masrouf.core.fixtures
  */
 object RealMessages {
 
+    // ---- Emirates NBD ------------------------------------------------------
+    //
+    // Captured from the owner's inbox. Names replaced, balances invented, card
+    // fragments kept because they are what the card patterns are tested against.
+    // The card is masked "XX9994" rather than with an asterisk, which is why this
+    // bank needs its own patterns despite wording that resembles SNB's.
+
+    /** Point of sale, Arabic. */
+    const val ENBD_POS_PURCHASE = """شراء بطاقة نقاط بيع (أثير)
+بطاقة: فيزا الائتمانية XX9994
+مبلغ: SAR 99.00
+لدى: Aldrees 1437
+في SAUDI ARABIA
+رصيد: 10,000.00 ريال
+في: 2026-08-11 02:29:51"""
+
+    /** Online purchase. Note the thousands separator in the amount. */
+    const val ENBD_ONLINE_PURCHASE = """شراء إنترنت
+بطاقة: فيزا الائتمانية XX9994
+مبلغ: SAR 15,000.00
+لدى: SADAD payment
+رصيد: 10,000.00 ريال
+في: 2026-08-22 17:05:27"""
+
+    /** Incoming transfer, English template. */
+    const val ENBD_INCOMING_TRANSFER = """Incoming Fund Transfer Credited
+to Account: XX8101
+Amount: 585.00 SAR
+From: RECIPIENT NAME ARAB NATIONAL BANK
+IBAN: XX0018
+at: 2026-08-23 12:32:24"""
+
+    /** Paying off the credit card. Not spending. */
+    const val ENBD_CARD_PAYMENT = """بطاقة إئتمانية: تأكيد السداد
+بطاقة: XX9994;إئتمانية
+مبلغ: 599.00  SAR
+رصيد: 10,000.00 SAR
+في: 23-08-2026"""
+
     // ---- AlRajhiBank -------------------------------------------------------
 
     /**
