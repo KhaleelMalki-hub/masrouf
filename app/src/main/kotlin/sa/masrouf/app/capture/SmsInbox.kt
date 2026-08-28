@@ -57,9 +57,18 @@ class SmsInbox(private val resolver: ContentResolver) {
 
     private companion object {
         /**
-         * Enough for several years of bank messages without walking an entire inbox
-         * of personal conversation. Newest first, so the cap trims the oldest.
+         * High enough not to be a cap in practice.
+         *
+         * It was 5,000, which sounded generous and was not: a real inbox held
+         * 24,000 messages, so the import silently stopped partway and the months
+         * before it simply never appeared. The user was told "665 added from 5000
+         * messages" and had no way to know 19,000 were never looked at.
+         *
+         * The bound still exists so a pathological inbox cannot exhaust memory,
+         * but it is now far above any real one. Reading is cheap; it is the
+         * per-record deduplication that costs, and that is bounded by how many
+         * messages are actually from banks.
          */
-        const val DEFAULT_LIMIT = 5000
+        const val DEFAULT_LIMIT = 100_000
     }
 }

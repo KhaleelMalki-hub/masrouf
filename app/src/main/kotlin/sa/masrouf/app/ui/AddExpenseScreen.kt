@@ -200,10 +200,24 @@ fun AddExpenseScreen(
             if (pending.isNotEmpty()) {
                 item {
                     Column {
-                        Text(
-                            text = stringResource(R.string.pending_title),
-                            style = MaterialTheme.typography.titleMedium,
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = stringResource(R.string.pending_title),
+                                style = MaterialTheme.typography.titleMedium,
+                            )
+                            // Only offered once the queue is long enough that
+                            // working through it one at a time is not realistic.
+                            if (pending.size >= BULK_CONFIRM_THRESHOLD) {
+                                FilledTonalButton(
+                                    onClick = { confirmingAll = true },
+                                    modifier = Modifier.heightIn(min = 48.dp),
+                                ) { Text(stringResource(R.string.confirm_all)) }
+                            }
+                        }
                         Text(
                             text = stringResource(R.string.pending_explain),
                             style = MaterialTheme.typography.bodySmall,
