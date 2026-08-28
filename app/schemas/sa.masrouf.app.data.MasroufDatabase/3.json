@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 3,
-    "identityHash": "2f247d1b7c98f8a1131f8e0e388cf010",
+    "identityHash": "d226bd3f1a0663842ac8c7797133e6ad",
     "entities": [
       {
         "tableName": "transactions",
@@ -135,17 +135,17 @@
       },
       {
         "tableName": "merchant_rules",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`merchantKey` TEXT NOT NULL, `categoryId` TEXT NOT NULL, PRIMARY KEY(`merchantKey`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`merchant_key` TEXT NOT NULL, `category_id` TEXT NOT NULL, PRIMARY KEY(`merchant_key`))",
         "fields": [
           {
             "fieldPath": "merchantKey",
-            "columnName": "merchantKey",
+            "columnName": "merchant_key",
             "affinity": "TEXT",
             "notNull": true
           },
           {
             "fieldPath": "categoryId",
-            "columnName": "categoryId",
+            "columnName": "category_id",
             "affinity": "TEXT",
             "notNull": true
           }
@@ -153,7 +153,7 @@
         "primaryKey": {
           "autoGenerate": false,
           "columnNames": [
-            "merchantKey"
+            "merchant_key"
           ]
         },
         "indices": [],
@@ -163,7 +163,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2f247d1b7c98f8a1131f8e0e388cf010')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd226bd3f1a0663842ac8c7797133e6ad')"
     ]
   }
 }

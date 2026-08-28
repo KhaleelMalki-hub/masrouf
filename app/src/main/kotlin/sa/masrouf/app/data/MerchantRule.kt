@@ -1,5 +1,6 @@
 package sa.masrouf.app.data
 
+import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Entity
 import androidx.room.Insert
@@ -10,10 +11,12 @@ import androidx.room.Query
 /**
  * A filing decision the user made about a merchant.
  *
- * The built-in rules cover about 62% of a real twelve-year history. The rest are
- * one-off local shops and people's names - things no shipped list could contain,
- * because they are specific to one person's life. So the app learns them: file a
- * merchant once and every transaction from it, past and future, follows.
+ * The built-in merchant list and the type rules together file 83.7% of a real
+ * 22,084-record history. The remaining 3,595 are spread over 1,289 local shops and
+ * people's names at about two transactions each - things no shipped list could
+ * contain, because they are specific to one person's life. So the app learns them:
+ * file a merchant once and every transaction from it, past and future, follows. One
+ * such decision, on a merchant seen 602 times, filed all 602.
  *
  * Keyed on the folded merchant key rather than the raw name, so "ALDREES",
  * "AL DREES" and "ALDREES 1437 RIYADH" are one merchant, which is the same
@@ -21,8 +24,8 @@ import androidx.room.Query
  */
 @Entity(tableName = "merchant_rules")
 data class MerchantRule(
-    @PrimaryKey val merchantKey: String,
-    val categoryId: String,
+    @PrimaryKey @ColumnInfo(name = "merchant_key") val merchantKey: String,
+    @ColumnInfo(name = "category_id") val categoryId: String,
 )
 
 @Dao
@@ -35,7 +38,7 @@ interface MerchantRuleDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(rule: MerchantRule)
 
-    @Query("SELECT categoryId FROM merchant_rules WHERE merchantKey = :merchantKey")
+    @Query("SELECT category_id FROM merchant_rules WHERE merchant_key = :merchantKey")
     suspend fun categoryFor(merchantKey: String): String?
 
     @Query("SELECT * FROM merchant_rules")

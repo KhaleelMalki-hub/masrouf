@@ -40,8 +40,8 @@ abstract class MasroufDatabase : RoomDatabase() {
                 db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS merchant_rules (
-                        merchantKey TEXT NOT NULL PRIMARY KEY,
-                        categoryId TEXT NOT NULL
+                        merchant_key TEXT NOT NULL PRIMARY KEY,
+                        category_id TEXT NOT NULL
                     )
                     """
                 )
