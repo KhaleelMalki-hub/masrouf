@@ -38,6 +38,11 @@ object CategoryGuess {
         "CARREFOUR" to SaudiCategories.GROCERIES,
         "LULU" to SaudiCategories.GROCERIES,
         "NINJA" to SaudiCategories.GROCERIES,
+        // ananinja.com, cut by the card network before the NINJA the rule above
+        // looks for: the same 109 orders arrive as "www.anani". Restaurant orders
+        // placed through it are groceries too, by the user's own decision - one
+        // shop, one category, rather than a split nothing in the message supports.
+        "ANANI" to SaudiCategories.GROCERIES,
         "بقالة" to SaudiCategories.GROCERIES,
         "تموينات" to SaudiCategories.GROCERIES,
 

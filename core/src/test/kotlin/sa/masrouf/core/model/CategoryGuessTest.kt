@@ -148,4 +148,23 @@ class CategoryGuessTest {
         assertEquals(SaudiCategories.TRANSFERS, CategoryGuess.forMerchant("D360"))
         assertEquals(SaudiCategories.TRANSFERS, CategoryGuess.forMerchant("CASH TRANSFER"))
     }
+
+    /**
+     * One delivery app, five spellings, one category.
+     *
+     * The card network truncates at a different point each time, so the keyword
+     * the rule was written for is not always present: "www.anani" carries no
+     * "NINJA" at all.
+     */
+    @Test
+    fun `every spelling of the delivery app files the same way`() {
+        listOf("www.anani", "ANANINJA", "ANA NINJA", "WWW ANANINJA COM", "NINJA FOOD COMPANY")
+            .forEach { spelling ->
+                assertEquals(
+                    SaudiCategories.GROCERIES,
+                    CategoryGuess.forMerchant(spelling),
+                    spelling,
+                )
+            }
+    }
 }
