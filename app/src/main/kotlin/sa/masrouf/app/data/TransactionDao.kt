@@ -112,6 +112,16 @@ interface TransactionDao {
     @Query("UPDATE transactions SET category_id = :categoryId WHERE id = :id")
     suspend fun setCategory(id: String, categoryId: String?): Int
 
+    /**
+     * When the earliest stored transaction happened, or null on an empty database.
+     *
+     * Bounds how far back the month navigation goes. Without it a user can page
+     * backwards for ever through months that never had anything in them, which
+     * looks like data loss rather than like the end of the record.
+     */
+    @Query("SELECT MIN(occurred_at_millis) FROM transactions")
+    fun observeEarliest(): Flow<Long?>
+
     /** Everything with no category yet, for a one-off backfill over the history. */
     @Query("SELECT * FROM transactions WHERE category_id IS NULL")
     suspend fun uncategorised(): List<TransactionEntity>

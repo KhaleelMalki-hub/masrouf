@@ -63,6 +63,7 @@ class ConcurrentCaptureTest {
         override suspend fun confirm(id: String) = 0
         override suspend fun dismiss(id: String) = 0
         override suspend fun setCategory(id: String, categoryId: String?) = 0
+        override fun observeEarliest(): Flow<Long?> = MutableStateFlow(null)
         override suspend fun uncategorised() = emptyList<TransactionEntity>()
         override suspend fun delete(id: String) = 0
     }

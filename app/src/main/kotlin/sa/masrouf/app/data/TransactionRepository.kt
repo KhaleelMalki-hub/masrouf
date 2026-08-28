@@ -47,6 +47,14 @@ class TransactionRepository(
     fun observeRecent(limit: Int = RECENT_LIMIT): Flow<List<Transaction>> =
         dao.observeRecent(limit).map { rows -> rows.map(TransactionEntity::toModel) }
 
+    /**
+     * The first Riyadh month that has anything in it, or null when nothing is
+     * stored. Resolved through [RiyadhTime] like every other day decision.
+     */
+    fun observeEarliestMonth(): Flow<LocalDate?> = dao.observeEarliest().map { millis ->
+        millis?.let { RiyadhTime.localDate(Instant.ofEpochMilli(it)).withDayOfMonth(1) }
+    }
+
     /** Everything belonging to a Riyadh calendar month, newest first. */
     fun observeMonth(anyDayInMonth: LocalDate): Flow<List<Transaction>> {
         val first = anyDayInMonth.withDayOfMonth(1)

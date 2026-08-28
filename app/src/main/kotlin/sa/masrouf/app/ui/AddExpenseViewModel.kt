@@ -7,8 +7,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -18,12 +18,14 @@ import sa.masrouf.app.data.categoryShares
 import sa.masrouf.app.data.spendingTotal
 import sa.masrouf.core.model.Category
 import sa.masrouf.core.model.Direction
+import sa.masrouf.core.model.Status
 import sa.masrouf.core.model.Transaction
 import sa.masrouf.core.model.TransactionType
 import sa.masrouf.core.money.Money
 import sa.masrouf.core.time.RiyadhTime
 import java.time.Clock
 import java.time.Instant
+import java.time.LocalDate
 
 /** The transaction types a person records by hand. Order is the order they appear in. */
 val MANUAL_TYPES: List<TransactionType> = listOf(
@@ -76,6 +78,7 @@ data class AddExpenseState(
     enum class AmountError { REQUIRED, INVALID }
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class AddExpenseViewModel(
     private val repository: TransactionRepository,
     private val clock: Clock = Clock.system(RiyadhTime.ZONE),
@@ -101,6 +104,50 @@ class AddExpenseViewModel(
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     /**
+     * The month being looked at, as its first day.
+     *
+     * Defaults to now. Everything the dashboard shows - the total, the strip, the
+     * history - reads from this one value, so the page can never be showing one
+     * month's total above another month's transactions.
+     */
+    private val _selectedMonth = MutableStateFlow(
+        RiyadhTime.localDate(Instant.now(clock)).withDayOfMonth(1)
+    )
+    val selectedMonth: StateFlow<LocalDate> = _selectedMonth.asStateFlow()
+
+    /** The current month. Nothing may be selected after it; the future has no spending. */
+    val currentMonth: LocalDate
+        get() = RiyadhTime.localDate(Instant.now(clock)).withDayOfMonth(1)
+
+    /**
+     * The first month with anything in it.
+     *
+     * Paging stops here rather than running backwards for ever through empty
+     * months, which reads as data loss rather than as the end of the record.
+     */
+    val earliestMonth: StateFlow<LocalDate?> =
+        repository.observeEarliestMonth()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /** Everything confirmed in the selected month, newest first. */
+    val monthTransactions: StateFlow<List<Transaction>> =
+        _selectedMonth
+            .flatMapLatest { month -> repository.observeMonth(month) }
+            .map { rows -> rows.filter { it.status == Status.CONFIRMED } }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    fun showPreviousMonth() {
+        val earliest = earliestMonth.value ?: return
+        val candidate = _selectedMonth.value.minusMonths(1)
+        if (!candidate.isBefore(earliest)) _selectedMonth.value = candidate
+    }
+
+    fun showNextMonth() {
+        val candidate = _selectedMonth.value.plusMonths(1)
+        if (!candidate.isAfter(currentMonth)) _selectedMonth.value = candidate
+    }
+
+    /**
      * Captured records the user has not vouched for yet.
      *
      * Kept out of [monthTotal] until they are confirmed - see `spendingTotal`.
@@ -112,16 +159,11 @@ class AddExpenseViewModel(
     /**
      * Spending for the current Riyadh month.
      *
-     * The clock is read on every resubscription, not once at construction. A
-     * ViewModel that survives midnight on the 1st would otherwise keep showing last
-     * month's total under this month's heading, with new records falling outside
-     * its fixed bounds and never appearing - a wrong number presented as fact,
-     * which is the failure `Status` and `spendingTotal` exist to prevent, arriving
-     * through the date instead of the amount.
-     *
-     * ponytail: corrects when the screen is backgrounded past the 5s stop timeout
-     * and returned to. An app left in the foreground across midnight still shows
-     * the old month; closing that needs a timer, which is not worth it here.
+     * Follows [selectedMonth], so the number and the strip beneath it are always
+     * describing the same month. The month the app opens on is read from the clock
+     * once; paging is then explicit, which also removes the old problem of a
+     * ViewModel surviving midnight on the 1st and quietly showing last month under
+     * this month's heading.
      */
     /**
      * The month split into the bands the strip draws, largest share first.
@@ -130,12 +172,14 @@ class AddExpenseViewModel(
      * strip cannot be showing one month while the number above it shows another.
      */
     val monthShares: StateFlow<List<Pair<Category?, Money>>> =
-        flow { emitAll(repository.observeMonth(RiyadhTime.localDate(Instant.now(clock)))) }
+        _selectedMonth
+            .flatMapLatest { month -> repository.observeMonth(month) }
             .map { it.categoryShares() }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val monthTotal: StateFlow<Money> =
-        flow { emitAll(repository.observeMonth(RiyadhTime.localDate(Instant.now(clock)))) }
+        _selectedMonth
+            .flatMapLatest { month -> repository.observeMonth(month) }
             .map { it.spendingTotal() }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), Money.ZERO)
 

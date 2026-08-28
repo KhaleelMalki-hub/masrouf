@@ -55,6 +55,9 @@ class FakeDao : TransactionDao {
         return 1
     }
 
+    override fun observeEarliest(): Flow<Long?> =
+        state.map { rows -> rows.minOfOrNull { it.occurredAtMillis } }
+
     override suspend fun uncategorised(): List<TransactionEntity> =
         state.value.filter { it.categoryId == null }
 

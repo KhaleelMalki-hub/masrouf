@@ -70,6 +70,7 @@ import sa.masrouf.core.model.SaudiCategories
 import sa.masrouf.core.model.Source
 import sa.masrouf.core.model.Transaction
 import sa.masrouf.core.model.TransactionType
+import java.time.LocalDate
 import sa.masrouf.core.money.Money
 
 /**
@@ -101,6 +102,9 @@ fun AddExpenseScreen(
     val monthTotal by viewModel.monthTotal.collectAsStateWithLifecycle()
     val pending by viewModel.pending.collectAsStateWithLifecycle()
     val shares by viewModel.monthShares.collectAsStateWithLifecycle()
+    val selectedMonth by viewModel.selectedMonth.collectAsStateWithLifecycle()
+    val earliestMonth by viewModel.earliestMonth.collectAsStateWithLifecycle()
+    val monthRows by viewModel.monthTransactions.collectAsStateWithLifecycle()
     val importState by viewModel.importState.collectAsStateWithLifecycle()
     val currency = stringResource(R.string.currency_sar)
 
@@ -148,10 +152,15 @@ fun AddExpenseScreen(
         ) {
             item {
                 MonthPanel(
+                    month = selectedMonth,
                     total = monthTotal.toPlainString(),
                     shares = shares,
                     currencyLabel = currency,
                     pendingCount = pending.size,
+                    canGoBack = earliestMonth?.let { selectedMonth.isAfter(it) } == true,
+                    canGoForward = selectedMonth.isBefore(viewModel.currentMonth),
+                    onPrevious = viewModel::showPreviousMonth,
+                    onNext = viewModel::showNextMonth,
                 )
             }
 
@@ -211,10 +220,10 @@ fun AddExpenseScreen(
                 )
             }
 
-            if (recent.isEmpty()) {
-                item { Text(stringResource(R.string.recent_empty)) }
+            if (monthRows.isEmpty()) {
+                item { Text(stringResource(R.string.month_empty)) }
             } else {
-                items(recent, key = { it.id }) { transaction ->
+                items(monthRows, key = { it.id }) { transaction ->
                     TransactionRow(
                         transaction = transaction,
                         currencyLabel = currency,
@@ -607,10 +616,15 @@ private val ThemeMode.labelRes: Int
 
 @Composable
 private fun MonthPanel(
+    month: LocalDate,
     total: String,
     shares: List<Pair<Category?, Money>>,
     currencyLabel: String,
     pendingCount: Int,
+    canGoBack: Boolean,
+    canGoForward: Boolean,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
 ) {
     val uncategorised = stringResource(R.string.uncategorised)
     val bands = shares.map { (category, amount) ->
@@ -626,22 +640,20 @@ private fun MonthPanel(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 8.dp)
-            .clip(RoundedCornerShape(6.dp))
+            .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surfaceContainer)
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        MonthNavigator(
+            month = month,
+            canGoBack = canGoBack,
+            canGoForward = canGoForward,
+            onPrevious = onPrevious,
+            onNext = onNext,
+        )
+
         Column {
-            Text(
-                text = stringResource(R.string.month_total_label),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            // Amount and currency set separately rather than as one string. At
-            // display size the joined form wraps, and "ر.س" alone on the next line
-            // reads as a second number rather than as a unit. The currency is also
-            // not the information here - it never changes - so it takes the
-            // smaller size and sits on the number's baseline.
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(
                     text = total,
@@ -677,6 +689,46 @@ private fun MonthPanel(
             )
         } else {
             BandLegend(bands = bands, currencyLabel = currencyLabel)
+        }
+    }
+}
+
+/**
+ * Paging between months.
+ *
+ * Arrows are laid out by reading direction rather than by absolute side, so
+ * "back" is on the right in Arabic. Both are disabled at the ends rather than
+ * hidden: a control that vanishes makes the user wonder where it went, one that
+ * dims says there is nothing further this way.
+ */
+@Composable
+private fun MonthNavigator(
+    month: LocalDate,
+    canGoBack: Boolean,
+    canGoForward: Boolean,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = month.monthLabel(),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Row {
+            TextButton(
+                onClick = onPrevious,
+                enabled = canGoBack,
+                modifier = Modifier.heightIn(min = 48.dp),
+            ) { Text("\u2039", style = MaterialTheme.typography.titleLarge) }
+            TextButton(
+                onClick = onNext,
+                enabled = canGoForward,
+                modifier = Modifier.heightIn(min = 48.dp),
+            ) { Text("\u203A", style = MaterialTheme.typography.titleLarge) }
         }
     }
 }
