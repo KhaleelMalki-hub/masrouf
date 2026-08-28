@@ -121,4 +121,11 @@
     <string name="compare_none">لا مقارنة، ما فيه شهر قبله</string>
     <string name="results_none">ما فيه نتيجة</string>
     <string name="showing_category">%1$s فقط</string>
+    <string name="refile_title">تصنيف %1$s</string>
+    <string name="refile_all_note">بيتطبّق على كل عمليات هذا المتجر، والقادمة كمان.</string>
+    <string name="refile_done">صُنّفت %1$s عملية</string>
+    <string name="category_charity">صدقة وزكاة</string>
+    <string name="category_entertainment">ترفيه</string>
+    <string name="category_cash">نقد</string>
+    <string name="category_income">دخل</string>
 </resources>

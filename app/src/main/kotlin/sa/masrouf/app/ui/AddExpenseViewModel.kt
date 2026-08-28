@@ -19,6 +19,7 @@ import sa.masrouf.app.data.categoryShares
 import sa.masrouf.app.data.spendingTotal
 import sa.masrouf.core.model.Category
 import sa.masrouf.core.model.Direction
+import sa.masrouf.core.model.SaudiCategories
 import sa.masrouf.core.model.Status
 import sa.masrouf.core.model.Transaction
 import sa.masrouf.core.model.TransactionType
@@ -147,15 +148,21 @@ class AddExpenseViewModel(
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query.asStateFlow()
 
-    /** A category the list is narrowed to, set by tapping its row in the legend. */
-    private val _categoryFilter = MutableStateFlow<Category?>(null)
-    val categoryFilter: StateFlow<Category?> = _categoryFilter.asStateFlow()
+    /** What the list is narrowed to, set by tapping a row in the legend. */
+    private val _categoryFilter = MutableStateFlow<HistoryFilter?>(null)
+    val categoryFilter: StateFlow<HistoryFilter?> = _categoryFilter.asStateFlow()
 
     fun onQueryChanged(value: String) { _query.value = value }
 
-    /** Tapping the same category again clears the filter, so it is its own undo. */
+    /**
+     * Tapping the same band again clears the filter, so it is its own undo.
+     *
+     * A null [category] is the legend's uncategorised band, which selects the
+     * user's filing worklist rather than clearing the filter.
+     */
     fun toggleCategoryFilter(category: Category?) {
-        _categoryFilter.value = if (_categoryFilter.value?.id == category?.id) null else category
+        val next = category?.let(HistoryFilter::OfCategory) ?: HistoryFilter.Unfiled
+        _categoryFilter.value = if (_categoryFilter.value == next) null else next
     }
 
     fun clearFilters() {
@@ -182,7 +189,13 @@ class AddExpenseViewModel(
         combine(confirmedThisMonth, _query, _categoryFilter) { rows, query, category ->
             val needle = ArabicText.foldForMatching(query).trim()
             rows.asSequence()
-                .filter { category == null || it.categoryId == category.id }
+                .filter { row ->
+                    when (category) {
+                        null -> true
+                        HistoryFilter.Unfiled -> SaudiCategories.byId(row.categoryId) == null
+                        is HistoryFilter.OfCategory -> row.categoryId == category.category.id
+                    }
+                }
                 .filter { row ->
                     needle.isEmpty() ||
                         ArabicText.foldForMatching(row.merchantRaw.orEmpty()).contains(needle) ||
@@ -295,9 +308,15 @@ class AddExpenseViewModel(
             _importState.value = ImportState.Running(0)
             val report = runCatching {
                 val messages = read()
-                HistoryImport(repository).run(messages) { examined, _ ->
+                val imported = HistoryImport(repository).run(messages) { examined, _ ->
                     _importState.value = ImportState.Running(examined)
                 }
+                // Filing runs as part of importing rather than as a second thing to
+                // remember. An import of twenty thousand records that lands with no
+                // categories on any of them is a history the user cannot read, and
+                // "now go and press the other button" is not a design.
+                repository.fileUncategorised()
+                imported
             }.getOrNull()
 
             _importState.value = report
@@ -328,6 +347,19 @@ class AddExpenseViewModel(
 
     fun clearImportState() {
         _importState.value = ImportState.Idle
+    }
+
+    /**
+     * Files every transaction from a merchant, and remembers the decision.
+     *
+     * The whole merchant rather than the one row: refiling only what is on screen
+     * leaves the other forty from the same shop wrong, and the user would have to
+     * do it again next month.
+     */
+    fun fileMerchant(merchantKey: String, categoryId: String) {
+        viewModelScope.launch {
+            _importState.value = ImportState.Filed(repository.fileMerchant(merchantKey, categoryId))
+        }
     }
 
     /** Refiles a record the user categorised wrongly the first time. */

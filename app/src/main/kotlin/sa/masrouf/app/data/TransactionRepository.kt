@@ -33,6 +33,7 @@ import java.util.UUID
 class TransactionRepository(
     private val dao: TransactionDao,
     private val detector: DuplicateDetector = DuplicateDetector(),
+    private val rules: MerchantRuleDao? = null,
 ) {
 
     /**
@@ -157,7 +158,15 @@ class TransactionRepository(
         transaction: Transaction,
         accountLast4: String? = null,
     ): Boolean = captureLock.withLock {
-        val entity = transaction.toEntity(accountLast4)
+        // A decision the user already made about this merchant outranks the
+        // built-in guess, and outranks having no category at all. Applied here
+        // rather than in the recorder because the recorder has no database and
+        // should not grow one.
+        val learned = transaction.merchantKey
+            ?.let { key -> rules?.categoryFor(key) }
+        val entity = transaction
+            .let { if (it.categoryId == null && learned != null) it.copy(categoryId = learned) else it }
+            .toEntity(accountLast4)
 
         // Wide enough to cover the detector's own widest window, which is a day for
         // anything involving a statement. Narrower here and the detector would never
@@ -193,6 +202,22 @@ class TransactionRepository(
         dao.observePending().map { rows -> rows.map(TransactionEntity::toModel) }
 
     /**
+     * Files every transaction from one merchant, and remembers the decision.
+     *
+     * Both halves matter. Refiling only the row in front of the user leaves the
+     * other forty from the same shop wrong, and refiling all of them without
+     * remembering means the next message from that shop arrives unfiled again. The
+     * built-in rules cover about 62% of a real history; this is how the rest gets
+     * covered, one decision at a time, by the only person who knows.
+     *
+     * @return how many existing records were refiled.
+     */
+    suspend fun fileMerchant(merchantKey: String, categoryId: String): Int {
+        rules?.upsert(MerchantRule(merchantKey = merchantKey, categoryId = categoryId))
+        return dao.setCategoryForMerchant(merchantKey, categoryId)
+    }
+
+    /**
      * Files a record under a category, or clears it when [categoryId] is null.
      *
      * @return false when no such record exists.
@@ -210,11 +235,16 @@ class TransactionRepository(
      * @return how many were filed.
      */
     suspend fun fileUncategorised(): Int {
+        // The user's own decisions first: they were made about this exact merchant
+        // and are never a guess.
+        val learned = rules?.all().orEmpty().associate { it.merchantKey to it.categoryId }
         var filed = 0
         dao.uncategorised().forEach { row ->
             val model = runCatching { row.toModel() }.getOrNull() ?: return@forEach
-            val guess = CategoryGuess.suggest(model.merchantRaw, model.type) ?: return@forEach
-            if (dao.setCategory(row.id, guess.id) == 1) filed++
+            val category = row.merchantKey?.let(learned::get)
+                ?: CategoryGuess.suggest(model.merchantRaw, model.type)?.id
+                ?: return@forEach
+            if (dao.setCategory(row.id, category) == 1) filed++
         }
         return filed
     }

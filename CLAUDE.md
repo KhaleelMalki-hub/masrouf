@@ -6,8 +6,8 @@ statements. Single user, on-device, offline. Not a product, not published.
 ## Commands
 
 ```bash
-./gradlew :core:test              # 171 tests, runs anywhere with a JDK
-./gradlew :app:testDebugUnitTest  # 85 tests, needs the Android SDK
+./gradlew :core:test              # 173 tests, runs anywhere with a JDK
+./gradlew :app:testDebugUnitTest  # 99 tests, needs the Android SDK
 ./gradlew :app:assembleDebug      # needs local.properties with sdk.dir
 ```
 
@@ -171,7 +171,13 @@ app/    Android - Compose, Room, Arabic default with English in values-en
 - Categories are a fixed list in `SaudiCategories`, not a table. Nothing lets a
   person add or rename one, so a table would be storage for a value that never
   changes plus two seeding paths that can disagree. Give them editing and that
-  reasoning expires.
+  reasoning expires. What *is* a table is `merchant_rules`: the user's own filing
+  decisions, keyed on the folded merchant. Measured against a real 22,084-record
+  history, the shipped merchant list plus `CategoryGuess.forType` file 83.7%; the
+  remaining 3,595 are spread over 1,289 local merchants at about two each, so no
+  list that ships in an APK will ever reach them. Filing one merchant files every
+  transaction from it and every future one, which is the only mechanism that scales
+  to that tail.
 - A category is optional everywhere. Filing can wait; recording cannot, and a
   required category turns a five-second entry into one that gets skipped. Both
   paths keep the last choice, since several of the same kind in a row is the

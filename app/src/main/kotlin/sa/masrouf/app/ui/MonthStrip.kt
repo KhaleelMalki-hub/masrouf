@@ -151,7 +151,7 @@ private fun EmptyStrip(modifier: Modifier) {
 fun BandLegend(
     bands: List<Band>,
     currencyLabel: String,
-    selected: Category?,
+    selected: HistoryFilter?,
     onSelect: (Category?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -166,7 +166,13 @@ fun BandLegend(
                 colour = band.colour,
                 name = band.label,
                 amount = band.amount.forDisplay(currencyLabel),
-                selected = band.category?.id != null && band.category.id == selected?.id,
+                selected = when (selected) {
+                    null -> false
+                    // The uncategorised band has no category, and selecting it is
+                    // what puts the user in front of the rows still to be filed.
+                    HistoryFilter.Unfiled -> band.category == null
+                    is HistoryFilter.OfCategory -> band.category?.id == selected.category.id
+                },
                 onClick = { onSelect(band.category) },
                 // Each row is filled to its share of the LARGEST band, not of the
                 // month. Against the month total the small categories would all be

@@ -72,6 +72,10 @@ val Category.labelRes: Int
         SaudiCategories.BILLS.id -> R.string.category_bills
         SaudiCategories.HEALTH.id -> R.string.category_health
         SaudiCategories.SHOPPING.id -> R.string.category_shopping
+        SaudiCategories.ENTERTAINMENT.id -> R.string.category_entertainment
+        SaudiCategories.CHARITY.id -> R.string.category_charity
+        SaudiCategories.CASH.id -> R.string.category_cash
+        SaudiCategories.INCOME.id -> R.string.category_income
         SaudiCategories.TRANSFERS.id -> R.string.category_transfers
         else -> R.string.category_other
     }

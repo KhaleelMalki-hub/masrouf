@@ -104,4 +104,11 @@
     <string name="compare_none">No earlier month to compare</string>
     <string name="results_none">Nothing matches</string>
     <string name="showing_category">%1$s only</string>
+    <string name="refile_title">File %1$s</string>
+    <string name="refile_all_note">Applies to every transaction from this merchant, and future ones.</string>
+    <string name="refile_done">Filed %1$s transactions</string>
+    <string name="category_charity">Charity</string>
+    <string name="category_entertainment">Entertainment</string>
+    <string name="category_cash">Cash</string>
+    <string name="category_income">Income</string>
 </resources>

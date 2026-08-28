@@ -151,6 +151,14 @@ interface TransactionDao {
     )
     fun observeMonthsWithData(): Flow<List<String>>
 
+    /**
+     * Files every transaction from one merchant at once.
+     *
+     * @return how many were refiled.
+     */
+    @Query("UPDATE transactions SET category_id = :categoryId WHERE merchant_key = :merchantKey")
+    suspend fun setCategoryForMerchant(merchantKey: String, categoryId: String?): Int
+
     /** Everything with no category yet, for a one-off backfill over the history. */
     @Query("SELECT * FROM transactions WHERE category_id IS NULL")
     suspend fun uncategorised(): List<TransactionEntity>

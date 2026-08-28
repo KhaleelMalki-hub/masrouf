@@ -13,6 +13,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -116,6 +117,28 @@ fun AddExpenseScreen(
     var confirming by remember { mutableStateOf<DestructiveAction?>(null) }
     var confirmingAll by remember { mutableStateOf(false) }
     var pickingMonth by remember { mutableStateOf(false) }
+    var refiling by remember { mutableStateOf<Transaction?>(null) }
+
+    refiling?.let { target ->
+        ModalBottomSheet(
+            onDismissRequest = { refiling = null },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        ) {
+            RefileSheet(
+                transaction = target,
+                onPick = { category ->
+                    val key = target.merchantKey
+                    if (key != null && category != null) {
+                        viewModel.fileMerchant(key, category.id)
+                    } else {
+                        viewModel.setCategory(target.id, category?.id)
+                    }
+                    refiling = null
+                },
+            )
+        }
+    }
 
     if (pickingMonth) {
         ModalBottomSheet(
@@ -321,6 +344,7 @@ fun AddExpenseScreen(
                         transaction = transaction,
                         currencyLabel = currency,
                         onDelete = { confirming = DestructiveAction.Delete(transaction) },
+                        onRefile = { refiling = transaction },
                     )
                 }
             }
@@ -747,7 +771,7 @@ private fun MonthPanel(
     onNext: () -> Unit,
     onPickMonth: () -> Unit,
     previousTotal: Money?,
-    activeFilter: Category?,
+    activeFilter: HistoryFilter?,
     onToggleCategory: (Category?) -> Unit,
 ) {
     val uncategorised = stringResource(R.string.uncategorised)
@@ -1032,11 +1056,17 @@ private fun TransactionRow(
     transaction: Transaction,
     currencyLabel: String,
     onDelete: () -> Unit,
+    onRefile: () -> Unit,
 ) {
     val category = SaudiCategories.byId(transaction.categoryId)
 
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            // The row is the way to refile it. A wrong category is the most common
+            // thing a person wants to change about a transaction, and it should not
+            // require finding a control.
+            .clickable(onClick = onRefile),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // The category's own dye, as a thread down the edge of the row. Without it
@@ -1202,7 +1232,7 @@ private fun MonthComparison(current: String, previous: Money?, currencyLabel: St
 private fun HistoryFilters(
     query: String,
     onQueryChange: (String) -> Unit,
-    activeFilter: Category?,
+    activeFilter: HistoryFilter?,
     onClear: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1220,9 +1250,13 @@ private fun HistoryFilters(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                activeFilter?.let {
+                activeFilter?.let { filter ->
+                    val name = when (filter) {
+                        HistoryFilter.Unfiled -> stringResource(R.string.uncategorised)
+                        is HistoryFilter.OfCategory -> stringResource(filter.category.labelRes)
+                    }
                     Text(
-                        text = stringResource(R.string.showing_category, stringResource(it.labelRes)),
+                        text = stringResource(R.string.showing_category, name),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
                     )
@@ -1233,5 +1267,48 @@ private fun HistoryFilters(
                 ) { Text(stringResource(R.string.filter_clear)) }
             }
         }
+    }
+}
+
+/**
+ * Refiling a merchant.
+ *
+ * The decision is about the merchant, not the row: a person deciding that ALDREES
+ * is transport has decided it for all forty of them, and for next month's. Saying
+ * so plainly is better than a checkbox nobody reads, and better than silently
+ * doing it and surprising them.
+ */
+@Composable
+private fun RefileSheet(
+    transaction: Transaction,
+    onPick: (Category?) -> Unit,
+) {
+    val current = SaudiCategories.byId(transaction.categoryId)
+    val merchant = transaction.merchantRaw ?: stringResource(transaction.type.labelRes)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 28.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.refile_title, merchant),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(horizontal = 20.dp),
+        )
+        if (transaction.merchantKey != null) {
+            Text(
+                text = stringResource(R.string.refile_all_note),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 20.dp),
+            )
+        }
+        CategoryChips(
+            selected = current,
+            onSelect = onPick,
+            edgePadding = 20.dp,
+        )
     }
 }

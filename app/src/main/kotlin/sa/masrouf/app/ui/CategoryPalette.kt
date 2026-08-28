@@ -27,6 +27,10 @@ private val LightBands = mapOf(
     SaudiCategories.BILLS.id to Color(0xFF8A5A00),
     SaudiCategories.HEALTH.id to Color(0xFF6C4E9C),
     SaudiCategories.SHOPPING.id to Color(0xFF9A4A2F),
+    SaudiCategories.ENTERTAINMENT.id to Color(0xFF7A3E8F),
+    SaudiCategories.CHARITY.id to Color(0xFF1F7A6B),
+    SaudiCategories.CASH.id to Color(0xFF6B5B2E),
+    SaudiCategories.INCOME.id to Color(0xFF2F7A3A),
     SaudiCategories.TRANSFERS.id to Color(0xFF4A6572),
     SaudiCategories.OTHER.id to Color(0xFF6E6E76),
 )
@@ -38,6 +42,10 @@ private val DarkBands = mapOf(
     SaudiCategories.BILLS.id to Color(0xFFF5C264),
     SaudiCategories.HEALTH.id to Color(0xFFCDB4F5),
     SaudiCategories.SHOPPING.id to Color(0xFFFFB59B),
+    SaudiCategories.ENTERTAINMENT.id to Color(0xFFE0AEF5),
+    SaudiCategories.CHARITY.id to Color(0xFF7FD8C6),
+    SaudiCategories.CASH.id to Color(0xFFDCC98A),
+    SaudiCategories.INCOME.id to Color(0xFF8FD99B),
     SaudiCategories.TRANSFERS.id to Color(0xFFA8C8D8),
     SaudiCategories.OTHER.id to Color(0xFFA8A8B2),
 )

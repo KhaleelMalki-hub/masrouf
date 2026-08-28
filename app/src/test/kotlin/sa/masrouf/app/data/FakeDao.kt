@@ -77,6 +77,14 @@ class FakeDao : TransactionDao {
         }.distinct().sortedDescending()
     }
 
+    override suspend fun setCategoryForMerchant(merchantKey: String, categoryId: String?): Int {
+        val hits = state.value.filter { it.merchantKey == merchantKey }
+        state.value = state.value.map {
+            if (it.merchantKey == merchantKey) it.copy(categoryId = categoryId) else it
+        }
+        return hits.size
+    }
+
     override suspend fun uncategorised(): List<TransactionEntity> =
         state.value.filter { it.categoryId == null }
 

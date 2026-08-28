@@ -16,5 +16,5 @@ class MasroufApp : Application() {
 
     val database: MasroufDatabase by lazy { MasroufDatabase.open(this) }
     val preferences: Preferences by lazy { Preferences(this) }
-    val transactions: TransactionRepository by lazy { TransactionRepository(database.transactions()) }
+    val transactions: TransactionRepository by lazy { TransactionRepository(database.transactions(), rules = database.merchantRules()) }
 }
