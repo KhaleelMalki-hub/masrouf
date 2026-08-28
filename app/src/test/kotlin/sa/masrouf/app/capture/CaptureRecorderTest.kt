@@ -30,10 +30,7 @@ class CaptureRecorderTest {
 
     @Test
     fun `a purchase notification becomes a pending transaction`() {
-        val decision = recorder.decide(
-            notification(RealMessages.RAJHI_POS_SHORT, "com.alrajhibank.activity"),
-            id = "t-1",
-        )
+        val decision = recorder.decide(notification(RealMessages.RAJHI_POS_SHORT, "com.alrajhibank.activity"), id = "t-1", Source.NOTIFICATION)
 
         val stored = assertIs<CaptureRecorder.Decision.Store>(decision)
         assertEquals(Status.PENDING, stored.transaction.status)
@@ -52,7 +49,7 @@ class CaptureRecorderTest {
         )
 
         val statuses = bodies.mapNotNull { (body, pkg) ->
-            (recorder.decide(notification(body, pkg), "t") as? CaptureRecorder.Decision.Store)
+            (recorder.decide(notification(body, pkg), "t", Source.NOTIFICATION) as? CaptureRecorder.Decision.Store)
                 ?.transaction
                 ?.status
         }
@@ -66,10 +63,7 @@ class CaptureRecorderTest {
         // The OTP carries the same amount and merchant as the purchase it
         // authorises and arrives seconds earlier. Stored, it doubles the purchase
         // and writes a credential to disk.
-        val decision = recorder.decide(
-            notification(RealMessages.SNB_OTP, "com.snb.alahli"),
-            id = "t-otp",
-        )
+        val decision = recorder.decide(notification(RealMessages.SNB_OTP, "com.snb.alahli"), id = "t-otp", Source.NOTIFICATION)
 
         val skipped = assertIs<CaptureRecorder.Decision.Skip>(decision)
         assertTrue(skipped.bodyWasSensitive)
@@ -86,7 +80,7 @@ class CaptureRecorderTest {
         )
 
         otps.forEach { (body, pkg) ->
-            val decision = recorder.decide(notification(body, pkg), "t")
+            val decision = recorder.decide(notification(body, pkg), "t", Source.NOTIFICATION)
             val skipped = assertIs<CaptureRecorder.Decision.Skip>(decision, "stored an OTP from $pkg")
             assertTrue(skipped.bodyWasSensitive, "OTP from $pkg not marked sensitive")
         }
@@ -95,10 +89,7 @@ class CaptureRecorderTest {
     @Test
     fun `a declined transaction is not recorded as spending`() {
         // Same shape as a successful purchase, but no money moved.
-        val decision = recorder.decide(
-            notification(RealMessages.BARQ_DECLINED, "sa.barq.app"),
-            id = "t-declined",
-        )
+        val decision = recorder.decide(notification(RealMessages.BARQ_DECLINED, "sa.barq.app"), id = "t-declined", Source.NOTIFICATION)
 
         val skipped = assertIs<CaptureRecorder.Decision.Skip>(decision)
         assertEquals("DECLINED", skipped.reason)
@@ -107,10 +98,7 @@ class CaptureRecorderTest {
 
     @Test
     fun `a notification from a non-bank app is ignored`() {
-        val decision = recorder.decide(
-            notification("Your order has shipped", "com.example.shopping"),
-            id = "t-other",
-        )
+        val decision = recorder.decide(notification("Your order has shipped", "com.example.shopping"), id = "t-other", Source.NOTIFICATION)
 
         assertEquals("UNKNOWN_SENDER", assertIs<CaptureRecorder.Decision.Skip>(decision).reason)
     }
@@ -122,8 +110,8 @@ class CaptureRecorderTest {
         // so the fingerprint has to be stable across two separate decisions.
         val message = notification(RealMessages.RAJHI_POS_SHORT, "com.alrajhibank.activity")
 
-        val first = assertIs<CaptureRecorder.Decision.Store>(recorder.decide(message, "id-a"))
-        val second = assertIs<CaptureRecorder.Decision.Store>(recorder.decide(message, "id-b"))
+        val first = assertIs<CaptureRecorder.Decision.Store>(recorder.decide(message, "id-a", Source.NOTIFICATION))
+        val second = assertIs<CaptureRecorder.Decision.Store>(recorder.decide(message, "id-b", Source.NOTIFICATION))
 
         assertEquals(first.transaction.fingerprint, second.transaction.fingerprint)
         // The ids differ, so the match is the fingerprint's doing and not an artefact
@@ -144,18 +132,15 @@ class CaptureRecorderTest {
             packageName = "com.alrajhibank.activity",
         )
 
-        val a = assertIs<CaptureRecorder.Decision.Store>(recorder.decide(early, "id-a"))
-        val b = assertIs<CaptureRecorder.Decision.Store>(recorder.decide(later, "id-b"))
+        val a = assertIs<CaptureRecorder.Decision.Store>(recorder.decide(early, "id-a", Source.NOTIFICATION))
+        val b = assertIs<CaptureRecorder.Decision.Store>(recorder.decide(later, "id-b", Source.NOTIFICATION))
 
         assertNotEquals(a.transaction.fingerprint, b.transaction.fingerprint)
     }
 
     @Test
     fun `the message body is kept so a parsing bug can be replayed against it`() {
-        val decision = recorder.decide(
-            notification(RealMessages.RAJHI_POS_SHORT, "com.alrajhibank.activity"),
-            id = "t-raw",
-        )
+        val decision = recorder.decide(notification(RealMessages.RAJHI_POS_SHORT, "com.alrajhibank.activity"), id = "t-raw", Source.NOTIFICATION)
 
         val stored = assertIs<CaptureRecorder.Decision.Store>(decision)
         assertTrue(stored.transaction.rawText!!.contains("8.28"))

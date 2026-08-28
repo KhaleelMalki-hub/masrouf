@@ -28,9 +28,8 @@
         </activity>
 
         <!--
-          Reads bank notifications off the status bar. The permission is held by
-          the system and granted by the user in settings, so the app cannot start
-          capturing without them having gone there first.
+          Receives bank SMS. BROADCAST_SMS is a signature|privileged permission no
+          third-party app can hold, so only the system can deliver to this receiver.
         -->
         <receiver
             android:name=".capture.SmsCaptureReceiver"
@@ -41,6 +40,11 @@
             </intent-filter>
         </receiver>
 
+        <!--
+          Reads bank notifications off the status bar. The permission is held by
+          the system and granted by the user in settings, so the app cannot start
+          capturing without them having gone there first.
+        -->
         <service
             android:name=".capture.MasroufNotificationListener"
             android:exported="false"

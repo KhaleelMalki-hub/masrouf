@@ -1,7 +1,6 @@
 package sa.masrouf.app.capture
 
 import sa.masrouf.core.capture.CapturePipeline
-import sa.masrouf.core.capture.MessageGate
 import sa.masrouf.core.capture.RawMessage
 import sa.masrouf.core.dedup.Fingerprint
 import sa.masrouf.core.model.Source
@@ -38,9 +37,13 @@ class CaptureRecorder(private val pipeline: CapturePipeline = CapturePipeline())
         /**
          * Deliberately not stored.
          *
-         * @param bodyWasSensitive true when the message carried a credential. The
-         *   body is absent from this decision entirely, not merely unused, so there
-         *   is no field a later caller could log by accident.
+         * @param bodyWasSensitive true when the message carried a credential.
+         *
+         *   Note what actually enforces the invariant: this type has no body field
+         *   at all, so logging one through a Skip is structurally impossible rather
+         *   than merely discouraged. A `mustNotPersistBody` helper used to sit in a
+         *   companion here, documented as the guard - nothing ever called it, and a
+         *   comment naming a guard that is not the guard is worse than no comment.
          */
         data class Skip(val reason: String, val bodyWasSensitive: Boolean = false) : Decision
     }
@@ -49,8 +52,14 @@ class CaptureRecorder(private val pipeline: CapturePipeline = CapturePipeline())
      * @param id identity for the new record. Passed in rather than generated here so
      *   that the same message decided twice produces the same answer, which is what
      *   makes this testable at all.
+     * @param source which transport delivered this. A parameter, not something
+     *   inferred from the message: this class is shared by the notification listener
+     *   and the SMS receiver, and a shared decision layer must not know either
+     *   caller's name. Deriving it from `packageName != null` would be a shorter
+     *   diff that silently guesses when both fields are absent - the same class of
+     *   defect as hardcoding it, which is what this parameter replaces.
      */
-    fun decide(message: RawMessage, id: String): Decision =
+    fun decide(message: RawMessage, id: String, source: Source): Decision =
         when (val outcome = pipeline.process(message)) {
             is CapturePipeline.Outcome.Rejected -> Decision.Skip(
                 reason = outcome.reason.name,
@@ -82,14 +91,14 @@ class CaptureRecorder(private val pipeline: CapturePipeline = CapturePipeline())
                             ?.let(ArabicText::normalizeMerchant)
                             ?.takeIf { it.isNotBlank() },
                         note = null,
-                        source = Source.NOTIFICATION,
+                        source = source,
                         // PENDING regardless of the parser's confidence. Lowering
                         // CONFIRMATION_THRESHOLD is a decision taken per parser after
                         // it has been measured against real messages, not one this
                         // class is allowed to make on the strength of a float.
                         status = Status.PENDING,
                         fingerprint = Fingerprint.forMessage(
-                            source = Source.NOTIFICATION,
+                            source = source,
                             occurredAt = draft.occurredAt,
                             amount = draft.amount,
                             direction = draft.direction,
@@ -103,17 +112,4 @@ class CaptureRecorder(private val pipeline: CapturePipeline = CapturePipeline())
                 )
             }
         }
-
-    companion object {
-        /**
-         * True when this message must not have its body written anywhere, including
-         * a diagnostic log.
-         *
-         * Exposed so the service can check it before logging, without having to
-         * reproduce the gate's reasoning - reproducing it is how the two drift apart
-         * and how a credential eventually reaches a log file.
-         */
-        fun mustNotPersistBody(message: RawMessage): Boolean =
-            MessageGate.mustNotPersistBody(message)
-    }
 }

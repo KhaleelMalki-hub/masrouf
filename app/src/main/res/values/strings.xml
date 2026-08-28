@@ -21,26 +21,38 @@
     <string name="type_bill_payment">سداد فاتورة</string>
     <string name="type_atm_withdrawal">سحب نقدي</string>
     <string name="type_own_transfer">تحويل بين حساباتي</string>
+    <string name="type_atm_deposit">إيداع نقدي</string>
+    <string name="type_transfer_in">تحويل وارد</string>
+    <string name="type_salary">راتب</string>
+    <string name="type_refund">استرداد</string>
+    <string name="type_fee">رسوم</string>
+    <string name="type_unknown">عملية غير محددة</string>
 
     <string name="error_amount_required">أدخل المبلغ</string>
     <string name="error_amount_invalid">مبلغ غير صالح. ريالات وهللتان على الأكثر.</string>
 
     <string name="recent_title">آخر العمليات</string>
     <string name="recent_empty">لا توجد عمليات بعد</string>
-    <string name="status_pending">بانتظار التأكيد</string>
 
     <string name="month_total_label">مصروف هذا الشهر</string>
 
     <string name="capture_off_title">التقاط عمليات البنوك متوقف</string>
     <string name="capture_off_body">امنح التطبيق صلاحية قراءة الإشعارات ليسجّل عمليات بنوكك تلقائياً. تبقى البيانات على جهازك.</string>
     <string name="capture_enable">فتح الإعدادات</string>
-    <string name="capture_on">التقاط الإشعارات مفعّل</string>
     <!--
-      %s and not %d: a decimal placeholder is formatted with the locale's own
-      digits, which renders "2" as "٢" in Arabic while every amount on the same
-      screen stays Western. The count is passed already converted.
+      Arabic counts in more forms than English, and "2 عملية" is ungrammatical to a
+      native reader - the dual is عمليتان. The argument is still passed as %s and
+      already converted, so the numeral itself stays Western and matches the amounts
+      on the same screen.
     -->
-    <string name="pending_count">%1$s عملية بانتظار التأكيد</string>
+    <plurals name="pending_count">
+        <item quantity="zero">لا عمليات بانتظار التأكيد</item>
+        <item quantity="one">عملية واحدة بانتظار التأكيد</item>
+        <item quantity="two">عمليتان بانتظار التأكيد</item>
+        <item quantity="few">%1$s عمليات بانتظار التأكيد</item>
+        <item quantity="many">%1$s عملية بانتظار التأكيد</item>
+        <item quantity="other">%1$s عملية بانتظار التأكيد</item>
+    </plurals>
 
     <string name="sms_off_title">رسائل البنوك غير مقروءة</string>
     <string name="sms_off_body">بنكان من بنوكك يرسلان العمليات كرسائل نصية فقط. امنح صلاحية قراءة الرسائل ليتم التقاطها.</string>
@@ -59,4 +71,7 @@
     <!-- %1$s is the amount already formatted, %2$s the day. Both are passed as text
          so neither is re-formatted with the locale's own digits. -->
     <string name="delete_body">سيُحذف مبلغ %1$s بتاريخ %2$s نهائياً. لا يمكن التراجع.</string>
+
+    <string name="dismiss_title">تجاهل هذه العملية؟</string>
+    <string name="dismiss_body">سيُحذف مبلغ %1$s بتاريخ %2$s مع نص رسالة البنك الأصلية. لا يمكن التراجع ولا استرجاع النص.</string>
 </resources>

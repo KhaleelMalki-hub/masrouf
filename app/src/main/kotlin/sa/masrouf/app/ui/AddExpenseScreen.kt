@@ -8,12 +8,15 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -30,15 +33,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import sa.masrouf.app.R
+import sa.masrouf.core.model.Direction
 import sa.masrouf.core.model.Source
-import sa.masrouf.core.model.Status
 import sa.masrouf.core.model.Transaction
 import sa.masrouf.core.model.TransactionType
 
@@ -57,19 +62,24 @@ fun AddExpenseScreen(
     val pending by viewModel.pending.collectAsStateWithLifecycle()
     val currency = stringResource(R.string.currency_sar)
 
-    // Deletion is irreversible and there is no server to restore from, so the
-    // record being removed is named on screen before it goes.
-    var pendingDeletion by remember { mutableStateOf<Transaction?>(null) }
+    // Both destructive actions are irreversible and there is no server to restore
+    // from, so both name the record before it goes. Dismiss is the MORE destructive
+    // of the two - it also destroys the original bank message, which cannot be
+    // typed back - so it cannot be the one left unguarded.
+    var confirming by remember { mutableStateOf<DestructiveAction?>(null) }
 
-    pendingDeletion?.let { target ->
-        DeleteConfirmation(
-            transaction = target,
+    confirming?.let { action ->
+        DestructiveConfirmation(
+            action = action,
             currencyLabel = currency,
             onConfirm = {
-                viewModel.delete(target.id)
-                pendingDeletion = null
+                when (action) {
+                    is DestructiveAction.Delete -> viewModel.delete(action.transaction.id)
+                    is DestructiveAction.Dismiss -> viewModel.dismiss(action.transaction.id)
+                }
+                confirming = null
             },
-            onCancel = { pendingDeletion = null },
+            onCancel = { confirming = null },
         )
     }
 
@@ -84,28 +94,6 @@ fun AddExpenseScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            if (!captureEnabled) {
-                item {
-                    AccessPrompt(
-                        title = stringResource(R.string.capture_off_title),
-                        body = stringResource(R.string.capture_off_body),
-                        action = stringResource(R.string.capture_enable),
-                        onAct = onEnableCapture,
-                    )
-                }
-            }
-
-            if (!smsEnabled) {
-                item {
-                    AccessPrompt(
-                        title = stringResource(R.string.sms_off_title),
-                        body = stringResource(R.string.sms_off_body),
-                        action = stringResource(R.string.sms_enable),
-                        onAct = onEnableSms,
-                    )
-                }
-            }
-
             item {
                 MonthTotal(
                     text = monthTotal.forDisplay(currency),
@@ -147,18 +135,47 @@ fun AddExpenseScreen(
             }
 
             item {
-                TextButton(
+                Button(
                     onClick = viewModel::save,
-                    // Enabled even when the amount is not yet valid, so that pressing
-                    // it is what reveals the reason. A button that is simply dead
-                    // tells the user nothing about what is missing.
-                    modifier = Modifier.fillMaxWidth(),
+                    // Filled, not a text link: this is the action the whole app exists
+                    // for, and it was previously the faintest control on the screen.
+                    // Still enabled when the amount is invalid, so that pressing it is
+                    // what reveals the reason - a dead button explains nothing.
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 56.dp),
                 ) {
                     Text(stringResource(R.string.save))
                 }
             }
 
             item { HorizontalDivider() }
+
+            // Below the entry form deliberately. Ungranted, both prompts render,
+            // and above the form they pushed Save off the bottom of a first launch -
+            // the one screen where the user has never seen the app work.
+            if (!captureEnabled) {
+                item {
+                    AccessPrompt(
+                        title = stringResource(R.string.capture_off_title),
+                        body = stringResource(R.string.capture_off_body),
+                        action = stringResource(R.string.capture_enable),
+                        onAct = onEnableCapture,
+                    )
+                }
+            }
+
+            if (!smsEnabled) {
+                item {
+                    AccessPrompt(
+                        title = stringResource(R.string.sms_off_title),
+                        body = stringResource(R.string.sms_off_body),
+                        action = stringResource(R.string.sms_enable),
+                        onAct = onEnableSms,
+                    )
+                }
+            }
+
 
             if (pending.isNotEmpty()) {
                 item {
@@ -178,7 +195,7 @@ fun AddExpenseScreen(
                         transaction = transaction,
                         currencyLabel = currency,
                         onConfirm = { viewModel.confirm(transaction.id) },
-                        onDismiss = { viewModel.dismiss(transaction.id) },
+                        onDismiss = { confirming = DestructiveAction.Dismiss(transaction) },
                     )
                 }
                 item { HorizontalDivider() }
@@ -198,7 +215,7 @@ fun AddExpenseScreen(
                     TransactionRow(
                         transaction = transaction,
                         currencyLabel = currency,
-                        onDelete = { pendingDeletion = transaction },
+                        onDelete = { confirming = DestructiveAction.Delete(transaction) },
                     )
                 }
             }
@@ -229,7 +246,14 @@ private fun MonthTotal(text: String, pendingCount: Int) {
                     // toString(), not the Int: passed as a number it would be
                     // formatted with the locale's digits and read "٢" beside an
                     // amount reading "1019.14". Kotlin's toString is always ASCII.
-                    text = stringResource(R.string.pending_count, pendingCount.toString()),
+                    text = pluralStringResource(
+                        R.plurals.pending_count,
+                        pendingCount,
+                        // toString(), not the Int: passed as a number the argument
+                        // would be formatted with the locale's digits and read "٢"
+                        // beside an amount reading "1019.14".
+                        pendingCount.toString(),
+                    ),
                     style = MaterialTheme.typography.labelMedium,
                 )
             }
@@ -308,7 +332,7 @@ private fun TypeChips(selected: TransactionType, onSelect: (TransactionType) -> 
         // correct in Arabic, whose labels here are longer than the English ones.
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .selectableGroup(),
@@ -318,6 +342,9 @@ private fun TypeChips(selected: TransactionType, onSelect: (TransactionType) -> 
                     selected = type == selected,
                     onClick = { onSelect(type) },
                     label = { Text(stringResource(type.labelRes)) },
+                    // A FilterChip is 32dp by default, under the 48dp minimum, and
+                    // these are the controls the five-second entry path must hit.
+                    modifier = Modifier.heightIn(min = 48.dp),
                 )
             }
         }
@@ -325,10 +352,14 @@ private fun TypeChips(selected: TransactionType, onSelect: (TransactionType) -> 
 }
 
 /**
- * Only the types offered for manual entry are mapped.
+ * Every type has its own label.
  *
- * `when` over the whole enum without an else, so adding a type to [MANUAL_TYPES]
- * without a label fails to compile rather than showing a raw enum name.
+ * Not only for the manual-entry chips: this is also the fallback whenever a
+ * captured row has no merchant, and `BankMessageParser` extracts a merchant only
+ * for purchases and refunds - so the captured types are precisely the ones that
+ * reach it. Grouping the rest under "purchase" was not a harmless default; it
+ * rendered a salary as a purchase in the list the user is asked to vouch for, and
+ * the catch-all also defeated the compile-time check this comment used to claim.
  */
 @get:StringRes
 private val TransactionType.labelRes: Int
@@ -338,13 +369,12 @@ private val TransactionType.labelRes: Int
         TransactionType.TRANSFER_OUT -> R.string.type_transfer_out
         TransactionType.ATM_WITHDRAWAL -> R.string.type_atm_withdrawal
         TransactionType.OWN_TRANSFER -> R.string.type_own_transfer
-        TransactionType.ATM_DEPOSIT,
-        TransactionType.TRANSFER_IN,
-        TransactionType.SALARY,
-        TransactionType.REFUND,
-        TransactionType.FEE,
-        TransactionType.UNKNOWN,
-        -> R.string.type_purchase
+        TransactionType.ATM_DEPOSIT -> R.string.type_atm_deposit
+        TransactionType.TRANSFER_IN -> R.string.type_transfer_in
+        TransactionType.SALARY -> R.string.type_salary
+        TransactionType.REFUND -> R.string.type_refund
+        TransactionType.FEE -> R.string.type_fee
+        TransactionType.UNKNOWN -> R.string.type_unknown
     }
 
 /**
@@ -377,8 +407,9 @@ private fun PendingRow(
                         ?: stringResource(transaction.type.labelRes),
                     style = MaterialTheme.typography.bodyLarge,
                 )
-                Text(
-                    text = transaction.amount.forDisplay(currencyLabel),
+                SignedAmount(
+                    transaction = transaction,
+                    currencyLabel = currencyLabel,
                     style = MaterialTheme.typography.titleMedium,
                 )
             }
@@ -386,9 +417,21 @@ private fun PendingRow(
                 text = "${transaction.dayLabel()} · ${stringResource(transaction.source.labelRes)}",
                 style = MaterialTheme.typography.labelSmall,
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton(onClick = onConfirm) { Text(stringResource(R.string.confirm)) }
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.dismiss)) }
+            // Confirming is the common case and dismissing the exception, so they
+            // must not look alike. Identical adjacent buttons are read as a pair of
+            // equals, which is how the destructive one gets tapped by mistake.
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                FilledTonalButton(
+                    onClick = onConfirm,
+                    modifier = Modifier.heightIn(min = 48.dp),
+                ) { Text(stringResource(R.string.confirm)) }
+                TextButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.heightIn(min = 48.dp),
+                ) { Text(stringResource(R.string.dismiss)) }
             }
         }
     }
@@ -404,6 +447,36 @@ private val Source.labelRes: Int
         // entry, and statement import is not wired into the app.
         Source.MANUAL, Source.STATEMENT -> R.string.source_notification
     }
+
+/**
+ * The amount, carrying its direction.
+ *
+ * Money is stored unsigned with [Direction] holding the sign, so a row printing the
+ * bare amount shows a 300 SAR refund and a 300 SAR purchase identically. The month
+ * total excludes the refund correctly, and the list then contradicts the total in a
+ * way the user has no way to resolve.
+ */
+@Composable
+private fun SignedAmount(
+    transaction: Transaction,
+    currencyLabel: String,
+    style: TextStyle = MaterialTheme.typography.bodyLarge,
+) {
+    val isCredit = transaction.direction == Direction.CREDIT
+    Text(
+        text = if (isCredit) {
+            "+ ${transaction.amount.forDisplay(currencyLabel)}"
+        } else {
+            transaction.amount.forDisplay(currencyLabel)
+        },
+        style = style,
+        color = if (isCredit) {
+            MaterialTheme.colorScheme.tertiary
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        },
+    )
+}
 
 @Composable
 private fun TransactionRow(
@@ -429,50 +502,72 @@ private fun TransactionRow(
                 text = transaction.dayLabel(),
                 style = MaterialTheme.typography.labelSmall,
             )
-            if (transaction.status == Status.PENDING) {
-                Text(
-                    text = stringResource(R.string.status_pending),
-                    style = MaterialTheme.typography.labelSmall,
-                )
-            }
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = transaction.amount.forDisplay(currencyLabel),
-                style = MaterialTheme.typography.bodyLarge,
-            )
-            TextButton(onClick = onDelete) { Text(stringResource(R.string.delete)) }
+            SignedAmount(transaction = transaction, currencyLabel = currencyLabel)
+            TextButton(
+                onClick = onDelete,
+                modifier = Modifier.heightIn(min = 48.dp),
+            ) { Text(stringResource(R.string.delete)) }
         }
     }
 }
 
+/** Which irreversible thing the user just asked for. */
+private sealed interface DestructiveAction {
+    val transaction: Transaction
+
+    /** Remove a record from the history. A manual one can simply be typed again. */
+    data class Delete(override val transaction: Transaction) : DestructiveAction
+
+    /**
+     * Reject a captured record. Strictly worse than [Delete]: it also destroys
+     * `rawText`, the original bank message, which is the one field the user cannot
+     * reproduce from memory. It was previously the only unguarded one.
+     */
+    data class Dismiss(override val transaction: Transaction) : DestructiveAction
+}
+
 /**
- * Names what is about to be deleted before deleting it.
+ * Names what is about to be destroyed before destroying it.
  *
  * The amount and day are shown rather than a generic "are you sure": the mistake
- * this guards against is deleting the wrong row, which a yes/no question about an
+ * this guards against is acting on the wrong row, which a yes/no question about an
  * unnamed record cannot prevent.
  */
 @Composable
-private fun DeleteConfirmation(
-    transaction: Transaction,
+private fun DestructiveConfirmation(
+    action: DestructiveAction,
     currencyLabel: String,
     onConfirm: () -> Unit,
     onCancel: () -> Unit,
 ) {
+    val titleRes = when (action) {
+        is DestructiveAction.Delete -> R.string.delete_title
+        is DestructiveAction.Dismiss -> R.string.dismiss_title
+    }
+    val bodyRes = when (action) {
+        is DestructiveAction.Delete -> R.string.delete_body
+        is DestructiveAction.Dismiss -> R.string.dismiss_body
+    }
+    val actionRes = when (action) {
+        is DestructiveAction.Delete -> R.string.delete
+        is DestructiveAction.Dismiss -> R.string.dismiss
+    }
+
     AlertDialog(
         onDismissRequest = onCancel,
-        title = { Text(stringResource(R.string.delete_title)) },
+        title = { Text(stringResource(titleRes)) },
         text = {
             Text(
                 stringResource(
-                    R.string.delete_body,
-                    transaction.amount.forDisplay(currencyLabel),
-                    transaction.dayLabel(),
+                    bodyRes,
+                    action.transaction.amount.forDisplay(currencyLabel),
+                    action.transaction.dayLabel(),
                 )
             )
         },
-        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.delete)) } },
+        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(actionRes)) } },
         dismissButton = { TextButton(onClick = onCancel) { Text(stringResource(R.string.cancel)) } },
     )
 }

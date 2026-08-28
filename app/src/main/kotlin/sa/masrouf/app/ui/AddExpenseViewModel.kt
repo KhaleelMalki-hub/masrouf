@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -39,10 +41,17 @@ data class AddExpenseState(
      * then, so an empty field is not scolded before it has been filled in.
      */
     val submitAttempted: Boolean = false,
+    /**
+     * True while a save is in flight.
+     *
+     * The Save button is deliberately always enabled, and clearing the form only
+     * after the write returns is deliberate too - so without this, two taps a
+     * tenth of a second apart both read the same form and write two records. Manual
+     * entry has no deduplication by design, so nothing downstream catches it.
+     */
+    val isSaving: Boolean = false,
 ) {
     val amountResult: AmountInput.Result get() = AmountInput.parse(typedAmount)
-
-    val canSave: Boolean get() = amountResult is AmountInput.Result.Valid
 
     /** The error to show under the amount field, or null when there is nothing to say yet. */
     val amountError: AmountError?
@@ -78,8 +87,22 @@ class AddExpenseViewModel(
         repository.observePending()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    /**
+     * Spending for the current Riyadh month.
+     *
+     * The clock is read on every resubscription, not once at construction. A
+     * ViewModel that survives midnight on the 1st would otherwise keep showing last
+     * month's total under this month's heading, with new records falling outside
+     * its fixed bounds and never appearing - a wrong number presented as fact,
+     * which is the failure `Status` and `spendingTotal` exist to prevent, arriving
+     * through the date instead of the amount.
+     *
+     * ponytail: corrects when the screen is backgrounded past the 5s stop timeout
+     * and returned to. An app left in the foreground across midnight still shows
+     * the old month; closing that needs a timer, which is not worth it here.
+     */
     val monthTotal: StateFlow<Money> =
-        repository.observeMonth(RiyadhTime.localDate(Instant.now(clock)))
+        flow { emitAll(repository.observeMonth(RiyadhTime.localDate(Instant.now(clock)))) }
             .map { it.spendingTotal() }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), Money.ZERO)
 
@@ -123,14 +146,17 @@ class AddExpenseViewModel(
      */
     fun save() {
         val current = _form.value
+        if (current.isSaving) return
         val amount = (current.amountResult as? AmountInput.Result.Valid)?.amount
         if (amount == null) {
             _form.value = current.copy(submitAttempted = true)
             return
         }
 
+        _form.value = current.copy(isSaving = true)
         viewModelScope.launch {
-            repository.recordManual(
+            try {
+                repository.recordManual(
                 amount = amount,
                 direction = Direction.DEBIT,
                 type = current.type,
@@ -138,9 +164,16 @@ class AddExpenseViewModel(
                 merchantRaw = current.merchant,
                 note = current.note,
             )
-            // Cleared only after the write returns, so a failed insert leaves the
-            // user's typing on screen instead of discarding it.
-            _form.value = AddExpenseState(type = current.type)
+                // Cleared only after the write returns, so a failed insert leaves
+                // the user's typing on screen instead of discarding it.
+                _form.value = AddExpenseState(type = current.type)
+            } catch (e: Exception) {
+                // Releasing the flag is load-bearing: without it a failed write
+                // locks the form forever, which is the mirror-image defect of the
+                // double-write this flag prevents.
+                _form.value = current.copy(isSaving = false)
+                throw e
+            }
         }
     }
 

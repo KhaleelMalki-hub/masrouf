@@ -5,6 +5,7 @@ import kotlin.test.assertIs
 import org.junit.jupiter.api.Test
 import sa.masrouf.core.capture.BankMessageParser
 import sa.masrouf.core.capture.RawMessage
+import sa.masrouf.core.model.Source
 import sa.masrouf.core.capture.SaudiBanks
 import sa.masrouf.core.fixtures.RealMessages
 import java.time.Instant
@@ -49,10 +50,7 @@ class ObservedBankPackagesTest {
         // canParse matching is necessary but not sufficient - this asserts the whole
         // path, so a profile that claims the package but cannot read its messages
         // still fails here.
-        val decision = CaptureRecorder().decide(
-            from("com.alrajhiretailapp", RealMessages.RAJHI_POS_SHORT),
-            id = "t-real-pkg",
-        )
+        val decision = CaptureRecorder().decide(from("com.alrajhiretailapp", RealMessages.RAJHI_POS_SHORT), id = "t-real-pkg", Source.NOTIFICATION)
 
         assertIs<CaptureRecorder.Decision.Store>(decision)
     }

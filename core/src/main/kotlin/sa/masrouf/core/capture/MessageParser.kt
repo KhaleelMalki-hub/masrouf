@@ -46,8 +46,15 @@ sealed interface ParseResult {
      *
      * Distinct from [NotApplicable] on purpose: this is the case worth surfacing and
      * counting, because it means a known bank changed its message format.
+     *
+     * Deliberately carries no [RawMessage]. It used to, and no consumer ever read
+     * it - `CapturePipeline` unwraps this into a reason string and drops the rest.
+     * But `RawMessage` is a data class, so its generated `toString` prints the body
+     * verbatim, and the obvious next debugging step - logging the failed result to
+     * find out why a bank message stopped parsing - would have put a message body
+     * into logcat without going anywhere near the gate that guards bodies.
      */
-    data class Failed(val parserId: String, val reason: String, val message: RawMessage) : ParseResult
+    data class Failed(val parserId: String, val reason: String) : ParseResult
 }
 
 /**
@@ -82,7 +89,7 @@ class ParserRegistry(private val parsers: List<MessageParser>) {
                 parser.canParse(message)
             } catch (e: RuntimeException) {
                 // A broken parser must not take down capture for every other bank.
-                lastFailure = ParseResult.Failed(parser.id, "canParse threw: ${e.message}", message)
+                lastFailure = ParseResult.Failed(parser.id, "canParse threw: ${e.message}")
                 false
             }
             if (!claims) continue
@@ -90,7 +97,7 @@ class ParserRegistry(private val parsers: List<MessageParser>) {
             val result = try {
                 parser.parse(message)
             } catch (e: RuntimeException) {
-                ParseResult.Failed(parser.id, "parse threw: ${e.message}", message)
+                ParseResult.Failed(parser.id, "parse threw: ${e.message}")
             }
             when (result) {
                 is ParseResult.Parsed -> return result

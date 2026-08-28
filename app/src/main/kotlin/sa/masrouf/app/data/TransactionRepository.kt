@@ -1,6 +1,8 @@
 package sa.masrouf.app.data
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.map
 import sa.masrouf.core.dedup.DuplicateDetector
 import sa.masrouf.core.dedup.EventSignature
@@ -29,6 +31,15 @@ class TransactionRepository(
     private val dao: TransactionDao,
     private val detector: DuplicateDetector = DuplicateDetector(),
 ) {
+
+    /**
+     * Serialises the check-then-insert in [recordCaptured].
+     *
+     * ponytail: a process-local lock, which is enough because `MasroufApp` holds
+     * exactly one repository in one process. A second process writing this database
+     * would need `db.withTransaction` instead.
+     */
+    private val captureLock = Mutex()
 
     fun observeRecent(limit: Int = RECENT_LIMIT): Flow<List<Transaction>> =
         dao.observeRecent(limit).map { rows -> rows.map(TransactionEntity::toModel) }
@@ -108,8 +119,19 @@ class TransactionRepository(
      * see it. Counting both silently doubles the month. So neighbours in time are
      * loaded and handed to [DuplicateDetector], which weighs amount, direction,
      * card and how far apart they arrived.
+     *
+     * The whole check-then-insert is under [captureLock]. It has to be: the two
+     * capture paths run on different coroutines, and the arrival pattern this
+     * method exists for - a bank's SMS and that bank's own push, seconds apart - is
+     * exactly the one that interleaves them. Unlocked, both read the neighbour
+     * window before either inserts, both find nothing to match, and both write. The
+     * fingerprints differ by design here, so the unique index cannot catch it
+     * either, and the month doubles with nothing reporting an error.
      */
-    suspend fun recordCaptured(transaction: Transaction, accountLast4: String? = null): Boolean {
+    suspend fun recordCaptured(
+        transaction: Transaction,
+        accountLast4: String? = null,
+    ): Boolean = captureLock.withLock {
         val entity = transaction.toEntity(accountLast4)
 
         // Wide enough to cover the detector's own widest window, which is a day for
@@ -120,15 +142,20 @@ class TransactionRepository(
         val neighbours = dao.neighbours(from.toEpochMilli(), until.toEpochMilli())
 
         val result = detector.reconcile(
-            existing = neighbours.map(TransactionEntity::toSignature),
+            // A neighbour that cannot be read is skipped, not thrown on. Unlike
+            // `toModel`, where a substituted enum would silently drop a record out
+            // of the monthly total, this row is only an input to a decision about a
+            // different record: the worst case of ignoring it is one duplicate,
+            // while throwing turns a single bad row into a permanent capture outage.
+            existing = neighbours.mapNotNull { it.toSignatureOrNull() },
             incoming = listOf(entity.toSignature()),
         )
         // The single incoming record matched something already stored. Kept out
         // rather than merged: merging fields is a decision that needs a screen and a
         // user, and inventing one here would overwrite whichever telling was better.
-        if (result.newIncoming.isEmpty()) return false
+        if (result.newIncoming.isEmpty()) return@withLock false
 
-        return dao.insert(entity) != -1L
+        dao.insert(entity) != -1L
     }
 
     /**
@@ -198,6 +225,9 @@ fun List<Transaction>.spendingTotal(): Money =
  * Built from the entity rather than the model because the card fragment lives only
  * on the entity - and a signature missing it matches too eagerly, not too little.
  */
+internal fun TransactionEntity.toSignatureOrNull(): EventSignature? =
+    runCatching { toSignature() }.getOrNull()
+
 internal fun TransactionEntity.toSignature(): EventSignature = EventSignature(
     amount = Money.ofHalalas(amountHalalas),
     direction = enumValueOf(direction),

@@ -33,9 +33,6 @@ class FakeDao : TransactionDao {
     override fun observeBetween(fromMillis: Long, untilMillis: Long) =
         state.map { rows -> rows.filter { it.occurredAtMillis in fromMillis until untilMillis } }
 
-    override suspend fun countByFingerprint(fingerprint: String) =
-        state.value.count { it.fingerprint == fingerprint }
-
     override fun observePending(): Flow<List<TransactionEntity>> =
         state.map { rows -> rows.filter { it.status == Status.PENDING.name } }
 

@@ -16,21 +16,28 @@
     <string name="type_bill_payment">Bill payment</string>
     <string name="type_atm_withdrawal">Cash withdrawal</string>
     <string name="type_own_transfer">Between my accounts</string>
+    <string name="type_atm_deposit">Cash deposit</string>
+    <string name="type_transfer_in">Transfer in</string>
+    <string name="type_salary">Salary</string>
+    <string name="type_refund">Refund</string>
+    <string name="type_fee">Fee</string>
+    <string name="type_unknown">Unrecognised</string>
 
     <string name="error_amount_required">Enter an amount</string>
     <string name="error_amount_invalid">Not a valid amount. Riyals and at most two halalas.</string>
 
     <string name="recent_title">Recent</string>
     <string name="recent_empty">Nothing recorded yet</string>
-    <string name="status_pending">Awaiting confirmation</string>
 
     <string name="month_total_label">Spent this month</string>
 
     <string name="capture_off_title">Bank capture is off</string>
     <string name="capture_off_body">Give the app notification access so it records your bank transactions automatically. The data stays on your device.</string>
     <string name="capture_enable">Open settings</string>
-    <string name="capture_on">Notification capture is on</string>
-    <string name="pending_count">%1$s awaiting confirmation</string>
+    <plurals name="pending_count">
+        <item quantity="one">%1$s awaiting confirmation</item>
+        <item quantity="other">%1$s awaiting confirmation</item>
+    </plurals>
 
     <string name="sms_off_title">Bank SMS is not being read</string>
     <string name="sms_off_body">Two of your banks send transactions only as text messages. Grant SMS access so they are captured.</string>
@@ -47,4 +54,7 @@
     <string name="cancel">Cancel</string>
     <string name="delete_title">Delete this transaction?</string>
     <string name="delete_body">%1$s on %2$s will be removed permanently. This cannot be undone.</string>
+
+    <string name="dismiss_title">Dismiss this transaction?</string>
+    <string name="dismiss_body">%1$s on %2$s will be deleted along with the original bank message. This cannot be undone and the message cannot be recovered.</string>
 </resources>

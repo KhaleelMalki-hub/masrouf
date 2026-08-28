@@ -6,6 +6,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
 import sa.masrouf.core.fixtures.RealMessages
+import sa.masrouf.core.model.Source
 import java.time.Instant
 
 class SmsAssemblyTest {
@@ -31,9 +32,13 @@ class SmsAssemblyTest {
         val split = RealMessages.RAJHI_POS_SHORT.chunked(40).map { SmsPart("AlRajhiBank", it) }
         val message = SmsAssembly.assemble(split, receivedAt)!!
 
-        val decision = CaptureRecorder().decide(message, "t-sms")
+        val decision = CaptureRecorder().decide(message, "t-sms", Source.SMS)
 
-        assertIs<CaptureRecorder.Decision.Store>(decision)
+        val stored = assertIs<CaptureRecorder.Decision.Store>(decision)
+        // The assertion this file was missing. Without it the recorder can stamp
+        // every SMS as a notification and the whole suite still passes, because the
+        // only other source assertion in the module is on the notification path.
+        assertEquals(Source.SMS, stored.transaction.source)
     }
 
     @Test
@@ -76,7 +81,7 @@ class SmsAssemblyTest {
             receivedAt,
         )!!
 
-        val decision = CaptureRecorder().decide(message, "t-otp-sms")
+        val decision = CaptureRecorder().decide(message, "t-otp-sms", Source.SMS)
 
         val skipped = assertIs<CaptureRecorder.Decision.Skip>(decision)
         assertTrue(skipped.bodyWasSensitive)

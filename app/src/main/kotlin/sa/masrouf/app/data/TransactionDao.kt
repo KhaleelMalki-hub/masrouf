@@ -19,7 +19,22 @@ interface TransactionDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(transaction: TransactionEntity): Long
 
-    @Query("SELECT * FROM transactions ORDER BY occurred_at_millis DESC LIMIT :limit")
+    /**
+     * Confirmed history, newest first.
+     *
+     * Pending records are excluded because they have their own section on screen.
+     * Without this filter each captured row rendered twice - once awaiting
+     * confirmation and once in the history beneath it - offering two different
+     * destructive actions for one transaction.
+     */
+    @Query(
+        """
+        SELECT * FROM transactions
+        WHERE status = 'CONFIRMED'
+        ORDER BY occurred_at_millis DESC
+        LIMIT :limit
+        """
+    )
     fun observeRecent(limit: Int): Flow<List<TransactionEntity>>
 
     /**
@@ -50,9 +65,6 @@ interface TransactionDao {
         """
     )
     suspend fun neighbours(fromMillis: Long, untilMillis: Long): List<TransactionEntity>
-
-    @Query("SELECT COUNT(*) FROM transactions WHERE fingerprint = :fingerprint")
-    suspend fun countByFingerprint(fingerprint: String): Int
 
     @Query("SELECT * FROM transactions WHERE status = 'PENDING' ORDER BY occurred_at_millis DESC")
     fun observePending(): Flow<List<TransactionEntity>>

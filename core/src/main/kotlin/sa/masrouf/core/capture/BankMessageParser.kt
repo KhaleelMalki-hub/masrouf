@@ -73,10 +73,10 @@ class BankMessageParser(private val profile: BankProfile) : MessageParser {
         val text = ArabicText.normalize(message.fullText)
 
         val intent = IntentClassifier.classify(text)
-            ?: return ParseResult.Failed(id, "no recognised intent", message)
+            ?: return ParseResult.Failed(id, "no recognised intent")
 
         val amount = AmountExtractor.extractOrNull(text)
-            ?: return ParseResult.Failed(id, "no amount found", message)
+            ?: return ParseResult.Failed(id, "no amount found")
 
         val isMerchantBearing =
             intent.type == TransactionType.PURCHASE || intent.type == TransactionType.REFUND

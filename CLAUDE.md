@@ -7,7 +7,7 @@ statements. Single user, on-device, offline. Not a product, not published.
 
 ```bash
 ./gradlew :core:test              # 140 tests, runs anywhere with a JDK
-./gradlew :app:testDebugUnitTest  # 50 tests, needs the Android SDK
+./gradlew :app:testDebugUnitTest  # 58 tests, needs the Android SDK
 ./gradlew :app:assembleDebug      # needs local.properties with sdk.dir
 ```
 
@@ -56,7 +56,10 @@ app/    Android - Compose, Room, Arabic default with English in values-en
   capture/    MasroufNotificationListener · SmsCaptureReceiver (both thin)
               → SmsAssembly · CaptureRecorder (both tested, no Android)
   data/       TransactionEntity + mappers · TransactionDao · MasroufDatabase
-  ui/         AmountInput (tested) · AddExpenseViewModel · AddExpenseScreen
+              TransactionRepository - the only route to storage, and where
+              cross-source reconciliation runs under a lock
+  ui/         AmountInput · DayLabel · MoneyFormat (all tested)
+              AddExpenseViewModel · AddExpenseScreen · Theme
 ```
 
 ## Rules that must not be broken
@@ -98,7 +101,20 @@ app/    Android - Compose, Room, Arabic default with English in values-en
    no test catches — because the test was invented from the same imagination. This
    has already produced one wrong test in this repo.
 
-9. **A screen that compiles is not a screen that fits.** Layout is checked by
+9. **Provenance is passed in, never inferred.** `CaptureRecorder` is shared by the
+   notification listener and the SMS receiver, so it takes `source` as a parameter.
+   It used to hardcode `NOTIFICATION`, which made every barq and D360 record - banks
+   with no app on the phone, so SMS only - claim it came from a notification. No test
+   caught it: the dedup tests hand-built `Source.SMS` values the producer could never
+   emit, so the suite proved the consumer while the producer was wrong.
+
+10. **The check-then-insert in `recordCaptured` runs under a lock.** Two capture
+   paths write from different coroutines, and the arrival pattern the feature exists
+   for - a bank's SMS and that bank's own push, seconds apart - is exactly the one
+   that interleaves them. Unlocked, both read the neighbour window before either
+   inserts and the month doubles, with no error anywhere.
+
+11. **A screen that compiles is not a screen that fits.** Layout is checked by
    running it, because the compiler has no opinion about width. Five type chips in
    a plain `Row` compiled, passed every unit test, and on a real screen wrapped the
    fourth chip to one letter per line and pushed the fifth off the edge entirely.
@@ -137,10 +153,15 @@ app/    Android - Compose, Room, Arabic default with English in values-en
 - Dismissing deletes the row, which frees its fingerprint, so an identical message
   redelivered later reappears. It needs the same second on the device clock, so it
   is rare; closing it properly means a `REJECTED` value on the core `Status` enum.
-- Statement import is not wired into the app, so `DuplicateDetector`'s one-day
-  window is exercised only by the message paths. Cross-source reconciliation
-  between SMS and notifications is live and tested; a statement arriving later has
-  never been reconciled against anything.
+- Statement import is not wired into the app. Two consequences: `DuplicateDetector`'s
+  one-day window is exercised only by the message paths, and `recordCaptured` still
+  reconciles one record at a time. `DuplicateDetector.reconcile` takes a *list* on
+  purpose - it pairs candidates as a multiset so two identical top-ups in one import
+  produce two merges rather than one. Importing with `forEach { recordCaptured(it) }`
+  would defeat that and silently merge real money. Whoever wires statement import
+  must add a batch call that reconciles the whole file at once, inside the same lock.
+- Nothing has been edited, only deleted and re-entered. Deleting a captured record
+  destroys its `rawText`, the one field that cannot be typed back.
 - No categories, no accounts, no date picker (a manual record is timestamped when
   it is saved).
 - `ColumnRuler` boundaries in `SaudiStatements` were measured with **pdfplumber's**

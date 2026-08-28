@@ -7,6 +7,7 @@ import android.provider.Settings
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -14,6 +15,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import sa.masrouf.app.MasroufApp
 import sa.masrouf.core.capture.RawMessage
+import sa.masrouf.core.model.Source
 import java.time.Instant
 import java.util.UUID
 
@@ -30,28 +32,69 @@ import java.util.UUID
  */
 class MasroufNotificationListener : NotificationListenerService() {
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    /**
+     * SupervisorJob stops one failure cancelling its siblings; it does NOT stop an
+     * uncaught exception in a root launch reaching the thread's default handler and
+     * killing the process. A storage error must degrade to one lost record, not to
+     * a dead app that silently stops capturing with nothing on screen to say so.
+     * The class name is logged, never the message body.
+     */
+    private val failures = CoroutineExceptionHandler { _, e ->
+        Log.w(TAG, "capture failed: ${e.javaClass.simpleName}")
+    }
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO + failures)
     private val recorder = CaptureRecorder()
+
+    /**
+     * Sweeps what is already on the shade when the listener binds.
+     *
+     * The service is unbound across boot, app update and process death, and for the
+     * moment between the user granting access and Android connecting us. Anything
+     * posted in those gaps is never delivered to [onNotificationPosted] and would
+     * simply be lost. This is cheap only because the unique fingerprint index makes
+     * a resweep idempotent - the design already paid for this and was not
+     * collecting.
+     *
+     * Note the asymmetry it does not fix: a missed SMS is gone for good, because
+     * the body is never persisted before parsing.
+     */
+    override fun onListenerConnected() {
+        super.onListenerConnected()
+        val existing = runCatching { activeNotifications }.getOrNull() ?: return
+        existing.forEach(::capture)
+    }
 
     override fun onDestroy() {
         scope.cancel()
         super.onDestroy()
     }
 
-    override fun onNotificationPosted(sbn: StatusBarNotification) {
+    override fun onNotificationPosted(sbn: StatusBarNotification) = capture(sbn)
+
+    private fun capture(sbn: StatusBarNotification) {
+        // Reading the Bundle stays on the callback thread - the system object should
+        // not be touched after this method returns. Everything after it moves off:
+        // the gate runs before the sender check by design, so parsing cost is paid
+        // for every notification any app on the device posts, and that does not
+        // belong on the main thread.
         val message = sbn.toRawMessage() ?: return
+        val postingPackage = sbn.packageName
 
-        when (val decision = recorder.decide(message, UUID.randomUUID().toString())) {
-            is CaptureRecorder.Decision.Store -> scope.launch {
-                val repository = (application as MasroufApp).transactions
-                repository.recordCaptured(decision.transaction, decision.accountLast4)
-            }
+        scope.launch {
+            when (val decision =
+                recorder.decide(message, UUID.randomUUID().toString(), Source.NOTIFICATION)) {
+                is CaptureRecorder.Decision.Store -> {
+                    val repository = (application as MasroufApp).transactions
+                    repository.recordCaptured(decision.transaction, decision.accountLast4)
+                }
 
-            is CaptureRecorder.Decision.Skip -> {
-                // The reason is logged, never the body. A rejected message is
-                // usually an OTP, and an OTP body in logcat is a credential in a
-                // buffer any other app on an older device could read.
-                Log.d(TAG, "skipped ${sbn.packageName}: ${decision.reason}")
+                is CaptureRecorder.Decision.Skip -> {
+                    // The reason is logged, never the body. A rejected message is
+                    // usually an OTP, and an OTP body in logcat is a credential in a
+                    // buffer any other app on an older device could read.
+                    Log.d(TAG, "skipped $postingPackage: ${decision.reason}")
+                }
             }
         }
     }
