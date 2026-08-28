@@ -13,7 +13,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import sa.masrouf.app.data.TransactionRepository
+import sa.masrouf.app.data.categoryShares
 import sa.masrouf.app.data.spendingTotal
+import sa.masrouf.core.model.Category
 import sa.masrouf.core.model.Direction
 import sa.masrouf.core.model.Transaction
 import sa.masrouf.core.model.TransactionType
@@ -101,6 +103,17 @@ class AddExpenseViewModel(
      * and returned to. An app left in the foreground across midnight still shows
      * the old month; closing that needs a timer, which is not worth it here.
      */
+    /**
+     * The month split into the bands the strip draws, largest share first.
+     *
+     * Derived from the same flow as [monthTotal] rather than a second query, so the
+     * strip cannot be showing one month while the number above it shows another.
+     */
+    val monthShares: StateFlow<List<Pair<Category?, Money>>> =
+        flow { emitAll(repository.observeMonth(RiyadhTime.localDate(Instant.now(clock)))) }
+            .map { it.categoryShares() }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     val monthTotal: StateFlow<Money> =
         flow { emitAll(repository.observeMonth(RiyadhTime.localDate(Instant.now(clock)))) }
             .map { it.spendingTotal() }
@@ -122,9 +135,19 @@ class AddExpenseViewModel(
         _form.value = _form.value.copy(type = type)
     }
 
-    /** The user vouched for a captured record; it joins their totals. */
-    fun confirm(id: String) {
-        viewModelScope.launch { repository.confirm(id) }
+    /**
+     * The user vouched for a captured record and said what it was for.
+     *
+     * One action, because it is one decision made while looking at the bank's own
+     * message. A null category is allowed - filing can wait, vouching cannot.
+     */
+    fun confirm(id: String, categoryId: String? = null) {
+        viewModelScope.launch { repository.confirmWithCategory(id, categoryId) }
+    }
+
+    /** Refiles a record the user categorised wrongly the first time. */
+    fun setCategory(id: String, categoryId: String?) {
+        viewModelScope.launch { repository.setCategory(id, categoryId) }
     }
 
     /** The user rejected a captured record - a misparse, or not theirs. */

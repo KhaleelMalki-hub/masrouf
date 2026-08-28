@@ -35,6 +35,10 @@
     <string name="recent_empty">لا توجد عمليات بعد</string>
 
     <string name="month_total_label">مصروف هذا الشهر</string>
+    <string name="uncategorised">بلا تصنيف</string>
+    <string name="category_prompt">على وش؟</string>
+    <string name="bank_said">نص الرسالة</string>
+    <string name="month_empty">لا مصروف مسجّل هذا الشهر بعد</string>
 
     <string name="capture_off_title">التقاط عمليات البنوك متوقف</string>
     <string name="capture_off_body">امنح التطبيق صلاحية قراءة الإشعارات ليسجّل عمليات بنوكك تلقائياً. تبقى البيانات على جهازك.</string>
@@ -74,4 +78,12 @@
 
     <string name="dismiss_title">تجاهل هذه العملية؟</string>
     <string name="dismiss_body">سيُحذف مبلغ %1$s بتاريخ %2$s مع نص رسالة البنك الأصلية. لا يمكن التراجع ولا استرجاع النص.</string>
+    <string name="category_food">مطاعم وقهوة</string>
+    <string name="category_groceries">بقالة</string>
+    <string name="category_transport">مواصلات</string>
+    <string name="category_bills">فواتير واشتراكات</string>
+    <string name="category_health">صحة</string>
+    <string name="category_shopping">تسوق</string>
+    <string name="category_transfers">تحويلات</string>
+    <string name="category_other">أخرى</string>
 </resources>

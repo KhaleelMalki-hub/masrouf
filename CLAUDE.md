@@ -7,7 +7,7 @@ statements. Single user, on-device, offline. Not a product, not published.
 
 ```bash
 ./gradlew :core:test              # 140 tests, runs anywhere with a JDK
-./gradlew :app:testDebugUnitTest  # 58 tests, needs the Android SDK
+./gradlew :app:testDebugUnitTest  # 64 tests, needs the Android SDK
 ./gradlew :app:assembleDebug      # needs local.properties with sdk.dir
 ```
 
@@ -47,7 +47,7 @@ proven.
 core/   pure Kotlin/JVM — no Android dependency, ever
   text/       ArabicText (normalise SMS text) · VisualOrder (undo PDF layout)
   money/      Money — integer halalas
-  model/      Transaction, TransactionDraft, enums
+  model/      Transaction, TransactionDraft, enums · SaudiCategories
   time/       RiyadhTime · ArabicDates
   capture/    MessageGate → ParserRegistry → CapturePipeline · SaudiBanks
   dedup/      Fingerprint · DuplicateDetector · EventSignature
@@ -59,7 +59,9 @@ app/    Android - Compose, Room, Arabic default with English in values-en
               TransactionRepository - the only route to storage, and where
               cross-source reconciliation runs under a lock
   ui/         AmountInput · DayLabel · MoneyFormat (all tested)
-              AddExpenseViewModel · AddExpenseScreen · Theme
+              AddExpenseViewModel · AddExpenseScreen
+              Theme (Sadu palette, bundled Plex Arabic) · MonthStrip ·
+              ReceiptSlip · CategoryPalette
 ```
 
 ## Rules that must not be broken
@@ -162,8 +164,13 @@ app/    Android - Compose, Room, Arabic default with English in values-en
   must add a batch call that reconciles the whole file at once, inside the same lock.
 - Nothing has been edited, only deleted and re-entered. Deleting a captured record
   destroys its `rawText`, the one field that cannot be typed back.
-- No categories, no accounts, no date picker (a manual record is timestamped when
-  it is saved).
+- No accounts and no date picker (a manual record is timestamped when it is saved).
+- Categories are a fixed list in `SaudiCategories`, not a table. Nothing lets a
+  person add or rename one, so a table would be storage for a value that never
+  changes plus two seeding paths that can disagree. Give them editing and that
+  reasoning expires.
+- Manual entry cannot set a category yet - only captured records can be filed, from
+  the slip. A typed expense lands uncategorised.
 - `ColumnRuler` boundaries in `SaudiStatements` were measured with **pdfplumber's**
   coordinate system. A different PDF extractor on Android may report different x
   values — verify against a real file before trusting barq / Emirates NBD imports.

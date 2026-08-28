@@ -30,6 +30,10 @@
     <string name="recent_empty">Nothing recorded yet</string>
 
     <string name="month_total_label">Spent this month</string>
+    <string name="uncategorised">Unfiled</string>
+    <string name="category_prompt">What was it for?</string>
+    <string name="bank_said">What the bank said</string>
+    <string name="month_empty">Nothing recorded this month yet</string>
 
     <string name="capture_off_title">Bank capture is off</string>
     <string name="capture_off_body">Give the app notification access so it records your bank transactions automatically. The data stays on your device.</string>
@@ -57,4 +61,12 @@
 
     <string name="dismiss_title">Dismiss this transaction?</string>
     <string name="dismiss_body">%1$s on %2$s will be deleted along with the original bank message. This cannot be undone and the message cannot be recovered.</string>
+    <string name="category_food">Eating out</string>
+    <string name="category_groceries">Groceries</string>
+    <string name="category_transport">Transport</string>
+    <string name="category_bills">Bills</string>
+    <string name="category_health">Health</string>
+    <string name="category_shopping">Shopping</string>
+    <string name="category_transfers">Transfers</string>
+    <string name="category_other">Other</string>
 </resources>

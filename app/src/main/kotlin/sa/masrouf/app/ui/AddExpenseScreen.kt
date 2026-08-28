@@ -1,6 +1,7 @@
 package sa.masrouf.app.ui
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -32,7 +33,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -42,10 +45,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import sa.masrouf.app.R
+import sa.masrouf.core.model.Category
 import sa.masrouf.core.model.Direction
 import sa.masrouf.core.model.Source
 import sa.masrouf.core.model.Transaction
 import sa.masrouf.core.model.TransactionType
+import sa.masrouf.core.money.Money
 
 @Composable
 fun AddExpenseScreen(
@@ -60,6 +65,7 @@ fun AddExpenseScreen(
     val recent by viewModel.recent.collectAsStateWithLifecycle()
     val monthTotal by viewModel.monthTotal.collectAsStateWithLifecycle()
     val pending by viewModel.pending.collectAsStateWithLifecycle()
+    val shares by viewModel.monthShares.collectAsStateWithLifecycle()
     val currency = stringResource(R.string.currency_sar)
 
     // Both destructive actions are irreversible and there is no server to restore
@@ -95,8 +101,10 @@ fun AddExpenseScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
-                MonthTotal(
-                    text = monthTotal.forDisplay(currency),
+                MonthPanel(
+                    total = monthTotal.forDisplay(currency),
+                    shares = shares,
+                    currencyLabel = currency,
                     pendingCount = pending.size,
                 )
             }
@@ -191,10 +199,10 @@ fun AddExpenseScreen(
                     )
                 }
                 items(pending, key = { it.id }) { transaction ->
-                    PendingRow(
+                    ReceiptSlip(
                         transaction = transaction,
                         currencyLabel = currency,
-                        onConfirm = { viewModel.confirm(transaction.id) },
+                        onConfirm = { categoryId -> viewModel.confirm(transaction.id, categoryId) },
                         onDismiss = { confirming = DestructiveAction.Dismiss(transaction) },
                     )
                 }
@@ -230,33 +238,61 @@ private fun AddExpenseTopBar() {
 }
 
 @Composable
-private fun MonthTotal(text: String, pendingCount: Int) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
+private fun MonthPanel(
+    total: String,
+    shares: List<Pair<Category?, Money>>,
+    currencyLabel: String,
+    pendingCount: Int,
+) {
+    val uncategorised = stringResource(R.string.uncategorised)
+    val bands = shares.map { (category, amount) ->
+        Band(
+            category = category,
+            label = category?.let { stringResource(it.labelRes) } ?: uncategorised,
+            amount = amount,
+            colour = category?.band ?: UncategorisedBand,
+        )
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp, bottom = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Column {
             Text(
                 text = stringResource(R.string.month_total_label),
-                style = MaterialTheme.typography.labelLarge,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Text(text = text, style = MaterialTheme.typography.headlineMedium)
-            // Captured records are not in the total above until the user confirms
-            // them, so the count is shown next to it. Otherwise the total looks
-            // simply wrong to someone who watched the notification arrive.
+            Text(
+                text = total,
+                style = MoneyStyle.merge(MaterialTheme.typography.displaySmall),
+            )
             if (pendingCount > 0) {
                 Text(
-                    // toString(), not the Int: passed as a number it would be
-                    // formatted with the locale's digits and read "٢" beside an
-                    // amount reading "1019.14". Kotlin's toString is always ASCII.
                     text = pluralStringResource(
                         R.plurals.pending_count,
                         pendingCount,
-                        // toString(), not the Int: passed as a number the argument
-                        // would be formatted with the locale's digits and read "٢"
-                        // beside an amount reading "1019.14".
                         pendingCount.toString(),
                     ),
-                    style = MaterialTheme.typography.labelMedium,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
+        }
+
+        MonthStrip(bands = bands)
+
+        if (bands.isEmpty()) {
+            Text(
+                text = stringResource(R.string.month_empty),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else {
+            BandLegend(bands = bands, currencyLabel = currencyLabel)
         }
     }
 }
@@ -276,15 +312,24 @@ private fun AccessPrompt(
     action: String,
     onAct: () -> Unit,
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            Text(text = title, style = MaterialTheme.typography.titleMedium)
-            Text(text = body, style = MaterialTheme.typography.bodyMedium)
-            TextButton(onClick = onAct) { Text(action) }
-        }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(4.dp))
+            .background(Sadu.GroundRaised)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(text = title, style = MaterialTheme.typography.titleMedium)
+        Text(
+            text = body,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        TextButton(
+            onClick = onAct,
+            modifier = Modifier.heightIn(min = 48.dp),
+        ) { Text(action) }
     }
 }
 
@@ -362,7 +407,7 @@ private fun TypeChips(selected: TransactionType, onSelect: (TransactionType) -> 
  * the catch-all also defeated the compile-time check this comment used to claim.
  */
 @get:StringRes
-private val TransactionType.labelRes: Int
+val TransactionType.labelRes: Int
     get() = when (this) {
         TransactionType.PURCHASE -> R.string.type_purchase
         TransactionType.BILL_PAYMENT -> R.string.type_bill_payment
@@ -457,7 +502,7 @@ private val Source.labelRes: Int
  * way the user has no way to resolve.
  */
 @Composable
-private fun SignedAmount(
+fun SignedAmount(
     transaction: Transaction,
     currencyLabel: String,
     style: TextStyle = MaterialTheme.typography.bodyLarge,

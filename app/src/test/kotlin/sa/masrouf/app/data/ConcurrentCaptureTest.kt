@@ -62,6 +62,7 @@ class ConcurrentCaptureTest {
             state.map { rows -> rows.filter { it.status == Status.PENDING.name } }
         override suspend fun confirm(id: String) = 0
         override suspend fun dismiss(id: String) = 0
+        override suspend fun setCategory(id: String, categoryId: String?) = 0
         override suspend fun delete(id: String) = 0
     }
 

@@ -102,4 +102,13 @@ interface TransactionDao {
      */
     @Query("DELETE FROM transactions WHERE id = :id")
     suspend fun delete(id: String): Int
+
+    /**
+     * Files a record under a category.
+     *
+     * Unguarded on status: a pending record is categorised as it is confirmed, and
+     * a confirmed one can be refiled later when the first guess turns out wrong.
+     */
+    @Query("UPDATE transactions SET category_id = :categoryId WHERE id = :id")
+    suspend fun setCategory(id: String, categoryId: String?): Int
 }

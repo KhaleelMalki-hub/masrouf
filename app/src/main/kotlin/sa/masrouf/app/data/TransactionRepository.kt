@@ -7,7 +7,9 @@ import kotlinx.coroutines.flow.map
 import sa.masrouf.core.dedup.DuplicateDetector
 import sa.masrouf.core.dedup.EventSignature
 import sa.masrouf.core.dedup.Fingerprint
+import sa.masrouf.core.model.Category
 import sa.masrouf.core.model.Direction
+import sa.masrouf.core.model.SaudiCategories
 import sa.masrouf.core.model.Source
 import sa.masrouf.core.model.Status
 import sa.masrouf.core.model.Transaction
@@ -168,6 +170,26 @@ class TransactionRepository(
         dao.observePending().map { rows -> rows.map(TransactionEntity::toModel) }
 
     /**
+     * Files a record under a category, or clears it when [categoryId] is null.
+     *
+     * @return false when no such record exists.
+     */
+    suspend fun setCategory(id: String, categoryId: String?): Boolean =
+        dao.setCategory(id, categoryId) == 1
+
+    /**
+     * Confirms a record and files it in one write.
+     *
+     * One call because it is one decision. The user is looking at the bank's own
+     * words when they answer both questions - is this right, and what was it for -
+     * and splitting them into two taps is how the second one stops being answered.
+     */
+    suspend fun confirmWithCategory(id: String, categoryId: String?): Boolean {
+        setCategory(id, categoryId)
+        return confirm(id)
+    }
+
+    /**
      * The user vouched for a captured record. It enters their totals from here on.
      *
      * @return false when there was nothing pending under that id, which means the
@@ -198,6 +220,26 @@ class TransactionRepository(
         private val NEIGHBOUR_WINDOW: Duration = Duration.ofDays(1)
     }
 }
+
+/**
+ * The month broken into its category shares, largest first.
+ *
+ * Filtered exactly as [spendingTotal] filters, so the strip and the number above
+ * it can never disagree - one rule decides both.
+ *
+ * Uncategorised spending gets a band of its own rather than being folded into
+ * "other". They mean different things: one is a decision the user made, the other
+ * is a decision they have not made yet, and a strip that hides the second cannot
+ * show how much of the month is still unexamined.
+ */
+fun List<Transaction>.categoryShares(): List<Pair<Category?, Money>> =
+    filter { it.status == Status.CONFIRMED }
+        .filter { it.direction == Direction.DEBIT && it.type.countsAsSpending }
+        .groupBy { SaudiCategories.byId(it.categoryId) }
+        .map { (category, rows) ->
+            category to rows.fold(Money.ZERO) { sum, row -> sum + row.amount }
+        }
+        .sortedByDescending { it.second.halalas }
 
 /**
  * What the user spent over these transactions.

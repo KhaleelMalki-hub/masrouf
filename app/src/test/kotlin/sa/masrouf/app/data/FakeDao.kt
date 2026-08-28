@@ -47,6 +47,14 @@ class FakeDao : TransactionDao {
         return 1
     }
 
+    override suspend fun setCategory(id: String, categoryId: String?): Int {
+        val target = state.value.firstOrNull { it.id == id } ?: return 0
+        state.value = state.value.map {
+            if (it.id == target.id) it.copy(categoryId = categoryId) else it
+        }
+        return 1
+    }
+
     override suspend fun delete(id: String): Int {
         val target = state.value.firstOrNull { it.id == id } ?: return 0
         state.value = state.value - target
