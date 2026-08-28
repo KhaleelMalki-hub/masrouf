@@ -109,4 +109,8 @@
     <string name="entry_details_hide">إخفاء التفاصيل</string>
     <string name="entry_close">إغلاق</string>
     <string name="amount_hint">0.00</string>
+    <string name="confirm_all">أكّد الكل</string>
+    <string name="confirm_all_title">تأكيد كل العمليات؟</string>
+    <string name="confirm_all_body">سيتم تأكيد %1$s عملية دفعة واحدة ودخولها في مجاميع شهورها. تقدر تحذف أي عملية غلط بعدين.</string>
+    <string name="confirm_all_done">تم تأكيد %1$s عملية</string>
 </resources>

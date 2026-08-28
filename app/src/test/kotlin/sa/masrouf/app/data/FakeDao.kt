@@ -40,6 +40,14 @@ class FakeDao : TransactionDao {
         row.copy(status = Status.CONFIRMED.name)
     }
 
+    override suspend fun confirmAllPending(): Int {
+        val pending = state.value.filter { it.status == Status.PENDING.name }
+        state.value = state.value.map {
+            if (it.status == Status.PENDING.name) it.copy(status = Status.CONFIRMED.name) else it
+        }
+        return pending.size
+    }
+
     override suspend fun dismiss(id: String): Int {
         val target = state.value.firstOrNull { it.id == id && it.status == Status.PENDING.name }
             ?: return 0

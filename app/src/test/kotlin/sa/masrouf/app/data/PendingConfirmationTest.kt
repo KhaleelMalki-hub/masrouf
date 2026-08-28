@@ -127,4 +127,36 @@ class PendingConfirmationTest {
         assertFalse(repository.dismiss("no-such-id"))
         assertFalse(repository.delete("no-such-id"))
     }
+
+    @Test
+    fun `confirming everything moves the whole backlog into the totals`() = runTest {
+        // A real import produced 1,664 pending records. Reviewing those one at a
+        // time is not protection, it is a pile nobody works through - and a pile
+        // nobody works through protects nothing.
+        repository.recordCaptured(captured("100.00", at), "2383")
+        repository.recordCaptured(captured("250.00", at.plusSeconds(3600)), "2383")
+        assertEquals(Money.ZERO, monthTotal())
+
+        assertEquals(2, repository.confirmAllPending())
+
+        assertEquals(emptyList(), repository.observePending().first())
+        assertEquals(Money.ofMajor("350.00"), monthTotal())
+    }
+
+    @Test
+    fun `confirming everything leaves already-confirmed records alone`() = runTest {
+        val first = captured("100.00", at)
+        repository.recordCaptured(first, "2383")
+        repository.confirm(first.id)
+        repository.recordCaptured(captured("40.00", at.plusSeconds(3600)), "2383")
+
+        // Only the one still waiting is counted as newly confirmed.
+        assertEquals(1, repository.confirmAllPending())
+        assertEquals(Money.ofMajor("140.00"), monthTotal())
+    }
+
+    @Test
+    fun `confirming everything on an empty queue changes nothing`() = runTest {
+        assertEquals(0, repository.confirmAllPending())
+    }
 }

@@ -92,4 +92,8 @@
     <string name="entry_details_hide">Hide details</string>
     <string name="entry_close">Close</string>
     <string name="amount_hint">0.00</string>
+    <string name="confirm_all">Confirm all</string>
+    <string name="confirm_all_title">Confirm every transaction?</string>
+    <string name="confirm_all_body">%1$s transactions will be confirmed at once and enter their months\' totals. You can delete any that are wrong afterwards.</string>
+    <string name="confirm_all_done">Confirmed %1$s transactions</string>
 </resources>

@@ -91,6 +91,7 @@ class AddExpenseViewModel(
         data class Running(val examined: Int) : ImportState
         data class Done(val stored: Int, val examined: Int) : ImportState
         data class Filed(val count: Int) : ImportState
+        data class Confirmed(val count: Int) : ImportState
     }
 
     private val _importState = MutableStateFlow<ImportState>(ImportState.Idle)
@@ -236,6 +237,19 @@ class AddExpenseViewModel(
             _importState.value = report
                 ?.let { ImportState.Done(stored = it.stored, examined = it.examined) }
                 ?: ImportState.Idle
+        }
+    }
+
+    /**
+     * Confirms everything waiting, in one action.
+     *
+     * Reported through [ImportState] like the other bulk operations, because an
+     * action over a thousand records that says nothing afterwards is
+     * indistinguishable from one that failed.
+     */
+    fun confirmAllPending() {
+        viewModelScope.launch {
+            _importState.value = ImportState.Confirmed(repository.confirmAllPending())
         }
     }
 

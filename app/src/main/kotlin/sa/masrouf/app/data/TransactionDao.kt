@@ -81,6 +81,19 @@ interface TransactionDao {
     suspend fun confirm(id: String): Int
 
     /**
+     * Confirms every pending record at once.
+     *
+     * @return how many were confirmed.
+     *
+     * The per-record rule stands: nothing auto-confirms. This is not the app
+     * deciding, it is the user vouching for a batch in one action, which is the
+     * only way a bulk import is usable - 1,664 records reviewed one at a time is a
+     * pile nobody works through, and a pile nobody works through protects nothing.
+     */
+    @Query("UPDATE transactions SET status = 'CONFIRMED' WHERE status = 'PENDING'")
+    suspend fun confirmAllPending(): Int
+
+    /**
      * Deletes a captured record the user rejected.
      *
      * Guarded to PENDING so this can never remove something already confirmed.

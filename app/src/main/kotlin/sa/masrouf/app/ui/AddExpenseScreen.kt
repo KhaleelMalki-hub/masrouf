@@ -110,6 +110,30 @@ fun AddExpenseScreen(
 
     var entryOpen by remember { mutableStateOf(false) }
     var confirming by remember { mutableStateOf<DestructiveAction?>(null) }
+    var confirmingAll by remember { mutableStateOf(false) }
+
+    if (confirmingAll) {
+        AlertDialog(
+            onDismissRequest = { confirmingAll = false },
+            title = { Text(stringResource(R.string.confirm_all_title)) },
+            text = {
+                Text(stringResource(R.string.confirm_all_body, pending.size.toString()))
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.confirmAllPending()
+                        confirmingAll = false
+                    },
+                ) { Text(stringResource(R.string.confirm_all)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmingAll = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
+    }
 
     confirming?.let { action ->
         DestructiveConfirmation(
@@ -318,6 +342,8 @@ private fun HistoryActions(
                 }
             is AddExpenseViewModel.ImportState.Filed ->
                 stringResource(R.string.file_history_done, state.count.toString())
+            is AddExpenseViewModel.ImportState.Confirmed ->
+                stringResource(R.string.confirm_all_done, state.count.toString())
             AddExpenseViewModel.ImportState.Idle ->
                 if (canImport) null else stringResource(R.string.import_history_body)
         }
@@ -1004,3 +1030,9 @@ private fun DestructiveConfirmation(
         dismissButton = { TextButton(onClick = onCancel) { Text(stringResource(R.string.cancel)) } },
     )
 }
+
+/**
+ * Below this, working through the queue one record at a time is reasonable and the
+ * bulk action would only invite skipping the review the queue exists for.
+ */
+private const val BULK_CONFIRM_THRESHOLD = 10

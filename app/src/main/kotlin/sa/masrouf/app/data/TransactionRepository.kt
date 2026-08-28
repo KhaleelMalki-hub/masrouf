@@ -225,6 +225,13 @@ class TransactionRepository(
      */
     suspend fun confirm(id: String): Boolean = dao.confirm(id) == 1
 
+    /**
+     * The user vouched for everything waiting, in one action.
+     *
+     * @return how many were confirmed.
+     */
+    suspend fun confirmAllPending(): Int = dao.confirmAllPending()
+
     /** The user rejected a captured record - a misparse, or a message that was not theirs. */
     suspend fun dismiss(id: String): Boolean = dao.dismiss(id) == 1
 

@@ -6,8 +6,8 @@ statements. Single user, on-device, offline. Not a product, not published.
 ## Commands
 
 ```bash
-./gradlew :core:test              # 157 tests, runs anywhere with a JDK
-./gradlew :app:testDebugUnitTest  # 82 tests, needs the Android SDK
+./gradlew :core:test              # 165 tests, runs anywhere with a JDK
+./gradlew :app:testDebugUnitTest  # 85 tests, needs the Android SDK
 ./gradlew :app:assembleDebug      # needs local.properties with sdk.dir
 ```
 
