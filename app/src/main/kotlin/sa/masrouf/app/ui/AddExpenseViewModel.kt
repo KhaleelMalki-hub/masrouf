@@ -69,9 +69,14 @@ class AddExpenseViewModel(
         repository.observeRecent()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    val pendingCount: StateFlow<Int> =
-        repository.observePendingCount()
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+    /**
+     * Captured records the user has not vouched for yet.
+     *
+     * Kept out of [monthTotal] until they are confirmed - see `spendingTotal`.
+     */
+    val pending: StateFlow<List<Transaction>> =
+        repository.observePending()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val monthTotal: StateFlow<Money> =
         repository.observeMonth(RiyadhTime.localDate(Instant.now(clock)))
@@ -92,6 +97,16 @@ class AddExpenseViewModel(
 
     fun onTypeChanged(type: TransactionType) {
         _form.value = _form.value.copy(type = type)
+    }
+
+    /** The user vouched for a captured record; it joins their totals. */
+    fun confirm(id: String) {
+        viewModelScope.launch { repository.confirm(id) }
+    }
+
+    /** The user rejected a captured record - a misparse, or not theirs. */
+    fun dismiss(id: String) {
+        viewModelScope.launch { repository.dismiss(id) }
     }
 
     /**

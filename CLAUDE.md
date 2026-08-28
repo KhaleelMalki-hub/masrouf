@@ -7,7 +7,7 @@ statements. Single user, on-device, offline. Not a product, not published.
 
 ```bash
 ./gradlew :core:test              # 140 tests, runs anywhere with a JDK
-./gradlew :app:testDebugUnitTest  # 40 tests, needs the Android SDK
+./gradlew :app:testDebugUnitTest  # 46 tests, needs the Android SDK
 ./gradlew :app:assembleDebug      # needs local.properties with sdk.dir
 ```
 
@@ -22,6 +22,18 @@ adb shell cmd locale set-app-locales sa.masrouf.app --locales ar-SA   # check RT
 adb shell cmd notification allow_listener \
   sa.masrouf.app/sa.masrouf.app.capture.MasroufNotificationListener
 adb logcat -s MasroufCapture     # one line per message the listener refused
+```
+
+Reading the database off a device needs the write-ahead log, not just the file.
+Room runs in WAL mode, so a write made seconds ago is still in `masrouf.db-wal`
+and `cat databases/masrouf.db` alone reports the state *before* it - which reads
+as "the button did nothing" when the button worked:
+
+```bash
+for f in masrouf.db masrouf.db-wal masrouf.db-shm; do
+  adb exec-out run-as sa.masrouf.app cat "databases/$f" > "local.${f#masrouf.}"
+done
+sqlite3 local.db 'SELECT id, status, source, amount_halalas FROM transactions;'
 ```
 
 `:app` is included in the build **only** when an Android SDK is present (see
@@ -118,10 +130,13 @@ app/    Android - Compose, Room, Arabic default with English in values-en
   SMS only. Package names for the apps that *are* installed were read off the
   device and are pinned in `ObservedBankPackagesTest` - that file should fail when
   a bank app is renamed.
-- **Nothing confirms a `PENDING` record yet.** Captured transactions are stored and
-  counted on screen but are excluded from the monthly total, and there is no screen
-  to confirm, edit or delete one - so today capture fills a list the user cannot
-  act on.
+- A pending record can be confirmed or dismissed, but not **edited**. A misread
+  amount is dismissed and typed in by hand, which is deliberate - it keeps every
+  number the user vouched for a number they actually entered - but it makes
+  correcting a near-miss more work than it should be.
+- Dismissing deletes the row, which frees its fingerprint, so an identical message
+  redelivered later reappears. It needs the same second on the device clock, so it
+  is rare; closing it properly means a `REJECTED` value on the core `Status` enum.
 - Statement import is not wired into the app, so `DuplicateDetector`'s one-day
   window is exercised only by the message paths. Cross-source reconciliation
   between SMS and notifications is live and tested; a statement arriving later has

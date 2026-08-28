@@ -35,4 +35,11 @@
     <string name="sms_off_title">Bank SMS is not being read</string>
     <string name="sms_off_body">Two of your banks send transactions only as text messages. Grant SMS access so they are captured.</string>
     <string name="sms_enable">Allow SMS access</string>
+
+    <string name="pending_title">Waiting for you</string>
+    <string name="pending_explain">Captured from your bank messages. These stay out of the month\'s total until you confirm them.</string>
+    <string name="confirm">Confirm</string>
+    <string name="dismiss">Dismiss</string>
+    <string name="source_sms">SMS</string>
+    <string name="source_notification">Notification</string>
 </resources>

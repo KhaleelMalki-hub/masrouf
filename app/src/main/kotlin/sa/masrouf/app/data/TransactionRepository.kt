@@ -131,8 +131,25 @@ class TransactionRepository(
         return dao.insert(entity) != -1L
     }
 
-    /** How many pending records are waiting for the user to confirm them. */
-    fun observePendingCount(): Flow<Int> = dao.observePendingCount()
+    /**
+     * Captured records waiting for the user, newest first.
+     *
+     * The screen counts this list rather than asking the database separately. Two
+     * ways to count the same thing is how a badge and a list come to disagree.
+     */
+    fun observePending(): Flow<List<Transaction>> =
+        dao.observePending().map { rows -> rows.map(TransactionEntity::toModel) }
+
+    /**
+     * The user vouched for a captured record. It enters their totals from here on.
+     *
+     * @return false when there was nothing pending under that id, which means the
+     *   screen was acting on a record that had already been dealt with.
+     */
+    suspend fun confirm(id: String): Boolean = dao.confirm(id) == 1
+
+    /** The user rejected a captured record - a misparse, or a message that was not theirs. */
+    suspend fun dismiss(id: String): Boolean = dao.dismiss(id) == 1
 
     companion object {
         const val RECENT_LIMIT = 50

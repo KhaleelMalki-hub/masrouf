@@ -40,4 +40,11 @@
     <string name="sms_off_title">رسائل البنوك غير مقروءة</string>
     <string name="sms_off_body">بنكان من بنوكك يرسلان العمليات كرسائل نصية فقط. امنح صلاحية قراءة الرسائل ليتم التقاطها.</string>
     <string name="sms_enable">السماح بقراءة الرسائل</string>
+
+    <string name="pending_title">بانتظار تأكيدك</string>
+    <string name="pending_explain">التقطها التطبيق من رسائل بنوكك. لا تدخل في مجموع الشهر حتى تؤكدها.</string>
+    <string name="confirm">تأكيد</string>
+    <string name="dismiss">تجاهل</string>
+    <string name="source_sms">رسالة نصية</string>
+    <string name="source_notification">إشعار</string>
 </resources>

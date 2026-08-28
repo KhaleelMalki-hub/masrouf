@@ -27,30 +27,6 @@ import java.time.Instant
  */
 class CrossSourceDedupTest {
 
-    /** In-memory stand-in with the one behaviour that matters: a unique fingerprint. */
-    private class FakeDao : TransactionDao {
-        val rows = mutableListOf<TransactionEntity>()
-
-        override suspend fun insert(transaction: TransactionEntity): Long {
-            if (rows.any { it.fingerprint == transaction.fingerprint }) return -1L
-            rows += transaction
-            return rows.size.toLong()
-        }
-
-        override suspend fun neighbours(fromMillis: Long, untilMillis: Long) =
-            rows.filter { it.occurredAtMillis in fromMillis..untilMillis }
-
-        override fun observeRecent(limit: Int): Flow<List<TransactionEntity>> = flowOf(rows)
-
-        override fun observeBetween(fromMillis: Long, untilMillis: Long) = flowOf(rows)
-
-        override suspend fun countByFingerprint(fingerprint: String) =
-            rows.count { it.fingerprint == fingerprint }
-
-        override fun observePendingCount(): Flow<Int> =
-            flowOf(rows.count { it.status == Status.PENDING.name })
-    }
-
     private val dao = FakeDao()
     private val repository = TransactionRepository(dao)
 

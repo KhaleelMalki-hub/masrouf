@@ -54,6 +54,30 @@ interface TransactionDao {
     @Query("SELECT COUNT(*) FROM transactions WHERE fingerprint = :fingerprint")
     suspend fun countByFingerprint(fingerprint: String): Int
 
-    @Query("SELECT COUNT(*) FROM transactions WHERE status = 'PENDING'")
-    fun observePendingCount(): Flow<Int>
+    @Query("SELECT * FROM transactions WHERE status = 'PENDING' ORDER BY occurred_at_millis DESC")
+    fun observePending(): Flow<List<TransactionEntity>>
+
+    /**
+     * @return rows changed: 1 on success, 0 when the record was already confirmed
+     *   or no longer exists.
+     *
+     * The `status = 'PENDING'` guard is the point. Without it a stale id from a
+     * screen that has not caught up would re-confirm a record, or confirm one the
+     * user had already dismissed, and the write would look successful either way.
+     */
+    @Query("UPDATE transactions SET status = 'CONFIRMED' WHERE id = :id AND status = 'PENDING'")
+    suspend fun confirm(id: String): Int
+
+    /**
+     * Deletes a captured record the user rejected.
+     *
+     * Guarded to PENDING so this can never remove something already confirmed.
+     *
+     * ponytail: deleting frees the fingerprint, so an identical message redelivered
+     * later reappears. That needs the same second on the device clock, so it is rare
+     * and costs a second dismissal rather than wrong money. A REJECTED status would
+     * close it properly, and that means a new value on the core Status enum.
+     */
+    @Query("DELETE FROM transactions WHERE id = :id AND status = 'PENDING'")
+    suspend fun dismiss(id: String): Int
 }

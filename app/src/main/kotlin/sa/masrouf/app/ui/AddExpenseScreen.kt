@@ -33,6 +33,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import sa.masrouf.app.R
+import sa.masrouf.core.model.Source
 import sa.masrouf.core.model.Status
 import sa.masrouf.core.model.Transaction
 import sa.masrouf.core.model.TransactionType
@@ -49,7 +50,7 @@ fun AddExpenseScreen(
     val form by viewModel.form.collectAsStateWithLifecycle()
     val recent by viewModel.recent.collectAsStateWithLifecycle()
     val monthTotal by viewModel.monthTotal.collectAsStateWithLifecycle()
-    val pendingCount by viewModel.pendingCount.collectAsStateWithLifecycle()
+    val pending by viewModel.pending.collectAsStateWithLifecycle()
     val currency = stringResource(R.string.currency_sar)
 
     Scaffold(
@@ -88,8 +89,32 @@ fun AddExpenseScreen(
             item {
                 MonthTotal(
                     text = monthTotal.forDisplay(currency),
-                    pendingCount = pendingCount,
+                    pendingCount = pending.size,
                 )
+            }
+
+            if (pending.isNotEmpty()) {
+                item {
+                    Text(
+                        text = stringResource(R.string.pending_title),
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                }
+                item {
+                    Text(
+                        text = stringResource(R.string.pending_explain),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+                items(pending, key = { it.id }) { transaction ->
+                    PendingRow(
+                        transaction = transaction,
+                        currencyLabel = currency,
+                        onConfirm = { viewModel.confirm(transaction.id) },
+                        onDismiss = { viewModel.dismiss(transaction.id) },
+                    )
+                }
+                item { HorizontalDivider() }
             }
 
             item {
@@ -293,6 +318,64 @@ private val TransactionType.labelRes: Int
         TransactionType.FEE,
         TransactionType.UNKNOWN,
         -> R.string.type_purchase
+    }
+
+/**
+ * A captured record with the two things the user can do about it.
+ *
+ * The amount and the merchant are shown as the parser read them, because the
+ * question being asked is whether that reading is right. There is no edit here on
+ * purpose: a wrong amount is dismissed and typed in by hand, which keeps the one
+ * number the user vouched for a number they actually entered.
+ */
+@Composable
+private fun PendingRow(
+    transaction: Transaction,
+    currencyLabel: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = transaction.merchantRaw
+                        ?: stringResource(transaction.type.labelRes),
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+                Text(
+                    text = transaction.amount.forDisplay(currencyLabel),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
+            Text(
+                text = stringResource(transaction.source.labelRes),
+                style = MaterialTheme.typography.labelSmall,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(onClick = onConfirm) { Text(stringResource(R.string.confirm)) }
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.dismiss)) }
+            }
+        }
+    }
+}
+
+/** Where a record came from, so the user knows which message to check it against. */
+@get:StringRes
+private val Source.labelRes: Int
+    get() = when (this) {
+        Source.SMS -> R.string.source_sms
+        Source.NOTIFICATION -> R.string.source_notification
+        // Neither can appear in the pending list: manual records are confirmed on
+        // entry, and statement import is not wired into the app.
+        Source.MANUAL, Source.STATEMENT -> R.string.source_notification
     }
 
 @Composable
