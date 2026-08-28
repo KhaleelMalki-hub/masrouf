@@ -7,7 +7,7 @@ statements. Single user, on-device, offline. Not a product, not published.
 
 ```bash
 ./gradlew :core:test              # 140 tests, runs anywhere with a JDK
-./gradlew :app:testDebugUnitTest  # 64 tests, needs the Android SDK
+./gradlew :app:testDebugUnitTest  # 67 tests, needs the Android SDK
 ./gradlew :app:assembleDebug      # needs local.properties with sdk.dir
 ```
 
@@ -61,7 +61,7 @@ app/    Android - Compose, Room, Arabic default with English in values-en
   ui/         AmountInput · DayLabel · MoneyFormat (all tested)
               AddExpenseViewModel · AddExpenseScreen
               Theme (Sadu palette, bundled Plex Arabic) · MonthStrip ·
-              ReceiptSlip · CategoryPalette
+              ReceiptSlip · CategoryChips · CategoryPalette
 ```
 
 ## Rules that must not be broken
@@ -169,8 +169,10 @@ app/    Android - Compose, Room, Arabic default with English in values-en
   person add or rename one, so a table would be storage for a value that never
   changes plus two seeding paths that can disagree. Give them editing and that
   reasoning expires.
-- Manual entry cannot set a category yet - only captured records can be filed, from
-  the slip. A typed expense lands uncategorised.
+- A category is optional everywhere. Filing can wait; recording cannot, and a
+  required category turns a five-second entry into one that gets skipped. Both
+  paths keep the last choice, since several of the same kind in a row is the
+  common case.
 - `ColumnRuler` boundaries in `SaudiStatements` were measured with **pdfplumber's**
   coordinate system. A different PDF extractor on Android may report different x
   values — verify against a real file before trusting barq / Emirates NBD imports.

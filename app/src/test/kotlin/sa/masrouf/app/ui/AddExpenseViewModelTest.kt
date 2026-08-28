@@ -14,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import sa.masrouf.app.data.FakeDao
 import sa.masrouf.app.data.TransactionRepository
+import sa.masrouf.core.model.SaudiCategories
 import sa.masrouf.core.model.Source
 import sa.masrouf.core.model.Status
 import sa.masrouf.core.model.TransactionType
@@ -131,6 +132,50 @@ class AddExpenseViewModelTest {
         assertNull(row.merchantRaw)
         assertNull(row.merchantKey)
         assertNull(row.note)
+    }
+
+    @Test
+    fun `a typed expense is filed under the category chosen with it`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onAmountChanged("62.00")
+        vm.onCategoryChanged(SaudiCategories.FOOD)
+
+        vm.save()
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(SaudiCategories.FOOD.id, dao.rows.single().categoryId)
+    }
+
+    @Test
+    fun `a category is optional and its absence is stored as null`() = runTest(dispatcher) {
+        // Filing can wait; recording cannot. A required category is how a
+        // five-second entry becomes a fifteen-second one that gets skipped.
+        val vm = viewModel()
+        vm.onAmountChanged("62.00")
+
+        vm.save()
+        testScheduler.advanceUntilIdle()
+
+        assertNull(dao.rows.single().categoryId)
+    }
+
+    @Test
+    fun `the category survives a save, like the type`() = runTest(dispatcher) {
+        // Recording several of the same kind in a row is the common case.
+        val vm = viewModel()
+        vm.onCategoryChanged(SaudiCategories.GROCERIES)
+        vm.onAmountChanged("30.00")
+        vm.save()
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(SaudiCategories.GROCERIES, vm.form.value.category)
+
+        vm.onAmountChanged("45.00")
+        vm.save()
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(2, dao.rows.size)
+        assertTrue(dao.rows.all { it.categoryId == SaudiCategories.GROCERIES.id })
     }
 
     @Test

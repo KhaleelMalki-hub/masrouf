@@ -68,7 +68,7 @@ fun ReceiptSlip(
             .fillMaxWidth()
             .clip(RoundedCornerShape(4.dp))
             .background(Sadu.GroundRaised)
-            .padding(16.dp)
+            .padding(vertical = 16.dp)
             // One node for the whole slip: a screen reader should hear the record,
             // not eleven fragments it has to assemble before it can act on them.
             .semantics(mergeDescendants = true) {
@@ -77,7 +77,7 @@ fun ReceiptSlip(
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = SLIP_PADDING),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Top,
         ) {
@@ -97,17 +97,23 @@ fun ReceiptSlip(
         }
 
         transaction.rawText?.takeIf { it.isNotBlank() }?.let { raw ->
-            BankWords(raw)
+            BankWords(raw, modifier = Modifier.padding(horizontal = SLIP_PADDING))
         }
 
         Text(
             text = stringResource(R.string.category_prompt),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = SLIP_PADDING),
         )
-        CategoryChips(selected = chosen, onSelect = { chosen = it })
+        CategoryChips(
+            selected = chosen,
+            onSelect = { chosen = it },
+            edgePadding = SLIP_PADDING,
+        )
 
         Row(
+            modifier = Modifier.padding(horizontal = SLIP_PADDING),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -131,9 +137,9 @@ fun ReceiptSlip(
  * their own inbox - which is the entire reason for showing it.
  */
 @Composable
-private fun BankWords(raw: String) {
+private fun BankWords(raw: String, modifier: Modifier = Modifier) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(3.dp))
             .background(Sadu.Ground)
@@ -155,46 +161,6 @@ private fun BankWords(raw: String) {
     }
 }
 
-@Composable
-private fun CategoryChips(selected: Category?, onSelect: (Category?) -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        SaudiCategories.ALL.forEach { category ->
-            val isSelected = category.id == selected?.id
-            FilterChip(
-                selected = isSelected,
-                // Tapping the chosen one again clears it: filing can be undone
-                // without hunting for a separate control.
-                onClick = { onSelect(if (isSelected) null else category) },
-                label = { Text(stringResource(category.labelRes)) },
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = category.band,
-                    selectedLabelColor = Sadu.Ground,
-                ),
-                modifier = Modifier.heightIn(min = 48.dp),
-            )
-        }
-    }
-}
-
-/** Category names live in resources so both locales stay in step. */
-@get:StringRes
-val Category.labelRes: Int
-    get() = when (id) {
-        SaudiCategories.FOOD.id -> R.string.category_food
-        SaudiCategories.GROCERIES.id -> R.string.category_groceries
-        SaudiCategories.TRANSPORT.id -> R.string.category_transport
-        SaudiCategories.BILLS.id -> R.string.category_bills
-        SaudiCategories.HEALTH.id -> R.string.category_health
-        SaudiCategories.SHOPPING.id -> R.string.category_shopping
-        SaudiCategories.TRANSFERS.id -> R.string.category_transfers
-        else -> R.string.category_other
-    }
-
 @get:StringRes
 private val Source.slipLabel: Int
     get() = when (this) {
@@ -202,3 +168,5 @@ private val Source.slipLabel: Int
         Source.NOTIFICATION -> R.string.source_notification
         Source.MANUAL, Source.STATEMENT -> R.string.source_notification
     }
+
+private val SLIP_PADDING = 16.dp

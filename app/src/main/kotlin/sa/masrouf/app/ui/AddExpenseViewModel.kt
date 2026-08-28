@@ -39,6 +39,13 @@ data class AddExpenseState(
     val note: String = "",
     val type: TransactionType = TransactionType.PURCHASE,
     /**
+     * What the expense was for, chosen while typing it.
+     *
+     * Optional: filing can wait, recording cannot, and a required category is how
+     * a five-second entry becomes a fifteen-second one that gets skipped.
+     */
+    val category: Category? = null,
+    /**
      * True once the user has tried to save. The amount error is withheld until
      * then, so an empty field is not scolded before it has been filled in.
      */
@@ -135,6 +142,10 @@ class AddExpenseViewModel(
         _form.value = _form.value.copy(type = type)
     }
 
+    fun onCategoryChanged(category: Category?) {
+        _form.value = _form.value.copy(category = category)
+    }
+
     /**
      * The user vouched for a captured record and said what it was for.
      *
@@ -180,16 +191,20 @@ class AddExpenseViewModel(
         viewModelScope.launch {
             try {
                 repository.recordManual(
-                amount = amount,
-                direction = Direction.DEBIT,
-                type = current.type,
-                occurredAt = Instant.now(clock),
-                merchantRaw = current.merchant,
-                note = current.note,
-            )
+                    amount = amount,
+                    direction = Direction.DEBIT,
+                    type = current.type,
+                    occurredAt = Instant.now(clock),
+                    merchantRaw = current.merchant,
+                    note = current.note,
+                    categoryId = current.category?.id,
+                )
                 // Cleared only after the write returns, so a failed insert leaves
                 // the user's typing on screen instead of discarding it.
-                _form.value = AddExpenseState(type = current.type)
+                _form.value = AddExpenseState(
+                    type = current.type,
+                    category = current.category,
+                )
             } catch (e: Exception) {
                 // Releasing the flag is load-bearing: without it a failed write
                 // locks the form forever, which is the mirror-image defect of the

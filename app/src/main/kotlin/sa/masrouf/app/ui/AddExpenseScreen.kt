@@ -122,6 +122,21 @@ fun AddExpenseScreen(
             }
 
             item {
+                Column {
+                    Text(
+                        text = stringResource(R.string.category_prompt),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    CategoryChips(
+                        selected = form.category,
+                        onSelect = viewModel::onCategoryChanged,
+                        modifier = Modifier.padding(top = 8.dp),
+                    )
+                }
+            }
+
+            item {
                 OutlinedTextField(
                     value = form.merchant,
                     onValueChange = viewModel::onMerchantChanged,
