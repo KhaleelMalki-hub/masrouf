@@ -23,6 +23,47 @@ object SaudiCategories {
     val HEALTH = Category(id = "health", labelAr = "صحة", labelEn = "Health")
     val SHOPPING = Category(id = "shopping", labelAr = "تسوق", labelEn = "Shopping")
     val TRANSFERS = Category(id = "transfers", labelAr = "تحويلات", labelEn = "Transfers")
+
+    /**
+     * Charity and endowment.
+     *
+     * A ninth category, added because a real history had 738 transactions to
+     * endowment funds and charities and none of the other eight described them.
+     * Folding زكاة and صدقة into "other" would hide a category the user gives to
+     * deliberately and would want to see.
+     */
+    val CHARITY = Category(id = "charity", labelAr = "صدقة وزكاة", labelEn = "Charity")
+
+    /**
+     * Cinemas, streaming, gyms, toys.
+     *
+     * Split out of [SHOPPING] because it answers a different question. Clothes and
+     * a cinema ticket are both discretionary, but a month where the discretionary
+     * money went on one rather than the other is a month the user wants to be able
+     * to see.
+     */
+    val ENTERTAINMENT = Category(id = "entertainment", labelAr = "ترفيه", labelEn = "Entertainment")
+
+    /**
+     * Cash out of, or into, a machine.
+     *
+     * Not spending, and not a transfer either: the money has left the account but
+     * has not yet been spent on anything, and the bank message cannot say what it
+     * later went on. Filing it as [OTHER] would put a category that means "unknown
+     * spending" on the one movement whose destination is knowable and simply is
+     * not a purchase.
+     */
+    val CASH = Category(id = "cash", labelAr = "نقد", labelEn = "Cash")
+
+    /**
+     * Money arriving: salary, refunds of a known kind, profit.
+     *
+     * It never enters a spending total - [TransactionType.countsAsSpending] decides
+     * that, not the category - but income with no category at all shows up in the
+     * history as an unfiled row that the user keeps opening and finding nothing to
+     * decide about.
+     */
+    val INCOME = Category(id = "income", labelAr = "دخل", labelEn = "Income")
     val OTHER = Category(id = "other", labelAr = "أخرى", labelEn = "Other")
 
     /**
@@ -33,7 +74,8 @@ object SaudiCategories {
      * spending.
      */
     val ALL: List<Category> = listOf(
-        FOOD, GROCERIES, TRANSPORT, BILLS, HEALTH, SHOPPING, TRANSFERS, OTHER,
+        FOOD, GROCERIES, TRANSPORT, BILLS, HEALTH, SHOPPING, ENTERTAINMENT,
+        CHARITY, CASH, TRANSFERS, INCOME, OTHER,
     )
 
     private val BY_ID: Map<String, Category> = ALL.associateBy(Category::id)

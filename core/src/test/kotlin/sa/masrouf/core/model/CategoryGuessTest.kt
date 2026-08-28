@@ -64,4 +64,37 @@ class CategoryGuessTest {
     fun `an ordinary purchase with an unknown merchant suggests nothing`() {
         assertNull(CategoryGuess.suggest("UNLISTED TRADER", TransactionType.PURCHASE))
     }
+
+    /**
+     * The type rules, which are what covers a merchant-less record.
+     *
+     * 9,301 records in a real 22,084-record history carry no merchant name at all:
+     * transfers to a person, machine withdrawals, salary. No list of shops however
+     * long can reach any of them, so these five mappings are worth more coverage
+     * than every merchant rule in the file put together.
+     */
+    @Test
+    fun `a movement with no merchant is filed by what kind of movement it is`() {
+        assertEquals(SaudiCategories.TRANSFERS, CategoryGuess.suggest(null, TransactionType.TRANSFER_OUT))
+        assertEquals(SaudiCategories.TRANSFERS, CategoryGuess.suggest(null, TransactionType.TRANSFER_IN))
+        assertEquals(SaudiCategories.TRANSFERS, CategoryGuess.suggest(null, TransactionType.OWN_TRANSFER))
+        assertEquals(SaudiCategories.CASH, CategoryGuess.suggest(null, TransactionType.ATM_WITHDRAWAL))
+        assertEquals(SaudiCategories.CASH, CategoryGuess.suggest(null, TransactionType.ATM_DEPOSIT))
+        assertEquals(SaudiCategories.INCOME, CategoryGuess.suggest(null, TransactionType.SALARY))
+        assertEquals(SaudiCategories.BILLS, CategoryGuess.suggest(null, TransactionType.BILL_PAYMENT))
+    }
+
+    /**
+     * A purchase with an unknown merchant stays unfiled, on purpose.
+     *
+     * The type says money left by card and nothing else. Filing it as "other" would
+     * make a guess look like a decision, and would remove it from the worklist the
+     * user works through to file the merchants only they can name.
+     */
+    @Test
+    fun `an unrecognised purchase is left for the user`() {
+        assertNull(CategoryGuess.suggest("SOME LOCAL SHOP EST", TransactionType.PURCHASE))
+        assertNull(CategoryGuess.suggest(null, TransactionType.PURCHASE))
+        assertNull(CategoryGuess.suggest(null, TransactionType.REFUND))
+    }
 }
