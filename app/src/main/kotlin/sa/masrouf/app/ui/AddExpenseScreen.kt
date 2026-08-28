@@ -157,6 +157,11 @@ fun AddExpenseScreen(
                 onSwitchLanguage = onSwitchLanguage,
                 themeMode = themeMode,
                 onThemeModeChange = onThemeModeChange,
+                importRunning = importState is AddExpenseViewModel.ImportState.Running,
+                onImportHistory = {
+                    if (canImportHistory) viewModel.importHistory() else onRequestHistoryAccess()
+                },
+                onFileHistory = viewModel::fileHistory,
             )
         },
         floatingActionButton = {
@@ -174,6 +179,10 @@ fun AddExpenseScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            if (importState !is AddExpenseViewModel.ImportState.Idle) {
+                item { ImportStatus(state = importState) }
+            }
+
             item {
                 MonthPanel(
                     month = selectedMonth,
@@ -256,17 +265,6 @@ fun AddExpenseScreen(
                 }
             }
 
-            item {
-                HistoryActions(
-                    state = importState,
-                    canImport = canImportHistory,
-                    onImport = {
-                        if (canImportHistory) viewModel.importHistory() else onRequestHistoryAccess()
-                    },
-                    onFile = viewModel::fileHistory,
-                )
-            }
-
             // Clearance for the floating button, which would otherwise sit on the
             // last row of the history.
             item { Spacer(Modifier.height(72.dp)) }
@@ -303,58 +301,86 @@ fun AddExpenseScreen(
 /**
  * The two things that can be done to a whole history at once.
  *
- * Both are one-off in practice, so they are a quiet row rather than a permanent
- * fixture - and both report what they did, because an action over hundreds of
- * records that says nothing afterwards is indistinguishable from one that failed.
+ * In the top bar, not in the list. They used to sit below the history, which was
+ * fine when the history was short and became unusable the moment a real import
+ * put 1,664 records above them: a once-in-the-life-of-the-app action was parked
+ * behind a scroll nobody would finish. An overflow menu is where an infrequent
+ * action belongs, and it is one tap from anywhere in the page.
  */
 @Composable
-private fun HistoryActions(
-    state: AddExpenseViewModel.ImportState,
-    canImport: Boolean,
-    onImport: () -> Unit,
-    onFile: () -> Unit,
+private fun MoreMenu(
+    importRunning: Boolean,
+    onImportHistory: () -> Unit,
+    onFileHistory: () -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TextButton(
-                onClick = onImport,
-                enabled = state !is AddExpenseViewModel.ImportState.Running,
-                modifier = Modifier.heightIn(min = 48.dp),
-            ) { Text(stringResource(R.string.import_history)) }
-            TextButton(
-                onClick = onFile,
-                modifier = Modifier.heightIn(min = 48.dp),
-            ) { Text(stringResource(R.string.file_history)) }
-        }
+    var open by remember { mutableStateOf(false) }
 
-        val note = when (state) {
-            is AddExpenseViewModel.ImportState.Running ->
-                stringResource(R.string.import_running, state.examined.toString())
-            is AddExpenseViewModel.ImportState.Done ->
-                if (state.stored == 0) {
-                    stringResource(R.string.import_none)
-                } else {
-                    stringResource(
-                        R.string.import_done,
-                        state.stored.toString(),
-                        state.examined.toString(),
-                    )
-                }
-            is AddExpenseViewModel.ImportState.Filed ->
-                stringResource(R.string.file_history_done, state.count.toString())
-            is AddExpenseViewModel.ImportState.Confirmed ->
-                stringResource(R.string.confirm_all_done, state.count.toString())
-            AddExpenseViewModel.ImportState.Idle ->
-                if (canImport) null else stringResource(R.string.import_history_body)
-        }
-        note?.let {
+    Box {
+        TextButton(
+            onClick = { open = true },
+            modifier = Modifier.heightIn(min = 48.dp),
+        ) {
             Text(
-                text = it,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                text = "\u22EE",
+                style = MaterialTheme.typography.titleLarge,
+            )
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.import_history)) },
+                enabled = !importRunning,
+                onClick = {
+                    onImportHistory()
+                    open = false
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.file_history)) },
+                onClick = {
+                    onFileHistory()
+                    open = false
+                },
             )
         }
     }
+}
+
+/**
+ * What a bulk action just did, shown at the top where it will be seen.
+ *
+ * An operation over a thousand records that reports nothing is indistinguishable
+ * from one that failed.
+ */
+@Composable
+private fun ImportStatus(state: AddExpenseViewModel.ImportState) {
+    val text = when (state) {
+        is AddExpenseViewModel.ImportState.Running ->
+            stringResource(R.string.import_running, state.examined.toString())
+        is AddExpenseViewModel.ImportState.Done ->
+            if (state.stored == 0) {
+                stringResource(R.string.import_none)
+            } else {
+                stringResource(
+                    R.string.import_done,
+                    state.stored.toString(),
+                    state.examined.toString(),
+                )
+            }
+        is AddExpenseViewModel.ImportState.Filed ->
+            stringResource(R.string.file_history_done, state.count.toString())
+        is AddExpenseViewModel.ImportState.Confirmed ->
+            stringResource(R.string.confirm_all_done, state.count.toString())
+        AddExpenseViewModel.ImportState.Idle -> return
+    }
+
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp),
+    )
 }
 
 /**
@@ -563,10 +589,18 @@ private fun AddExpenseTopBar(
     onSwitchLanguage: () -> Unit,
     themeMode: ThemeMode,
     onThemeModeChange: (ThemeMode) -> Unit,
+    importRunning: Boolean,
+    onImportHistory: () -> Unit,
+    onFileHistory: () -> Unit,
 ) {
     TopAppBar(
         title = { Text(stringResource(R.string.dashboard_title)) },
         actions = {
+            MoreMenu(
+                importRunning = importRunning,
+                onImportHistory = onImportHistory,
+                onFileHistory = onFileHistory,
+            )
             ThemeMenu(mode = themeMode, onSelect = onThemeModeChange)
             // The label is the language you would switch TO, not the one you are
             // in: a control that names the current state reads as a status, and
