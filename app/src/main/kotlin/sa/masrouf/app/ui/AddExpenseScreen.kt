@@ -202,7 +202,10 @@ private fun MonthTotal(text: String, pendingCount: Int) {
             // simply wrong to someone who watched the notification arrive.
             if (pendingCount > 0) {
                 Text(
-                    text = stringResource(R.string.pending_count, pendingCount),
+                    // toString(), not the Int: passed as a number it would be
+                    // formatted with the locale's digits and read "٢" beside an
+                    // amount reading "1019.14". Kotlin's toString is always ASCII.
+                    text = stringResource(R.string.pending_count, pendingCount.toString()),
                     style = MaterialTheme.typography.labelMedium,
                 )
             }

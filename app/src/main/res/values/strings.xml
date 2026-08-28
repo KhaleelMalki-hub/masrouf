@@ -35,7 +35,12 @@
     <string name="capture_off_body">امنح التطبيق صلاحية قراءة الإشعارات ليسجّل عمليات بنوكك تلقائياً. تبقى البيانات على جهازك.</string>
     <string name="capture_enable">فتح الإعدادات</string>
     <string name="capture_on">التقاط الإشعارات مفعّل</string>
-    <string name="pending_count">%1$d عملية بانتظار التأكيد</string>
+    <!--
+      %s and not %d: a decimal placeholder is formatted with the locale's own
+      digits, which renders "2" as "٢" in Arabic while every amount on the same
+      screen stays Western. The count is passed already converted.
+    -->
+    <string name="pending_count">%1$s عملية بانتظار التأكيد</string>
 
     <string name="sms_off_title">رسائل البنوك غير مقروءة</string>
     <string name="sms_off_body">بنكان من بنوكك يرسلان العمليات كرسائل نصية فقط. امنح صلاحية قراءة الرسائل ليتم التقاطها.</string>

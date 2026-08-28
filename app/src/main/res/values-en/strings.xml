@@ -30,7 +30,7 @@
     <string name="capture_off_body">Give the app notification access so it records your bank transactions automatically. The data stays on your device.</string>
     <string name="capture_enable">Open settings</string>
     <string name="capture_on">Notification capture is on</string>
-    <string name="pending_count">%1$d awaiting confirmation</string>
+    <string name="pending_count">%1$s awaiting confirmation</string>
 
     <string name="sms_off_title">Bank SMS is not being read</string>
     <string name="sms_off_body">Two of your banks send transactions only as text messages. Grant SMS access so they are captured.</string>
