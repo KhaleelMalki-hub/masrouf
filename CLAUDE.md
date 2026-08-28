@@ -106,7 +106,15 @@ app/    Android - Compose, Room, Arabic default with English in values-en
    no test catches — because the test was invented from the same imagination. This
    has already produced one wrong test in this repo.
 
-9. **Provenance is passed in, never inferred.** `CaptureRecorder` is shared by the
+9. **Provenance is passed in, never inferred.** Two of these now. `CaptureRecorder`
+   takes `source`, and every category write records a `category_source` of `MANUAL`
+   or `AUTOMATIC` so that re-filing can replace the app's decisions and keep the
+   user's. Neither can be recovered afterwards: asking whether the current rules
+   would produce a stored category cannot tell a correct guess from a person
+   agreeing with it, and would discard the agreement. Rows written before migration
+   3→4 read as `AUTOMATIC`; see `CategorySource.LEGACY` for what that costs.
+
+   `CaptureRecorder` is shared by the
    notification listener and the SMS receiver, so it takes `source` as a parameter.
    It used to hardcode `NOTIFICATION`, which made every barq and D360 record - banks
    with no app on the phone, so SMS only - claim it came from a notification. No test
