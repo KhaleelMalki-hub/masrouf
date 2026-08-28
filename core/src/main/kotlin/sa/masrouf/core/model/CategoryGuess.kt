@@ -203,6 +203,43 @@ object CategoryGuess {
         "بطاقه ايتمانيه" to SaudiCategories.TRANSFERS,
         "بطاقة ائتمانية" to SaudiCategories.TRANSFERS,
 
+        // Schools, and the fees and wages that are neither a purchase nor a
+        // transfer. Both categories were asked for by name.
+        "EJAR" to SaudiCategories.HOUSING,
+        "MASKAN" to SaudiCategories.HOUSING,
+        "إيجار" to SaudiCategories.HOUSING,
+        "ايجار" to SaudiCategories.HOUSING,
+        "سكن" to SaudiCategories.HOUSING,
+        "عقار" to SaudiCategories.HOUSING,
+        "صيانة المبنى" to SaudiCategories.HOUSING,
+        "SCHOOL" to SaudiCategories.EDUCATION,
+        "ACADEMY" to SaudiCategories.EDUCATION,
+        "UNIVERSITY" to SaudiCategories.EDUCATION,
+        "COLLEGE" to SaudiCategories.EDUCATION,
+        "INSTITUTE" to SaudiCategories.EDUCATION,
+        "KINDERGARTEN" to SaudiCategories.EDUCATION,
+        "NURSERY" to SaudiCategories.EDUCATION,
+        "TUITION" to SaudiCategories.EDUCATION,
+        "مدرس" to SaudiCategories.EDUCATION,
+        "مدارس" to SaudiCategories.EDUCATION,
+        "جامعة" to SaudiCategories.EDUCATION,
+        "روضة" to SaudiCategories.EDUCATION,
+        "تعليم" to SaudiCategories.EDUCATION,
+        "أكاديم" to SaudiCategories.EDUCATION,
+        "MUSANED" to SaudiCategories.FEES,
+        "MAKTAB ALAML" to SaudiCategories.FEES,
+        "JAWAZAT" to SaudiCategories.FEES,
+        "MUQEEM" to SaudiCategories.FEES,
+        "IQAMA" to SaudiCategories.FEES,
+        "QIWA" to SaudiCategories.FEES,
+        "مساند" to SaudiCategories.FEES,
+        "رسوم" to SaudiCategories.FEES,
+        "إقامة" to SaudiCategories.FEES,
+        "جوازات" to SaudiCategories.FEES,
+        "مكتب العمل" to SaudiCategories.FEES,
+        "راتب عامل" to SaudiCategories.FEES,
+        "أجر عامل" to SaudiCategories.FEES,
+
         // ---- Added from a real 22,084-record history --------------------------
         // Every name below was taken from that export's own merchant column, in
         // descending count order, and only where the name says what was bought.

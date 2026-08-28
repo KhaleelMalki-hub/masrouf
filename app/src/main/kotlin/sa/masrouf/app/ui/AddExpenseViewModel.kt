@@ -345,6 +345,19 @@ class AddExpenseViewModel(
         }
     }
 
+    /**
+     * Throws away the app's own filing and does it again with the current rules.
+     *
+     * Separate from [fileHistory], and destructive where that one is not, so it is
+     * behind a confirmation. What it destroys is only what the app decided; a
+     * category the user chose is kept.
+     */
+    fun refileEverything() {
+        viewModelScope.launch {
+            _importState.value = ImportState.Filed(repository.refileAll())
+        }
+    }
+
     fun clearImportState() {
         _importState.value = ImportState.Idle
     }

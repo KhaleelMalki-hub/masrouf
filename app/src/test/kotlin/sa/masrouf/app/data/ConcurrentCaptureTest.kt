@@ -63,8 +63,13 @@ class ConcurrentCaptureTest {
         override suspend fun confirm(id: String) = 0
         override suspend fun confirmAllPending() = 0
         override suspend fun dismiss(id: String) = 0
-        override suspend fun setCategory(id: String, categoryId: String?) = 0
-        override suspend fun setCategoryForMerchant(merchantKey: String, categoryId: String?) = 0
+        override suspend fun setCategory(id: String, categoryId: String?, source: String?) = 0
+        override suspend fun setCategoryForMerchant(
+            merchantKey: String,
+            categoryId: String?,
+            source: String?,
+        ) = 0
+        override suspend fun clearAutomaticCategories() = 0
         override fun observeEarliest(): Flow<Long?> = MutableStateFlow(null)
         override fun observeMonthsWithData(): Flow<List<String>> = MutableStateFlow(emptyList())
         override suspend fun uncategorised() = emptyList<TransactionEntity>()

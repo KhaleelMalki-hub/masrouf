@@ -124,4 +124,55 @@ class MerchantFilingTest {
         assertEquals(SaudiCategories.OTHER.id, dao.rows.single { it.id == "a" }.categoryId)
         assertEquals(SaudiCategories.HEALTH.id, dao.rows.single { it.id == "b" }.categoryId)
     }
+
+    /**
+     * Re-filing replaces what the app decided and keeps what the user decided.
+     *
+     * The distinction has to be stored, not re-derived. Asking "would the current
+     * rules produce this category" cannot tell a rule that got it right from a
+     * person who agreed with it, and would throw the agreement away.
+     */
+    @Test
+    fun `re-filing keeps the user's own choices and redoes the app's`() = runTest {
+        // NAHDI is a shipped rule: the app files it, so a re-file may redo it.
+        repository.recordCaptured(record("auto", "NAHDI PHARMACY", 0))
+        repository.fileUncategorised()
+        // The user filed this one by hand.
+        repository.recordCaptured(record("mine", "AL QIMMA", 30))
+        repository.setCategory("mine", SaudiCategories.OTHER.id)
+
+        repository.refileAll()
+
+        assertEquals(SaudiCategories.HEALTH.id, dao.rows.single { it.id == "auto" }.categoryId)
+        assertEquals(SaudiCategories.OTHER.id, dao.rows.single { it.id == "mine" }.categoryId)
+    }
+
+    /**
+     * A rule that changes reaches records it already filed wrongly.
+     *
+     * The ordinary backfill only ever fills a gap, so a wrong category it wrote
+     * stays wrong for ever however many times the backfill is re-run. That is what
+     * this exists for.
+     */
+    @Test
+    fun `re-filing corrects a category an earlier rule got wrong`() = runTest {
+        repository.recordCaptured(record("stale", "NAHDI PHARMACY", 0))
+        // Stand-in for what a since-corrected rule left behind.
+        dao.setCategory("stale", SaudiCategories.SHOPPING.id, CategorySource.AUTOMATIC.name)
+
+        assertEquals(1, repository.refileAll())
+
+        assertEquals(SaudiCategories.HEALTH.id, dao.rows.single().categoryId)
+    }
+
+    /** A merchant the user filed keeps its learned rule through a re-file. */
+    @Test
+    fun `a learned merchant rule survives re-filing`() = runTest {
+        repository.recordCaptured(record("a", "AL QIMMA", 0))
+        repository.fileMerchant("AL QIMMA", SaudiCategories.FOOD.id)
+
+        repository.refileAll()
+
+        assertEquals(SaudiCategories.FOOD.id, dao.rows.single().categoryId)
+    }
 }

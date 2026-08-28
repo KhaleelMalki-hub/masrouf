@@ -70,6 +70,15 @@ data class TransactionEntity(
      */
     @ColumnInfo(name = "account_last4") val accountLast4: String?,
     @ColumnInfo(name = "category_id") val categoryId: String?,
+
+    /**
+     * Who decided [categoryId]. See [CategorySource]; null when nothing has.
+     *
+     * Not on the core [Transaction], which is what the screens reason about and
+     * has no business knowing how a category got there. It is storage's answer to
+     * one question: may a re-file overwrite this row.
+     */
+    @ColumnInfo(name = "category_source") val categorySource: String?,
     @ColumnInfo(name = "merchant_raw") val merchantRaw: String?,
     @ColumnInfo(name = "merchant_key") val merchantKey: String?,
     val note: String?,
@@ -88,7 +97,10 @@ data class TransactionEntity(
     val currency: String,
 )
 
-fun Transaction.toEntity(accountLast4: String? = null): TransactionEntity = TransactionEntity(
+fun Transaction.toEntity(
+    accountLast4: String? = null,
+    categorySource: CategorySource? = null,
+): TransactionEntity = TransactionEntity(
     id = id,
     amountHalalas = amount.halalas,
     direction = direction.name,
@@ -97,6 +109,7 @@ fun Transaction.toEntity(accountLast4: String? = null): TransactionEntity = Tran
     accountId = accountId,
     accountLast4 = accountLast4,
     categoryId = categoryId,
+    categorySource = categoryId?.let { (categorySource ?: CategorySource.AUTOMATIC).name },
     merchantRaw = merchantRaw,
     merchantKey = merchantKey,
     note = note,

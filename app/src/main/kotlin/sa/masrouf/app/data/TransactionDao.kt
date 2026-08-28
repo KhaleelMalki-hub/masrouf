@@ -122,8 +122,13 @@ interface TransactionDao {
      * Unguarded on status: a pending record is categorised as it is confirmed, and
      * a confirmed one can be refiled later when the first guess turns out wrong.
      */
-    @Query("UPDATE transactions SET category_id = :categoryId WHERE id = :id")
-    suspend fun setCategory(id: String, categoryId: String?): Int
+    @Query(
+        """
+        UPDATE transactions SET category_id = :categoryId, category_source = :source
+        WHERE id = :id
+        """
+    )
+    suspend fun setCategory(id: String, categoryId: String?, source: String?): Int
 
     /**
      * When the earliest stored transaction happened, or null on an empty database.
@@ -156,10 +161,37 @@ interface TransactionDao {
      *
      * @return how many were refiled.
      */
-    @Query("UPDATE transactions SET category_id = :categoryId WHERE merchant_key = :merchantKey")
-    suspend fun setCategoryForMerchant(merchantKey: String, categoryId: String?): Int
+    @Query(
+        """
+        UPDATE transactions SET category_id = :categoryId, category_source = :source
+        WHERE merchant_key = :merchantKey
+        """
+    )
+    suspend fun setCategoryForMerchant(
+        merchantKey: String,
+        categoryId: String?,
+        source: String?,
+    ): Int
 
     /** Everything with no category yet, for a one-off backfill over the history. */
     @Query("SELECT * FROM transactions WHERE category_id IS NULL")
     suspend fun uncategorised(): List<TransactionEntity>
+
+    /**
+     * Clears every category the app itself filed, leaving the user's alone.
+     *
+     * The first half of re-filing. A row the user chose is identified by its
+     * `category_source`, not by whether the current rules would agree with it:
+     * agreeing with a guess is still a decision, and re-deriving it would throw the
+     * decision away.
+     *
+     * @return how many were cleared.
+     */
+    @Query(
+        """
+        UPDATE transactions SET category_id = NULL, category_source = NULL
+        WHERE category_id IS NOT NULL AND category_source = 'AUTOMATIC'
+        """
+    )
+    suspend fun clearAutomaticCategories(): Int
 }

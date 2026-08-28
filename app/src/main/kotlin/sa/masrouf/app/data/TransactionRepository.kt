@@ -120,7 +120,9 @@ class TransactionRepository(
             fingerprint = Fingerprint.forManual(id),
             rawText = null,
         )
-        dao.insert(transaction.toEntity())
+        // A category typed in on the entry screen is the user's own choice, and a
+        // re-file must not overwrite it.
+        dao.insert(transaction.toEntity(categorySource = CategorySource.MANUAL))
         return transaction
     }
 
@@ -214,7 +216,7 @@ class TransactionRepository(
      */
     suspend fun fileMerchant(merchantKey: String, categoryId: String): Int {
         rules?.upsert(MerchantRule(merchantKey = merchantKey, categoryId = categoryId))
-        return dao.setCategoryForMerchant(merchantKey, categoryId)
+        return dao.setCategoryForMerchant(merchantKey, categoryId, CategorySource.MANUAL.name)
     }
 
     /**
@@ -223,7 +225,28 @@ class TransactionRepository(
      * @return false when no such record exists.
      */
     suspend fun setCategory(id: String, categoryId: String?): Boolean =
-        dao.setCategory(id, categoryId) == 1
+        dao.setCategory(id, categoryId, CategorySource.MANUAL.name.takeIf { categoryId != null }) == 1
+
+    /**
+     * Clears everything the app filed and files it again with the current rules.
+     *
+     * For when the rules themselves change. The ordinary backfill only ever fills a
+     * gap, so a rule that was wrong when it ran leaves a wrong category behind for
+     * ever: four keywords matching inside longer words filed 152 records under
+     * categories nothing about them suggested, and no amount of re-running the
+     * backfill would have corrected one of them.
+     *
+     * The user's own decisions are not touched. They are identified by
+     * [CategorySource.MANUAL], recorded when the choice was made, rather than by
+     * asking whether the current rules would agree: a person agreeing with a guess
+     * has still made a decision, and re-deriving it would discard the agreement.
+     *
+     * @return how many records ended up filed.
+     */
+    suspend fun refileAll(): Int {
+        dao.clearAutomaticCategories()
+        return fileUncategorised()
+    }
 
     /**
      * Files every uncategorised record whose merchant is recognised.
@@ -244,7 +267,7 @@ class TransactionRepository(
             val category = row.merchantKey?.let(learned::get)
                 ?: CategoryGuess.suggest(model.merchantRaw, model.type)?.id
                 ?: return@forEach
-            if (dao.setCategory(row.id, category) == 1) filed++
+            if (dao.setCategory(row.id, category, CategorySource.AUTOMATIC.name) == 1) filed++
         }
         return filed
     }

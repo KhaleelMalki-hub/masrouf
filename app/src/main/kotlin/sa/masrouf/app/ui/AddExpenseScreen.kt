@@ -188,6 +188,7 @@ fun AddExpenseScreen(
                 when (action) {
                     is DestructiveAction.Delete -> viewModel.delete(action.transaction.id)
                     is DestructiveAction.Dismiss -> viewModel.dismiss(action.transaction.id)
+                    DestructiveAction.RefileAll -> viewModel.refileEverything()
                 }
                 confirming = null
             },
@@ -207,6 +208,7 @@ fun AddExpenseScreen(
                     if (canImportHistory) viewModel.importHistory() else onRequestHistoryAccess()
                 },
                 onFileHistory = viewModel::fileHistory,
+                onRefileAll = { confirming = DestructiveAction.RefileAll },
             )
         },
         floatingActionButton = {
@@ -396,6 +398,7 @@ private fun MoreMenu(
     importRunning: Boolean,
     onImportHistory: () -> Unit,
     onFileHistory: () -> Unit,
+    onRefileAll: () -> Unit,
 ) {
     var open by remember { mutableStateOf(false) }
 
@@ -422,6 +425,13 @@ private fun MoreMenu(
                 text = { Text(stringResource(R.string.file_history)) },
                 onClick = {
                     onFileHistory()
+                    open = false
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.refile_all)) },
+                onClick = {
+                    onRefileAll()
                     open = false
                 },
             )
@@ -676,6 +686,7 @@ private fun AddExpenseTopBar(
     importRunning: Boolean,
     onImportHistory: () -> Unit,
     onFileHistory: () -> Unit,
+    onRefileAll: () -> Unit,
 ) {
     TopAppBar(
         title = { Text(stringResource(R.string.dashboard_title)) },
@@ -684,6 +695,7 @@ private fun AddExpenseTopBar(
                 importRunning = importRunning,
                 onImportHistory = onImportHistory,
                 onFileHistory = onFileHistory,
+                onRefileAll = onRefileAll,
             )
             ThemeMenu(mode = themeMode, onSelect = onThemeModeChange)
             // The label is the language you would switch TO, not the one you are
@@ -1130,17 +1142,25 @@ private fun TransactionRow(
 
 /** Which irreversible thing the user just asked for. */
 private sealed interface DestructiveAction {
-    val transaction: Transaction
 
     /** Remove a record from the history. A manual one can simply be typed again. */
-    data class Delete(override val transaction: Transaction) : DestructiveAction
+    data class Delete(val transaction: Transaction) : DestructiveAction
 
     /**
      * Reject a captured record. Strictly worse than [Delete]: it also destroys
      * `rawText`, the original bank message, which is the one field the user cannot
      * reproduce from memory. It was previously the only unguarded one.
      */
-    data class Dismiss(override val transaction: Transaction) : DestructiveAction
+    data class Dismiss(val transaction: Transaction) : DestructiveAction
+
+    /**
+     * Throw away every category the app filed and file again with current rules.
+     *
+     * Destroys no transaction, so it names no amount and no day. What it destroys
+     * is the app's own filing across the whole history, which is why it is here and
+     * not a menu item that acts on the first tap.
+     */
+    data object RefileAll : DestructiveAction
 }
 
 /**
@@ -1160,28 +1180,31 @@ private fun DestructiveConfirmation(
     val titleRes = when (action) {
         is DestructiveAction.Delete -> R.string.delete_title
         is DestructiveAction.Dismiss -> R.string.dismiss_title
-    }
-    val bodyRes = when (action) {
-        is DestructiveAction.Delete -> R.string.delete_body
-        is DestructiveAction.Dismiss -> R.string.dismiss_body
+        DestructiveAction.RefileAll -> R.string.refile_all_title
     }
     val actionRes = when (action) {
         is DestructiveAction.Delete -> R.string.delete
         is DestructiveAction.Dismiss -> R.string.dismiss
+        DestructiveAction.RefileAll -> R.string.refile_all_confirm
+    }
+    val body = when (action) {
+        is DestructiveAction.Delete -> stringResource(
+            R.string.delete_body,
+            action.transaction.amount.forDisplay(currencyLabel),
+            action.transaction.dayLabel(),
+        )
+        is DestructiveAction.Dismiss -> stringResource(
+            R.string.dismiss_body,
+            action.transaction.amount.forDisplay(currencyLabel),
+            action.transaction.dayLabel(),
+        )
+        DestructiveAction.RefileAll -> stringResource(R.string.refile_all_body)
     }
 
     AlertDialog(
         onDismissRequest = onCancel,
         title = { Text(stringResource(titleRes)) },
-        text = {
-            Text(
-                stringResource(
-                    bodyRes,
-                    action.transaction.amount.forDisplay(currencyLabel),
-                    action.transaction.dayLabel(),
-                )
-            )
-        },
+        text = { Text(body) },
         confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(actionRes)) } },
         dismissButton = { TextButton(onClick = onCancel) { Text(stringResource(R.string.cancel)) } },
     )

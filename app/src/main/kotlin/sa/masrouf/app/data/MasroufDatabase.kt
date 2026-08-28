@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [TransactionEntity::class, MerchantRule::class],
-    version = 3,
+    version = 4,
     exportSchema = true,
 )
 abstract class MasroufDatabase : RoomDatabase() {
@@ -35,6 +35,23 @@ abstract class MasroufDatabase : RoomDatabase() {
          * Nothing to backfill: before this existed the user could not express a
          * decision about a merchant, so there are none to carry forward.
          */
+        /**
+         * Records who filed each transaction, so re-filing can replace the app's
+         * decisions and leave the user's alone.
+         *
+         * Existing filed rows are marked automatic; see [CategorySource.LEGACY] for
+         * why that is the safe reading and what it costs.
+         */
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE transactions ADD COLUMN category_source TEXT")
+                db.execSQL(
+                    "UPDATE transactions SET category_source = 'AUTOMATIC' " +
+                        "WHERE category_id IS NOT NULL"
+                )
+            }
+        }
+
         private val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL(
@@ -64,7 +81,7 @@ abstract class MasroufDatabase : RoomDatabase() {
          */
         fun open(context: Context): MasroufDatabase =
             Room.databaseBuilder(context.applicationContext, MasroufDatabase::class.java, NAME)
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                 .build()
     }
 }

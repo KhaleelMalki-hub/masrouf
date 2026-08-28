@@ -55,10 +55,10 @@ class FakeDao : TransactionDao {
         return 1
     }
 
-    override suspend fun setCategory(id: String, categoryId: String?): Int {
+    override suspend fun setCategory(id: String, categoryId: String?, source: String?): Int {
         val target = state.value.firstOrNull { it.id == id } ?: return 0
         state.value = state.value.map {
-            if (it.id == target.id) it.copy(categoryId = categoryId) else it
+            if (it.id == target.id) it.copy(categoryId = categoryId, categorySource = source) else it
         }
         return 1
     }
@@ -77,10 +77,28 @@ class FakeDao : TransactionDao {
         }.distinct().sortedDescending()
     }
 
-    override suspend fun setCategoryForMerchant(merchantKey: String, categoryId: String?): Int {
+    override suspend fun setCategoryForMerchant(
+        merchantKey: String,
+        categoryId: String?,
+        source: String?,
+    ): Int {
         val hits = state.value.filter { it.merchantKey == merchantKey }
         state.value = state.value.map {
-            if (it.merchantKey == merchantKey) it.copy(categoryId = categoryId) else it
+            if (it.merchantKey == merchantKey) {
+                it.copy(categoryId = categoryId, categorySource = source)
+            } else {
+                it
+            }
+        }
+        return hits.size
+    }
+
+    override suspend fun clearAutomaticCategories(): Int {
+        val hits = state.value.filter {
+            it.categoryId != null && it.categorySource == CategorySource.AUTOMATIC.name
+        }
+        state.value = state.value.map {
+            if (it in hits) it.copy(categoryId = null, categorySource = null) else it
         }
         return hits.size
     }

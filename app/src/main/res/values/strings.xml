@@ -129,4 +129,11 @@
     <string name="category_cash">نقد</string>
     <string name="category_income">دخل</string>
     <string name="legend_hint">اضغط أي تصنيف عشان تشوف عملياته</string>
+    <string name="refile_all">أعد تصنيف الكل</string>
+    <string name="refile_all_title">إعادة تصنيف كل شي؟</string>
+    <string name="refile_all_body">بيمسح التصنيفات اللي حطها التطبيق ويعيدها بالقواعد الحالية. التصنيفات اللي اخترتها بنفسك ما تنمس.</string>
+    <string name="refile_all_confirm">أعد التصنيف</string>
+    <string name="category_education">مدارس وتعليم</string>
+    <string name="category_fees">رسوم وأجور</string>
+    <string name="category_housing">رسوم شهرية (سكن)</string>
 </resources>

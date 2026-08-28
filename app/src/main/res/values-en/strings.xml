@@ -112,4 +112,11 @@
     <string name="category_cash">Cash</string>
     <string name="category_income">Income</string>
     <string name="legend_hint">Tap a category to see what is in it</string>
+    <string name="refile_all">Re-file everything</string>
+    <string name="refile_all_title">Re-file everything?</string>
+    <string name="refile_all_body">Clears the categories the app filed and files them again with the current rules. Categories you chose yourself are kept.</string>
+    <string name="refile_all_confirm">Re-file</string>
+    <string name="category_education">Education</string>
+    <string name="category_fees">Fees and wages</string>
+    <string name="category_housing">Housing</string>
 </resources>

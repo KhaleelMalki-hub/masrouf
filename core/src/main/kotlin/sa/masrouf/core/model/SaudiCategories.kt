@@ -35,6 +35,28 @@ object SaudiCategories {
     val CHARITY = Category(id = "charity", labelAr = "صدقة وزكاة", labelEn = "Charity")
 
     /**
+     * Housing: rent, the monthly building charge, utilities billed by a landlord.
+     *
+     * Its own category rather than a line in [BILLS] because it is the largest
+     * fixed number in most months, and a bills line that contains it moves so
+     * little in proportion that a real change in the others cannot be seen.
+     */
+    val HOUSING = Category(id = "housing", labelAr = "رسوم شهرية (سكن)", labelEn = "Housing")
+
+    /** School and university fees, courses, books bought for a course. */
+    val EDUCATION = Category(id = "education", labelAr = "مدارس وتعليم", labelEn = "Education")
+
+    /**
+     * Fees and wages: government charges, a domestic worker's monthly pay.
+     *
+     * Both are money that leaves on a schedule for something that is not a purchase
+     * and not a transfer between the user's own accounts. Filed under [BILLS] they
+     * would disappear into a line already carrying electricity and a phone plan,
+     * which is the line the user looks at to ask whether the bills went up.
+     */
+    val FEES = Category(id = "fees", labelAr = "رسوم وأجور", labelEn = "Fees and wages")
+
+    /**
      * Cinemas, streaming, gyms, toys.
      *
      * Split out of [SHOPPING] because it answers a different question. Clothes and
@@ -74,8 +96,8 @@ object SaudiCategories {
      * spending.
      */
     val ALL: List<Category> = listOf(
-        FOOD, GROCERIES, TRANSPORT, BILLS, HEALTH, SHOPPING, ENTERTAINMENT,
-        CHARITY, CASH, TRANSFERS, INCOME, OTHER,
+        FOOD, GROCERIES, TRANSPORT, HOUSING, BILLS, HEALTH, EDUCATION, SHOPPING,
+        ENTERTAINMENT, FEES, CHARITY, CASH, TRANSFERS, INCOME, OTHER,
     )
 
     private val BY_ID: Map<String, Category> = ALL.associateBy(Category::id)
