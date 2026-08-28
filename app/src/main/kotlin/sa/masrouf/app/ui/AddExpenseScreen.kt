@@ -79,6 +79,7 @@ fun AddExpenseScreen(
     modifier: Modifier = Modifier,
     canImportHistory: Boolean = false,
     onRequestHistoryAccess: () -> Unit = {},
+    onSwitchLanguage: () -> Unit = {},
 ) {
     val form by viewModel.form.collectAsStateWithLifecycle()
     val recent by viewModel.recent.collectAsStateWithLifecycle()
@@ -108,7 +109,7 @@ fun AddExpenseScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = { AddExpenseTopBar() },
+        topBar = { AddExpenseTopBar(onSwitchLanguage = onSwitchLanguage) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { entryOpen = true },
@@ -133,23 +134,19 @@ fun AddExpenseScreen(
                 )
             }
 
-            item {
-                HistoryActions(
-                    state = importState,
-                    canImport = canImportHistory,
-                    onImport = {
-                        if (canImportHistory) viewModel.importHistory() else onRequestHistoryAccess()
-                    },
-                    onFile = viewModel::fileHistory,
-                )
-            }
-
             if (pending.isNotEmpty()) {
                 item {
-                    Text(
-                        text = stringResource(R.string.pending_title),
-                        style = MaterialTheme.typography.titleMedium,
-                    )
+                    Column {
+                        Text(
+                            text = stringResource(R.string.pending_title),
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        Text(
+                            text = stringResource(R.string.pending_explain),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
                 items(pending, key = { it.id }) { transaction ->
                     ReceiptSlip(
@@ -202,6 +199,17 @@ fun AddExpenseScreen(
                         onDelete = { confirming = DestructiveAction.Delete(transaction) },
                     )
                 }
+            }
+
+            item {
+                HistoryActions(
+                    state = importState,
+                    canImport = canImportHistory,
+                    onImport = {
+                        if (canImportHistory) viewModel.importHistory() else onRequestHistoryAccess()
+                    },
+                    onFile = viewModel::fileHistory,
+                )
             }
 
             // Clearance for the floating button, which would otherwise sit on the
@@ -345,12 +353,27 @@ private fun EntrySheet(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AddExpenseTopBar() {
+private fun AddExpenseTopBar(onSwitchLanguage: () -> Unit) {
     TopAppBar(
         title = { Text(stringResource(R.string.dashboard_title)) },
+        actions = {
+            // The label is the language you would switch TO, not the one you are
+            // in: a control that names the current state reads as a status, and
+            // people tap it expecting nothing to happen.
+            TextButton(
+                onClick = onSwitchLanguage,
+                modifier = Modifier.heightIn(min = 48.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.language_toggle),
+                    style = MaterialTheme.typography.labelLarge,
+                )
+            }
+        },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = Sadu.Ground,
             titleContentColor = MaterialTheme.colorScheme.onSurface,
+            actionIconContentColor = MaterialTheme.colorScheme.primary,
         ),
     )
 }
@@ -375,8 +398,11 @@ private fun MonthPanel(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 8.dp, bottom = 4.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+            .padding(top = 8.dp)
+            .clip(RoundedCornerShape(6.dp))
+            .background(Sadu.GroundRaised)
+            .padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Column {
             Text(

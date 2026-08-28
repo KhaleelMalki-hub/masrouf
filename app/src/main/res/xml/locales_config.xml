@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Declares the languages this app actually ships, so Android offers a per-app
+  language picker and AppCompat's setApplicationLocales has something to switch
+  between. Without it the app follows the system language only, and the Arabic
+  build can only be reached by changing the whole phone.
+-->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="ar" />
+    <locale android:name="en" />
+</locale-config>

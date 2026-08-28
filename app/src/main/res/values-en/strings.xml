@@ -81,4 +81,6 @@
     <string name="file_history_done">Filed %1$s transactions</string>
     <string name="nothing_pending">Everything confirmed</string>
     <string name="history_all">All transactions</string>
+    <string name="language_toggle">ع</string>
+    <string name="language_switch">Switch language</string>
 </resources>

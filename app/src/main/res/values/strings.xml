@@ -98,4 +98,6 @@
     <string name="file_history_done">صُنّفت %1$s عملية</string>
     <string name="nothing_pending">كل شي مؤكّد</string>
     <string name="history_all">كل العمليات</string>
+    <string name="language_toggle">EN</string>
+    <string name="language_switch">تغيير اللغة</string>
 </resources>
