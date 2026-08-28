@@ -141,4 +141,11 @@ class CategoryGuessTest {
         // وقف is an endowment; موقف is a car park, and merely contains those letters.
         assertNull(CategoryGuess.forMerchant(parking))
     }
+
+    /** Named by the user off their own history; neither is a purchase. */
+    @Test
+    fun `a wallet and a cash transfer are transfers`() {
+        assertEquals(SaudiCategories.TRANSFERS, CategoryGuess.forMerchant("D360"))
+        assertEquals(SaudiCategories.TRANSFERS, CategoryGuess.forMerchant("CASH TRANSFER"))
+    }
 }

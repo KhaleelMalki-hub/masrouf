@@ -197,6 +197,10 @@ object CategoryGuess {
         // Wallets and the user's own name on a transfer: money moving between
         // places they control, not spending on anything.
         "BARQ" to SaudiCategories.TRANSFERS,
+        // Both named by the user off their own history: D360 is a wallet, and
+        // CASH TRANSFER is a transfer, not a purchase. 33 and 28 records.
+        "D360" to SaudiCategories.TRANSFERS,
+        "CASH TRANSFER" to SaudiCategories.TRANSFERS,
         "STCPAY" to SaudiCategories.TRANSFERS,
         "URPAY" to SaudiCategories.TRANSFERS,
         "بطاقه مدي" to SaudiCategories.TRANSFERS,
