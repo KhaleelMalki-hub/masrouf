@@ -128,4 +128,5 @@
     <string name="category_entertainment">ترفيه</string>
     <string name="category_cash">نقد</string>
     <string name="category_income">دخل</string>
+    <string name="legend_hint">اضغط أي تصنيف عشان تشوف عملياته</string>
 </resources>

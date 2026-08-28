@@ -844,6 +844,17 @@ private fun MonthPanel(
                 selected = activeFilter,
                 onSelect = onToggleCategory,
             )
+            if (activeFilter == null) {
+                // The legend has been the filter since it was built, and it was not
+                // discovered: rows of a chart do not read as controls. One line
+                // costs less than a second copy of the same list as a menu.
+                Text(
+                    text = stringResource(R.string.legend_hint),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 2.dp),
+                )
+            }
         }
     }
 }

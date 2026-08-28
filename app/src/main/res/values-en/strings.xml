@@ -111,4 +111,5 @@
     <string name="category_entertainment">Entertainment</string>
     <string name="category_cash">Cash</string>
     <string name="category_income">Income</string>
+    <string name="legend_hint">Tap a category to see what is in it</string>
 </resources>

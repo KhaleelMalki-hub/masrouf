@@ -44,6 +44,7 @@ object CategoryGuess {
         // Eating out
         "STARBUCKS" to SaudiCategories.FOOD,
         "DUNKIN" to SaudiCategories.FOOD,
+        "POTTERY BARN" to SaudiCategories.SHOPPING,
         "BARN" to SaudiCategories.FOOD,
         "HALF MILLION" to SaudiCategories.FOOD,
         "MCDONALD" to SaudiCategories.FOOD,
@@ -111,7 +112,7 @@ object CategoryGuess {
         "JARIR" to SaudiCategories.SHOPPING,
         "EXTRA" to SaudiCategories.SHOPPING,
         "CENTREPOINT" to SaudiCategories.SHOPPING,
-        "HM" to SaudiCategories.SHOPPING,
+        "H M" to SaudiCategories.SHOPPING,
         "SALLA" to SaudiCategories.SHOPPING,
         "ARAMEX" to SaudiCategories.SHOPPING,
         "SMSA" to SaudiCategories.SHOPPING,
@@ -340,13 +341,45 @@ object CategoryGuess {
      * a prefix is evidence rather than a coincidence.
      */
     private fun matches(foldedMerchant: String, foldedKeyword: String): Boolean {
+        if (foldedKeyword.length < MIN_SUBSTRING_LENGTH) {
+            return matchesWholeWord(foldedMerchant, foldedKeyword)
+        }
         val merchant = foldedMerchant.replace(" ", "")
         val keyword = foldedKeyword.replace(" ", "")
         if (merchant.contains(keyword)) return true
         return merchant.length >= MIN_TRUNCATED_LENGTH && keyword.startsWith(merchant)
     }
 
+    /**
+     * A short keyword has to be a whole word, never a fragment of one.
+     *
+     * Measured on the same 22,084-record history: as substrings, "HM" filed TAHA
+     * AHMED and TAREQ MOHAMMED as shopping, "SEC" filed the Cheesecake Factory and
+     * Victoria's Secret as a utility bill, "DR" filed FIRST DROP CAFE as healthcare,
+     * and "LAB" filed BURGER & LABSTER. Each was a rule for a real thing - H&M, the
+     * electricity company, a doctor, a laboratory - reaching into words that have
+     * nothing to do with it, and every one of them produced a category the user
+     * would then have to notice and undo.
+     *
+     * The Arabic definite article is stripped from the merchant's words before
+     * comparing, because Arabic attaches it: "المركز الطبي" carries the word طبي and
+     * should match, while "موقف" merely contains those letters and must not.
+     */
+    private fun matchesWholeWord(foldedMerchant: String, foldedKeyword: String): Boolean {
+        val keyword = foldedKeyword.split(" ")
+        return foldedMerchant
+            .split(" ")
+            .map { it.removePrefix(DEFINITE_ARTICLE) }
+            .windowed(keyword.size)
+            .any { it == keyword }
+    }
+
     private const val MIN_TRUNCATED_LENGTH = 6
+
+    /** Below this, a keyword matches a whole word only. See [matchesWholeWord]. */
+    private const val MIN_SUBSTRING_LENGTH = 4
+
+    private const val DEFINITE_ARTICLE = "\u0627\u0644"
 
     /**
      * A transaction type can decide a category on its own when the merchant cannot.

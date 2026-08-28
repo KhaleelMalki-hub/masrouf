@@ -97,4 +97,48 @@ class CategoryGuessTest {
         assertNull(CategoryGuess.suggest(null, TransactionType.PURCHASE))
         assertNull(CategoryGuess.suggest(null, TransactionType.REFUND))
     }
+
+    /**
+     * Short keywords, as substrings, filed real merchants under categories nothing
+     * about them suggested. Every name here is from the user's own history.
+     */
+    @Test
+    fun `a short keyword does not match inside a longer word`() {
+        // "HM", for H&M.
+        assertNull(CategoryGuess.forMerchant("TAHA AHMED"))
+        assertNull(CategoryGuess.forMerchant("TAREQ MOHAMMED AHMED A"))
+        // "SEC", for the electricity company.
+        assertNull(CategoryGuess.forMerchant("CHEESECAKE FACTORY"))
+        assertNull(CategoryGuess.forMerchant("WOMEN SECRET"))
+        // "DR", for a doctor. FIRST DROP CAFE is not here because it is genuinely
+        // food by its own word, which is the answer either way and proves nothing.
+        assertNull(CategoryGuess.forMerchant("Dropelmagara"))
+        // "LAB", for a laboratory.
+        assertNull(CategoryGuess.forMerchant("LABEYLAA"))
+    }
+
+    @Test
+    fun `a short keyword still matches the word it was written for`() {
+        assertEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("H&M"))
+        assertEquals(SaudiCategories.HEALTH, CategoryGuess.forMerchant("DR AHMED CLINIC"))
+        assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("KFC Al Zahra"))
+        assertEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("SPL"))
+    }
+
+    /**
+     * Arabic attaches its definite article, so the article is stripped from the
+     * merchant's words before comparing. Without that, a keyword would have to be
+     * listed twice, once with ال and once without, and the two copies would drift.
+     */
+    @Test
+    fun `the arabic definite article does not hide a word`() {
+        val medical = "\u0637\u0628\u064A"          // طبي
+        val theMedicalCentre = "\u0627\u0644\u0645\u0631\u0643\u0632 \u0627\u0644\u0637\u0628\u064A"
+        val parking = "\u0645\u0648\u0642\u0641 \u0633\u064A\u0627\u0631\u0627\u062A"   // موقف سيارات
+
+        assertEquals(SaudiCategories.HEALTH, CategoryGuess.forMerchant(medical))
+        assertEquals(SaudiCategories.HEALTH, CategoryGuess.forMerchant(theMedicalCentre))
+        // وقف is an endowment; موقف is a car park, and merely contains those letters.
+        assertNull(CategoryGuess.forMerchant(parking))
+    }
 }
