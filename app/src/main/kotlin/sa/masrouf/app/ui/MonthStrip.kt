@@ -149,13 +149,23 @@ fun BandLegend(
     currencyLabel: String,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
+    val largest = bands.maxOfOrNull { it.amount.halalas }?.takeIf { it > 0L } ?: 1L
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
         bands.forEach { band ->
             BandRow(
                 colour = band.colour,
                 name = band.label,
                 amount = band.amount.forDisplay(currencyLabel),
-                modifier = Modifier.padding(vertical = 6.dp),
+                // Each row is filled to its share of the LARGEST band, not of the
+                // month. Against the month total the small categories would all be
+                // slivers indistinguishable from each other, and the point of the
+                // legend is comparing them to one another - the strip above already
+                // shows the share of the whole.
+                fraction = (band.amount.halalas.toFloat() / largest).coerceIn(0f, 1f),
             )
         }
     }
@@ -166,37 +176,57 @@ private fun BandRow(
     colour: Color,
     name: String,
     amount: String,
+    fraction: Float,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(3.dp)),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .size(width = SWATCH_WIDTH, height = SWATCH_HEIGHT)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(colour),
-            )
+        // The proportion, drawn behind the text rather than beside it. A swatch
+        // tells you which colour a category is; this tells you how big it is
+        // without anyone having to read two numbers and divide.
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(fraction)
+                .height(ROW_HEIGHT)
+                .background(colour.copy(alpha = 0.22f)),
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(ROW_HEIGHT)
+                .padding(horizontal = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(width = SWATCH_WIDTH, height = SWATCH_HEIGHT)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(colour),
+                )
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(start = 10.dp),
+                )
+            }
             Text(
-                text = name,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(start = 12.dp),
+                text = amount,
+                style = MoneyStyle.merge(MaterialTheme.typography.bodyMedium),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        Text(
-            text = amount,
-            style = MoneyStyle.merge(MaterialTheme.typography.bodyMedium),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
     }
 }
 
 private val STRIP_HEIGHT = 76.dp
 private val SWATCH_WIDTH = 4.dp
-private val SWATCH_HEIGHT = 20.dp
+private val SWATCH_HEIGHT = 16.dp
+private val ROW_HEIGHT = 38.dp
 private const val GAP_PX = 3f
 private const val CORNER_PX = 6f
 

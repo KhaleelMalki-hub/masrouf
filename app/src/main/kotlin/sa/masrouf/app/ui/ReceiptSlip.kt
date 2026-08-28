@@ -66,9 +66,9 @@ fun ReceiptSlip(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(4.dp))
+            .clip(TornEdgeShape())
             .background(Sadu.GroundRaised)
-            .padding(vertical = 16.dp)
+            .padding(top = 16.dp, bottom = 24.dp)
             // One node for the whole slip: a screen reader should hear the record,
             // not eleven fragments it has to assemble before it can act on them.
             .semantics(mergeDescendants = true) {

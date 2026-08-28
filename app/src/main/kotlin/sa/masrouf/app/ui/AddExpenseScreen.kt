@@ -8,6 +8,8 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -45,6 +47,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
@@ -53,6 +56,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import sa.masrouf.app.R
 import sa.masrouf.core.model.Category
 import sa.masrouf.core.model.Direction
+import sa.masrouf.core.model.SaudiCategories
 import sa.masrouf.core.model.Source
 import sa.masrouf.core.model.Transaction
 import sa.masrouf.core.model.TransactionType
@@ -617,37 +621,56 @@ private fun TransactionRow(
     currencyLabel: String,
     onDelete: () -> Unit,
 ) {
+    val category = SaudiCategories.byId(transaction.categoryId)
+
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(modifier = Modifier.padding(vertical = 8.dp)) {
+        // The category's own dye, as a thread down the edge of the row. Without it
+        // the strip is the only place colour means anything and the history reads
+        // as an unrelated list; with it a month can be scanned for one category
+        // without reading a single word.
+        Box(
+            modifier = Modifier
+                .padding(vertical = 8.dp)
+                .size(width = 3.dp, height = 34.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(category?.band ?: UncategorisedBand),
+        )
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 12.dp, top = 8.dp, bottom = 8.dp),
+        ) {
             Text(
                 text = transaction.merchantRaw
                     ?: transaction.note
                     ?: stringResource(transaction.type.labelRes),
                 style = MaterialTheme.typography.bodyLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
             Text(
-                // Without a date every row looks like it happened today, and a
-                // total the user is checking cannot be traced back to a day.
-                text = transaction.dayLabel(),
+                // Date and category on one line: two facts about the same row, and
+                // stacking them would make a two-line row into a three-line one.
+                text = category
+                    ?.let { "${transaction.dayLabel()}  ·  ${stringResource(it.labelRes)}" }
+                    ?: transaction.dayLabel(),
                 style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            SignedAmount(transaction = transaction, currencyLabel = currencyLabel)
-            TextButton(
-                onClick = onDelete,
-                modifier = Modifier.heightIn(min = 48.dp),
-            ) {
-                Text(
-                    text = "\u00D7",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+        SignedAmount(transaction = transaction, currencyLabel = currencyLabel)
+        TextButton(
+            onClick = onDelete,
+            modifier = Modifier.heightIn(min = 48.dp),
+        ) {
+            Text(
+                text = "\u00D7",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
