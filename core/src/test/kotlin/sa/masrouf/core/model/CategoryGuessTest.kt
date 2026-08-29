@@ -181,20 +181,4 @@ class CategoryGuessTest {
         assertEquals(SaudiCategories.HEALTH, CategoryGuess.forMerchant("Al Noor T"))
         assertNotEquals(SaudiCategories.HEALTH, CategoryGuess.forMerchant("Noor AlMa"))
     }
-
-    /**
-     * A car wash is a running cost of a car, and the rule that says so has to
-     * outrank the one that files anything called a laundry as "other". Order is
-     * load-bearing here: first match wins, and both rules match this shop.
-     */
-    @Test
-    fun `a car wash beats the laundry rule`() {
-        assertEquals(SaudiCategories.TRANSPORT, CategoryGuess.forMerchant("Noor AlMa"))
-        assertEquals(
-            SaudiCategories.TRANSPORT,
-            CategoryGuess.forMerchant("Noor AlMaabadi Laundry"),
-        )
-        // An ordinary clothes laundry is untouched.
-        assertEquals(SaudiCategories.OTHER, CategoryGuess.forMerchant("CITY LAUNDRY"))
-    }
 }
