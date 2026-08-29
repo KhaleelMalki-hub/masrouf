@@ -279,6 +279,12 @@ object CategoryGuess {
         "H AMP M" to SaudiCategories.SHOPPING,
         "ENAYA SAL" to SaudiCategories.SERVICES,
         "HEALTH EN" to SaudiCategories.CHARITY,
+        // The endowment fund cut down to one word: 48 records, every one of them
+        // exactly 10.00 riyals, the same donation as the 603 that arrive with the
+        // full name. Deliberately last among the rules that contain "HEALTH", so
+        // that "Healthy pie bakery" is still a bakery and DR.MAZEN FAKEEH HEALTH is
+        // still a doctor - both are matched by rules above this line.
+        "HEALTH" to SaudiCategories.CHARITY,
         "TAKAMOL" to SaudiCategories.FEES,
         "MF DATES" to SaudiCategories.GROCERIES,
 
@@ -601,6 +607,18 @@ object CategoryGuess {
             ?: return null
         // First match wins, and the list is ordered so the specific sits above the
         // general - "HUNGERSTATION" before any bare "STATION" rule would be.
+        // An exact match beats a partial one, whatever the order of the list.
+        //
+        // Without this, "Amazon SA" - which normalises to exactly "AMAZON" - was
+        // caught by the "AMAZON NO" rule through the truncation rule below, because
+        // "AMAZONNO" does start with "AMAZON". Six hundred records went to
+        // groceries. Reordering cannot fix it: whichever of the two rules comes
+        // first swallows the other's merchant.
+        val exact = RULES.firstOrNull { (keyword, _) ->
+            ArabicText.normalizeMerchant(keyword).replace(" ", "") == folded.replace(" ", "")
+        }
+        if (exact != null) return exact.second
+
         return RULES.firstOrNull { (keyword, _) ->
             matches(folded, ArabicText.normalizeMerchant(keyword))
         }?.second

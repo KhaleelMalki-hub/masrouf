@@ -12,7 +12,8 @@ class CategoryGuessTest {
         // Every one of these appears in a captured message, not in an invented list.
         assertEquals(SaudiCategories.GROCERIES, CategoryGuess.forMerchant("TAMIMI MARKETS"))
         assertEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("IHERB ARA"))
-        assertEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("Amazon Now"))
+        // Amazon Now is the grocery arm; the rest of Amazon is shopping.
+        assertEquals(SaudiCategories.GROCERIES, CategoryGuess.forMerchant("Amazon Now"))
         assertEquals(SaudiCategories.HEALTH, CategoryGuess.forMerchant("ASIAN POLYCLINI"))
         assertEquals(SaudiCategories.BILLS, CategoryGuess.forMerchant("Google YouTubePremium"))
     }
@@ -356,5 +357,38 @@ class CategoryGuessTest {
         assertEquals(SaudiCategories.GROCERIES, CategoryGuess.forMerchant("Amazon Now"))
         assertEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("Amazon SA"))
         assertEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("AmazonPrime"))
+    }
+
+    /**
+     * A shorter brand that is the prefix of a longer one.
+     *
+     * The truncation rule accepts a merchant when a keyword starts with it, which
+     * is what reaches "HUNGERSTA" from "HUNGERSTATION". It also reaches "AMAZON"
+     * from "AMAZON NO", and Amazon SA normalises to exactly "AMAZON" - so six
+     * hundred records went to groceries until an exact keyword match was made to
+     * win regardless of list order.
+     */
+    @Test
+    fun `an exact keyword match beats a truncation match`() {
+        assertEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("Amazon SA"))
+        assertEquals(SaudiCategories.GROCERIES, CategoryGuess.forMerchant("Amazon No"))
+        // The truncation rule still does its job where nothing matches exactly.
+        assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("HUNGERSTA"))
+    }
+
+    /**
+     * One word that means three different things, resolved by rule order.
+     *
+     * The endowment fund arrives cut to "Health" 48 times, always 10.00 riyals. A
+     * bakery and a doctor also carry the word, and both are matched by rules that
+     * sit above it.
+     */
+    @Test
+    fun `health alone is the endowment fund, not a bakery or a doctor`() {
+        assertEquals(SaudiCategories.CHARITY, CategoryGuess.forMerchant("Health"))
+        assertEquals(SaudiCategories.CHARITY, CategoryGuess.forMerchant("Health Endowment Fund"))
+        assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("Healthy pie bakery"))
+        assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("Healthy p"))
+        assertEquals(SaudiCategories.HEALTH, CategoryGuess.forMerchant("DR.MAZEN FAKEEH HEALTH"))
     }
 }
