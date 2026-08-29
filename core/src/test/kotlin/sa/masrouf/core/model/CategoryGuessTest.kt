@@ -315,4 +315,12 @@ class CategoryGuessTest {
         assertEquals(SaudiCategories.TRANSPORT, CategoryGuess.forMerchant("Fourth fr"))
         assertEquals(SaudiCategories.TRANSPORT, CategoryGuess.forMerchant("Fourth frame EST"))
     }
+
+    /** A toy shop and a delivery app share three letters and nothing else. */
+    @Test
+    fun `the toy shops are not the delivery app`() {
+        assertEquals(SaudiCategories.ENTERTAINMENT, CategoryGuess.forMerchant("LOUBA W HEKAYA EST"))
+        assertEquals(SaudiCategories.ENTERTAINMENT, CategoryGuess.forMerchant("TOYS R U S"))
+        assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("ToYou"))
+    }
 }

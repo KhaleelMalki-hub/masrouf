@@ -524,6 +524,13 @@ object CategoryGuess {
         "LEEJAM" to SaudiCategories.ENTERTAINMENT,
         "X CORP" to SaudiCategories.ENTERTAINMENT,
         "TOY AND S" to SaudiCategories.ENTERTAINMENT,
+        // لعبة وحكاية, a toy shop, named by the user. The name says so in Arabic:
+        // "LOUBA" is لعبة. Read as a person's name in English it says nothing,
+        // which is the same mistake as reading الإطار الرابع as a picture frame.
+        "LOUBA" to SaudiCategories.ENTERTAINMENT,
+        "TOYS R U" to SaudiCategories.ENTERTAINMENT,
+        // Not keyed on "TOY": ToYou is a delivery app, and the same three letters.
+        "TOYOU" to SaudiCategories.FOOD,
         "BLVD" to SaudiCategories.ENTERTAINMENT,
         "MOAAREF PHARAMCY" to SaudiCategories.HEALTH,
         "TAMEENI" to SaudiCategories.BILLS,
