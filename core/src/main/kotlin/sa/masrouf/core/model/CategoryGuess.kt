@@ -203,6 +203,16 @@ object CategoryGuess {
         // spelling matched here and the short one fell through to a grocery rule
         // further down, so the same laundry was filed under two categories.
         "LAUNDR" to SaudiCategories.SERVICES,
+        // Mobile Service, car servicing, named by the user. The name arrives as
+        // "MS.21535", "MS 21534." and "MS.21515_" - a branch code that
+        // `normalizeMerchant` strips as a trailing reference, leaving "MS". Two
+        // characters, so it matches as a whole word only, which is what makes it
+        // safe: nothing else in a 22,091-record history folds to that token. The
+        // same branch also arrives as "MS.21535 KUDAY ALZAIDY", which the petrol
+        // rule was already filing as transport - the same answer by a different
+        // route, and a check that this one is right.
+        "MS" to SaudiCategories.TRANSPORT,
+
         // A petrol station, named by the user. Thirty-eight fill-ups between 55 and
         // 103 riyals, weekly and then fortnightly: the shape reads as a recurring
         // delivery of a variable quantity of one thing, which is what filling a

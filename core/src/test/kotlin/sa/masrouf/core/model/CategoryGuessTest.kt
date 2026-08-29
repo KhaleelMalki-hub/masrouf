@@ -236,4 +236,21 @@ class CategoryGuessTest {
         assertEquals(SaudiCategories.BILLS, CategoryGuess.forMerchant("Elaf Comp"))
         assertNotEquals(SaudiCategories.BILLS, CategoryGuess.forMerchant("ELAF HOTEL"))
     }
+
+    /**
+     * A two-character keyword, which is only safe because it matches whole words.
+     *
+     * The branch code is stripped as a trailing reference, so the car service
+     * arrives as the token "MS" and nothing else. As a substring it would be inside
+     * a great many names.
+     */
+    @Test
+    fun `the car service is matched as a word and not as two letters`() {
+        listOf("MS.21535", "MS 21534.", "MS.21515_", "MS.21535 KUDAY ALZAIDY")
+            .forEach { assertEquals(SaudiCategories.TRANSPORT, CategoryGuess.forMerchant(it), it) }
+
+        // Names that merely contain the letters.
+        assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("Mrsool"))
+        assertEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("SMSA"))
+    }
 }
