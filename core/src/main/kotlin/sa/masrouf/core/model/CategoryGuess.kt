@@ -268,6 +268,11 @@ object CategoryGuess {
         "راتب عامل" to SaudiCategories.FEES,
         "أجر عامل" to SaudiCategories.FEES,
 
+        // شركة المياه الوطنية, named by the user: water delivery, ordered online.
+        // "ELAF COMP" and not "ELAF", because Elaf Hotels is a different business
+        // with three records of its own in the same history.
+        "ELAF COMP" to SaudiCategories.BILLS,
+
         // Confirmed by the user after the pattern in their own records pointed at
         // an answer the name could not give:
         //

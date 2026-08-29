@@ -224,4 +224,16 @@ class CategoryGuessTest {
             CategoryGuess.forMerchant("EMDAD ALKHLEEJ LAITH R"),
         )
     }
+
+    /**
+     * Two unrelated businesses whose names start the same way.
+     *
+     * "ELAF" alone would file a hotel as a water bill. The history contains both:
+     * thirteen water deliveries and three hotel charges.
+     */
+    @Test
+    fun `the water company is not the hotel`() {
+        assertEquals(SaudiCategories.BILLS, CategoryGuess.forMerchant("Elaf Comp"))
+        assertNotEquals(SaudiCategories.BILLS, CategoryGuess.forMerchant("ELAF HOTEL"))
+    }
 }
