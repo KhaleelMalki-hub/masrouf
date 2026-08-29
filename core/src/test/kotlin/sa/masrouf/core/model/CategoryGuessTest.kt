@@ -272,4 +272,35 @@ class CategoryGuessTest {
         assertEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("Kitchen Design Est"))
         assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("THE SOCIAL KITCHEN"))
     }
+
+    /**
+     * Truncations recovered by finding a longer spelling of the same shop.
+     *
+     * Each of these appears in the history many times cut short and once or twice
+     * in full. The rule has to be written for the cut-short form, which is the one
+     * that arrives.
+     */
+    @Test
+    fun `shops recovered from a longer spelling elsewhere in the history`() {
+        assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("Khayal Re"))
+        assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("Khayal Restaurant"))
+        assertEquals(SaudiCategories.HEALTH, CategoryGuess.forMerchant("albishri midical Compl"))
+        assertEquals(SaudiCategories.HEALTH, CategoryGuess.forMerchant("AL BORG DIAGNOSTICS"))
+        // H&M reaches the app as "H amp;M-S": the ampersand arrives HTML-escaped.
+        assertEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("H amp;M-S"))
+        assertEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("LANAFLOWERS"))
+        assertEquals(SaudiCategories.CHARITY, CategoryGuess.forMerchant("Health En"))
+    }
+
+    /**
+     * "MAX" is three characters, so it matches a whole word only.
+     *
+     * As a substring it would be inside a great many names; as a word it is the
+     * clothing shop, which arrives as "MAX Makkah MALL 60186" and "MAX Makk".
+     */
+    @Test
+    fun `the clothing shop does not match inside other words`() {
+        assertEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("MAX Makkah MALL 60186"))
+        assertNotEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("MAXIMUM CLINIC"))
+    }
 }

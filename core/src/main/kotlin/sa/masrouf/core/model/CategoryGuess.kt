@@ -203,6 +203,36 @@ object CategoryGuess {
         // spelling matched here and the short one fell through to a grocery rule
         // further down, so the same laundry was filed under two categories.
         "LAUNDR" to SaudiCategories.SERVICES,
+        // Recovered by asking the history for a longer spelling of each unfiled
+        // merchant. Card networks cut the name at different lengths, so one rare
+        // record often carries the full name of a shop that appears truncated
+        // dozens of times: "Khayal Re" is Khayal Restaurant, "ALBISHRI" is a
+        // medical complex, "H amp;M-S" is H&M with the ampersand HTML-escaped.
+        // Each keyword below is the truncation that actually arrives, not the full
+        // name, because the full name is the rare one.
+        "KHAYAL RE" to SaudiCategories.FOOD,
+        "PIATTO" to SaudiCategories.FOOD,
+        "FIRST DRO" to SaudiCategories.FOOD,
+        "GURKAN CH" to SaudiCategories.FOOD,
+        "MUNCH BAK" to SaudiCategories.FOOD,
+        "THE CHEES" to SaudiCategories.FOOD,
+        "WWW CALO" to SaudiCategories.FOOD,
+        "TAP ATLAS" to SaudiCategories.FOOD,
+        "ALBISHRI" to SaudiCategories.HEALTH,
+        "AL BORG" to SaudiCategories.HEALTH,
+        "LANA" to SaudiCategories.SHOPPING,
+        "RARE AND" to SaudiCategories.SHOPPING,
+        "MAX" to SaudiCategories.SHOPPING,
+        "CENTERPOINT" to SaudiCategories.SHOPPING,
+        "IKKS" to SaudiCategories.SHOPPING,
+        "NICEONESA" to SaudiCategories.SHOPPING,
+        "UNITED HOMEWARE" to SaudiCategories.SHOPPING,
+        "H AMP M" to SaudiCategories.SHOPPING,
+        "ENAYA SAL" to SaudiCategories.SERVICES,
+        "HEALTH EN" to SaudiCategories.CHARITY,
+        "TAKAMOL" to SaudiCategories.FEES,
+        "MF DATES" to SaudiCategories.GROCERIES,
+
         // Kitchen Trends, who fitted the user's kitchen: 74,000 riyals across six
         // in-person card payments in six weeks, each one minutes after a transfer
         // arrived to cover it. Home Centre an hour after the largest, and a kitchen
