@@ -43,4 +43,16 @@ interface MerchantRuleDao {
 
     @Query("SELECT * FROM merchant_rules")
     suspend fun all(): List<MerchantRule>
+
+    /**
+     * Forgets a decision.
+     *
+     * A learned rule outranks every built-in one, for ever, and until this existed
+     * there was no way to take one back. That is fine while a decision is right and
+     * a trap when it is not: a merchant name arrives truncated, the user files it
+     * from what the fragment looks like, and the app then defends that reading
+     * against every later correction - including one the user asks for out loud.
+     */
+    @Query("DELETE FROM merchant_rules WHERE merchant_key = :merchantKey")
+    suspend fun forget(merchantKey: String)
 }

@@ -133,6 +133,10 @@ fun AddExpenseScreen(
         ) {
             RefileSheet(
                 transaction = target,
+                onForget = {
+                    target.merchantKey?.let(viewModel::forgetMerchant)
+                    refiling = null
+                },
                 onPick = { category ->
                     val key = target.merchantKey
                     if (key != null && category != null) {
@@ -1360,6 +1364,7 @@ private fun HistoryFilters(
 private fun RefileSheet(
     transaction: Transaction,
     onPick: (Category?) -> Unit,
+    onForget: () -> Unit,
 ) {
     val current = SaudiCategories.byId(transaction.categoryId)
     val merchant = transaction.merchantRaw ?: stringResource(transaction.type.labelRes)
@@ -1388,6 +1393,20 @@ private fun RefileSheet(
             onSelect = onPick,
             edgePadding = 20.dp,
         )
+        if (transaction.merchantKey != null) {
+            // The undo for a filing decision. Without it a choice made once - often
+            // from a truncated name that looked like something else - outranks every
+            // built-in rule for ever, and the only way out is to already know the
+            // right answer and pick it again by hand.
+            TextButton(
+                onClick = onForget,
+                modifier = Modifier
+                    .padding(start = 12.dp)
+                    .heightIn(min = 48.dp),
+            ) {
+                Text(stringResource(R.string.refile_forget))
+            }
+        }
     }
 }
 

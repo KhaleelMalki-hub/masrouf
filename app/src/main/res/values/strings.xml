@@ -36,7 +36,7 @@
 
     <string name="month_total_label">مصروف هذا الشهر</string>
     <string name="uncategorised">بلا تصنيف</string>
-    <string name="category_prompt">على وش؟</string>
+    <string name="category_prompt">على ماذا صُرف؟</string>
     <string name="bank_said">نص الرسالة</string>
     <string name="month_empty">لا مصروف مسجّل هذا الشهر بعد</string>
 
@@ -138,4 +138,5 @@
     <string name="category_housing">رسوم شهرية (سكن)</string>
     <string name="refile_running">يعيد التصنيف…</string>
     <string name="category_services">مغاسل وعناية</string>
+    <string name="refile_forget">دع التطبيق يقرّر</string>
 </resources>

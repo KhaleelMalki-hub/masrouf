@@ -250,6 +250,30 @@ class TransactionRepository(
     }
 
     /**
+     * Drops a learned rule and lets the built-in ones answer again.
+     *
+     * The undo for [fileMerchant]. Every record of the merchant is refiled from
+     * [CategoryGuess], and marked automatic, so a later change to the shipped rules
+     * reaches them too - which is the whole point of giving the decision back.
+     *
+     * @return how many records were refiled.
+     */
+    suspend fun forgetMerchant(merchantKey: String): Int {
+        rules?.forget(merchantKey)
+        var filed = 0
+        inTransaction {
+            dao.uncategorisedOrMerchant(merchantKey).forEach { row ->
+                if (row.merchantKey != merchantKey) return@forEach
+                val model = runCatching { row.toModel() }.getOrNull() ?: return@forEach
+                val category = CategoryGuess.suggest(model.merchantRaw, model.type)?.id
+                val source = category?.let { CategorySource.AUTOMATIC.name }
+                if (dao.setCategory(row.id, category, source) == 1) filed++
+            }
+        }
+        return filed
+    }
+
+    /**
      * Files a record under a category, or clears it when [categoryId] is null.
      *
      * @return false when no such record exists.

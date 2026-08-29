@@ -29,6 +29,7 @@ class MerchantFilingTest {
         }
         override suspend fun categoryFor(merchantKey: String) = stored[merchantKey]
         override suspend fun all() = stored.map { MerchantRule(it.key, it.value) }
+        override suspend fun forget(merchantKey: String) { stored.remove(merchantKey) }
     }
 
     private val dao = FakeDao()
@@ -174,5 +175,46 @@ class MerchantFilingTest {
         repository.refileAll()
 
         assertEquals(SaudiCategories.FOOD.id, dao.rows.single().categoryId)
+    }
+
+    /**
+     * Taking back a filing decision.
+     *
+     * A learned rule outranks every built-in one for ever, which is right while the
+     * decision is right and a trap when it is not: a merchant arrives truncated,
+     * the user files it from what the fragment looks like, and the app then defends
+     * that reading against every later correction. This is the way out.
+     */
+    @Test
+    fun `forgetting a merchant hands the decision back to the built-in rules`() = runTest {
+        // NAHDI is a pharmacy by the shipped rules. Suppose the user filed it wrongly.
+        repository.recordCaptured(record("a", "NAHDI PHARMACY", 0))
+        repository.recordCaptured(record("b", "NAHDI PHARMACY", 30))
+        repository.fileMerchant("NAHDI PHARMACY", SaudiCategories.SHOPPING.id)
+        assertEquals(
+            listOf(SaudiCategories.SHOPPING.id, SaudiCategories.SHOPPING.id),
+            dao.rows.map { it.categoryId },
+        )
+
+        assertEquals(2, repository.forgetMerchant("NAHDI PHARMACY"))
+
+        assertEquals(
+            listOf(SaudiCategories.HEALTH.id, SaudiCategories.HEALTH.id),
+            dao.rows.map { it.categoryId },
+        )
+        assertEquals(null, rules.stored["NAHDI PHARMACY"])
+    }
+
+    /** And a merchant the built-in rules cannot name goes back to unfiled. */
+    @Test
+    fun `forgetting a merchant nothing recognises leaves it unfiled`() = runTest {
+        // A name no shipped rule reaches. AL QIMMA is not one: it earned a rule of
+        // its own, which is exactly what forgetting is supposed to hand back to.
+        repository.recordCaptured(record("a", "MEZAB TRADING EST", 0))
+        repository.fileMerchant("MEZAB TRADING EST", SaudiCategories.OTHER.id)
+
+        repository.forgetMerchant("MEZAB TRADING EST")
+
+        assertEquals(null, dao.rows.single().categoryId)
     }
 }

@@ -202,6 +202,10 @@ interface TransactionDao {
     )
     fun observeCardBanks(): Flow<List<CardBank>>
 
+    /** Every record of one merchant, for re-deriving its category from scratch. */
+    @Query("SELECT * FROM transactions WHERE merchant_key = :merchantKey")
+    suspend fun uncategorisedOrMerchant(merchantKey: String): List<TransactionEntity>
+
     /** Everything with no category yet, for a one-off backfill over the history. */
     @Query("SELECT * FROM transactions WHERE category_id IS NULL")
     suspend fun uncategorised(): List<TransactionEntity>

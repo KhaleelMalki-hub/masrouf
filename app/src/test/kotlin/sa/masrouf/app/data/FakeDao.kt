@@ -120,6 +120,9 @@ class FakeDao : TransactionDao {
         }.distinct()
     }
 
+    override suspend fun uncategorisedOrMerchant(merchantKey: String): List<TransactionEntity> =
+        state.value.filter { it.merchantKey == merchantKey }
+
     override suspend fun uncategorised(): List<TransactionEntity> =
         state.value.filter { it.categoryId == null }
 

@@ -391,6 +391,19 @@ class AddExpenseViewModel(
         }
     }
 
+    /**
+     * Drops a learned rule for a merchant and lets the built-in rules answer.
+     *
+     * The undo for [fileMerchant]. Needed because a filing decision made from a
+     * truncated name is still a decision, and the app defends it against every
+     * later correction until it is taken back.
+     */
+    fun forgetMerchant(merchantKey: String) {
+        viewModelScope.launch {
+            _importState.value = ImportState.Filed(repository.forgetMerchant(merchantKey))
+        }
+    }
+
     /** Refiles a record the user categorised wrongly the first time. */
     fun setCategory(id: String, categoryId: String?) {
         viewModelScope.launch { repository.setCategory(id, categoryId) }
