@@ -207,4 +207,21 @@ class CategoryGuessTest {
                 assertEquals(SaudiCategories.SERVICES, CategoryGuess.forMerchant(name), name)
             }
     }
+
+    /**
+     * Both spellings the card network sends for one petrol station.
+     *
+     * The same shop arrives as "EMDAD ALKHLEEJ" for twenty-one records and as
+     * "EMDAD ALK" for seventeen, and a rule written for either alone reaches half
+     * of them.
+     */
+    @Test
+    fun `both truncations of the petrol station are transport`() {
+        assertEquals(SaudiCategories.TRANSPORT, CategoryGuess.forMerchant("EMDAD ALKHLEEJ"))
+        assertEquals(SaudiCategories.TRANSPORT, CategoryGuess.forMerchant("EMDAD ALK"))
+        assertEquals(
+            SaudiCategories.TRANSPORT,
+            CategoryGuess.forMerchant("EMDAD ALKHLEEJ LAITH R"),
+        )
+    }
 }

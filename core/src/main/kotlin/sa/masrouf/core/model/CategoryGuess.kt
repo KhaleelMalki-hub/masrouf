@@ -203,6 +203,12 @@ object CategoryGuess {
         // spelling matched here and the short one fell through to a grocery rule
         // further down, so the same laundry was filed under two categories.
         "LAUNDR" to SaudiCategories.SERVICES,
+        // A petrol station, named by the user. Thirty-eight fill-ups between 55 and
+        // 103 riyals, weekly and then fortnightly: the shape reads as a recurring
+        // delivery of a variable quantity of one thing, which is what filling a
+        // tank is. "EMDAD ALK" and not the full name, because the card network
+        // sends both and the shorter one is the truncation of the longer.
+        "EMDAD ALK" to SaudiCategories.TRANSPORT,
         "NOOR ALMA" to SaudiCategories.SERVICES,
         "MGHASL" to SaudiCategories.SERVICES,
         "مغسلة" to SaudiCategories.SERVICES,
