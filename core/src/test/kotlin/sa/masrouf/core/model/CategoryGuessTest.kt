@@ -303,4 +303,16 @@ class CategoryGuessTest {
         assertEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("MAX Makkah MALL 60186"))
         assertNotEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("MAXIMUM CLINIC"))
     }
+
+    /**
+     * Both spellings of the tyre shop, whose English name reads as something else.
+     *
+     * "Fourth frame" is الإطار الرابع, and إطار is a tyre. Sixteen of its seventeen
+     * records arrive truncated to "Fourth fr".
+     */
+    @Test
+    fun `the tyre shop is transport under either spelling`() {
+        assertEquals(SaudiCategories.TRANSPORT, CategoryGuess.forMerchant("Fourth fr"))
+        assertEquals(SaudiCategories.TRANSPORT, CategoryGuess.forMerchant("Fourth frame EST"))
+    }
 }

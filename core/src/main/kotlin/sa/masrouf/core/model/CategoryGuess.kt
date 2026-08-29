@@ -203,6 +203,17 @@ object CategoryGuess {
         // spelling matched here and the short one fell through to a grocery rule
         // further down, so the same laundry was filed under two categories.
         "LAUNDR" to SaudiCategories.SERVICES,
+        // بنشر: a tyre and quick-service shop, named by the user. "Fourth frame" is
+        // the English of الإطار الرابع, and إطار is a tyre - the reading the name
+        // invites in English, a picture frame, is the wrong language. Seventeen
+        // records, 7,280 riyals, the largest of them 3,680 for a set of tyres.
+        //
+        // The only evidence that ever pointed here was weak and nearly discarded:
+        // five of the seventeen have a petrol station within three hours, against
+        // a background rate near a fifth. Weak evidence in the right direction
+        // still beats a confident reading of the wrong one.
+        "FOURTH FR" to SaudiCategories.TRANSPORT,
+
         // Found while looking for something else, which is where most of these come
         // from: three opticians and a tyre shop, sitting unfiled.
         "MAGRABI" to SaudiCategories.HEALTH,
