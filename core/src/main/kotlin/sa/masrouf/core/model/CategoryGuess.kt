@@ -113,6 +113,10 @@ object CategoryGuess {
         "عيادة" to SaudiCategories.HEALTH,
 
         // Shopping
+        // Amazon Now is the grocery arm, and it has to be tested before the plain
+        // AMAZON rule below: first match wins, and both match. It arrives cut to
+        // "Amazon No" 36 times out of 37.
+        "AMAZON NO" to SaudiCategories.GROCERIES,
         "AMAZON" to SaudiCategories.SHOPPING,
         "NOON" to SaudiCategories.SHOPPING,
         "IHERB" to SaudiCategories.SHOPPING,
@@ -203,6 +207,34 @@ object CategoryGuess {
         // spelling matched here and the short one fell through to a grocery rule
         // further down, so the same laundry was filed under two categories.
         "LAUNDR" to SaudiCategories.SERVICES,
+        // مركز إطاري الذهبي, the tyre centre the user used before the one below.
+        // Named by them; the English descriptor is cut to "MY GOLDEN" and says
+        // nothing. Every one of its eleven amounts is a multiple of ten, which is
+        // the fingerprint the other tyre shop has and almost nothing else does, and
+        // its first visit is the same day as a car service.
+        //
+        // One test came back against it: a petrol station falls within three hours
+        // of only one visit in eleven, below the background rate, where the other
+        // tyre shop was above it. Recorded because a rule written past a failed
+        // test should say so.
+        "MY GOLDEN" to SaudiCategories.TRANSPORT,
+
+        // Two shops nobody could name, filed on the shape of their amounts alone.
+        //
+        // Of the 44 filed merchants in this history with the same fingerprint -
+        // five or more records, 10 to 90 riyals, nearly always whole riyals but
+        // rarely round tens - 28 are restaurants and cafes. That is 64%, against
+        // 14% for the next category. Both of these sit inside it: 18 records
+        // averaging 42 riyals and 11 averaging 46, beside Coffee Language at 47,
+        // Subway at 45 and Al Saj Al Reefi at 49 on the same card in the same
+        // years. Their neighbours in time are McDonald's, Juices Station, Barns
+        // and HungerStation.
+        //
+        // A probability, not a fact. It beats leaving 29 records blank, and one tap
+        // on any of them corrects all 29 if it is wrong.
+        "ADMINISTRION" to SaudiCategories.FOOD,
+        "HEAD OFFICE WEST" to SaudiCategories.FOOD,
+
         // بنشر: a tyre and quick-service shop, named by the user. "Fourth frame" is
         // the English of الإطار الرابع, and إطار is a tyre - the reading the name
         // invites in English, a picture frame, is the wrong language. Seventeen

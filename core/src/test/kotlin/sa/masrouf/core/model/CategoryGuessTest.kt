@@ -331,4 +331,30 @@ class CategoryGuessTest {
         assertEquals(SaudiCategories.GROCERIES, CategoryGuess.forMerchant("Al Maaref8121"))
         assertNotEquals(SaudiCategories.GROCERIES, CategoryGuess.forMerchant("ALMAREFAH"))
     }
+
+    /** Both tyre centres, under the descriptors the terminals actually send. */
+    @Test
+    fun `both tyre centres are transport`() {
+        assertEquals(SaudiCategories.TRANSPORT, CategoryGuess.forMerchant("MY GOLDEN"))
+        assertEquals(SaudiCategories.TRANSPORT, CategoryGuess.forMerchant("Fourth fr"))
+    }
+
+    /** "HEAD OFFICE WEST", not "HEAD OFFICE", which would be any company's. */
+    @Test
+    fun `the office keyword carries its qualifier`() {
+        assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("HEAD OFFICE - WEST"))
+        assertNull(CategoryGuess.forMerchant("SOME HEAD OFFICE"))
+    }
+
+    /**
+     * Amazon's grocery arm against Amazon itself. Order is load-bearing: both
+     * rules match "Amazon No", and the first one wins.
+     */
+    @Test
+    fun `amazon now is groceries and the rest of amazon is not`() {
+        assertEquals(SaudiCategories.GROCERIES, CategoryGuess.forMerchant("Amazon No"))
+        assertEquals(SaudiCategories.GROCERIES, CategoryGuess.forMerchant("Amazon Now"))
+        assertEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("Amazon SA"))
+        assertEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("AmazonPrime"))
+    }
 }
