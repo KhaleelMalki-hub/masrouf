@@ -480,6 +480,14 @@ object CategoryGuess {
         "BINDAWOOD" to SaudiCategories.GROCERIES,
         "HYPER MAR" to SaudiCategories.GROCERIES,
         "AL QIMMA" to SaudiCategories.GROCERIES,
+        // المعارف, a late-night grocer. Named by nothing in the name: what settled
+        // it was that not one of its nine amounts is a whole riyal - 6.90, 13.15,
+        // 189.49. In this history 74% of restaurant amounts are whole riyals and
+        // only 16% of grocery ones, so nine out of nine with halalas is about three
+        // chances in a million under "restaurant" and one in five under "grocer".
+        // Barcode prices with VAT on them, not a menu.
+        "AL MAAREF" to SaudiCategories.GROCERIES,
+
         // The hypermarket under a new merchant descriptor. "HYPER MAR" runs to
         // 2024-10-06 and stops; "AlJoumaa2" starts 2024-09-15 and continues. On the
         // one day they overlap, a 124-riyal basket goes through the old name at

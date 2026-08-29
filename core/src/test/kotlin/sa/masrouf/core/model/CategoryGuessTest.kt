@@ -323,4 +323,12 @@ class CategoryGuessTest {
         assertEquals(SaudiCategories.ENTERTAINMENT, CategoryGuess.forMerchant("TOYS R U S"))
         assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("ToYou"))
     }
+
+    /** المعارف, and the differently-spelt المعرفة, are not the same shop. */
+    @Test
+    fun `al maaref the grocer does not swallow almarefah`() {
+        assertEquals(SaudiCategories.GROCERIES, CategoryGuess.forMerchant("Al Maaref"))
+        assertEquals(SaudiCategories.GROCERIES, CategoryGuess.forMerchant("Al Maaref8121"))
+        assertNotEquals(SaudiCategories.GROCERIES, CategoryGuess.forMerchant("ALMAREFAH"))
+    }
 }
