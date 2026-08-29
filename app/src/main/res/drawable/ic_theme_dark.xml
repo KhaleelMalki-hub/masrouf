@@ -1,0 +1,12 @@
+<!-- A crescent: one disc with a second subtracted from it, expressed as a single
+     path so no background colour has to be painted to fake the bite. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?attr/colorControlNormal">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M20.5,15.4A9,9 0 0,1 8.6,3.5A9,9 0 1,0 20.5,15.4z" />
+</vector>

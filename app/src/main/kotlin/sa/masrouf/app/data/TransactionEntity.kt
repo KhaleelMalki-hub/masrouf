@@ -95,6 +95,9 @@ data class TransactionEntity(
     @ColumnInfo(name = "raw_text") val rawText: String?,
 
     val currency: String,
+
+    /** Which bank's parser read the message. See [sa.masrouf.core.model.Transaction.bankId]. */
+    @ColumnInfo(name = "bank_id") val bankId: String? = null,
 )
 
 fun Transaction.toEntity(
@@ -118,6 +121,7 @@ fun Transaction.toEntity(
     fingerprint = fingerprint,
     rawText = rawText,
     currency = currency,
+    bankId = bankId,
 )
 
 /**
@@ -143,4 +147,9 @@ fun TransactionEntity.toModel(): Transaction = Transaction(
     fingerprint = fingerprint,
     rawText = rawText,
     currency = currency,
+    // Read back onto the model, unlike on the way in: the card and the bank are
+    // recorded by the capture path, which passes them alongside, and the screen
+    // needs both to say which card a purchase was on.
+    accountLast4 = accountLast4,
+    bankId = bankId,
 )

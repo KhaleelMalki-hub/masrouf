@@ -113,6 +113,12 @@ class CaptureRecorder(private val pipeline: CapturePipeline = CapturePipeline())
                             merchantRaw = draft.merchantRaw,
                         ),
                         rawText = draft.rawText ?: message.fullText,
+                        accountLast4 = draft.accountLast4,
+                        // The parser is the bank: there is one per bank, chosen by
+                        // the sender address. Recorded here, where that is known,
+                        // rather than read back off the body later - only about
+                        // 1,000 of 22,000 real messages name their own bank.
+                        bankId = outcome.parserId,
                     ),
                     parserId = outcome.parserId,
                     accountLast4 = draft.accountLast4,

@@ -136,6 +136,26 @@ data class Transaction(
      */
     val rawText: String?,
     val currency: String = "SAR",
+
+    /**
+     * Last four digits of the card the money moved on, when the message gave them.
+     *
+     * Kept off this model for a long time on the grounds that only deduplication
+     * needed it. It is here now because a person looking at a month wants to know
+     * which card a purchase was on, and a value the screen has to show cannot live
+     * only in the storage layer.
+     */
+    val accountLast4: String? = null,
+
+    /**
+     * Which bank's parser read the message: see `SaudiBanks`.
+     *
+     * Null for a record the user typed, and null for anything captured before this
+     * field existed until the message history is read again. Never inferred from
+     * the body: only about 1,000 of 22,000 real messages name their own bank, and
+     * the sender address that does identify it is not part of what gets stored.
+     */
+    val bankId: String? = null,
 ) {
     init {
         require(!amount.isNegative) { "amount must be non-negative; use direction for the sign" }

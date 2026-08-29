@@ -1,5 +1,6 @@
 package sa.masrouf.app.ui
 
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -27,6 +28,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectableGroup
@@ -38,6 +40,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -56,6 +60,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
@@ -106,6 +111,7 @@ fun AddExpenseScreen(
     val selectedMonth by viewModel.selectedMonth.collectAsStateWithLifecycle()
     val earliestMonth by viewModel.earliestMonth.collectAsStateWithLifecycle()
     val monthRows by viewModel.monthTransactions.collectAsStateWithLifecycle()
+    val cardBanks by viewModel.cardBanks.collectAsStateWithLifecycle()
     val monthsWithData by viewModel.monthsWithData.collectAsStateWithLifecycle()
     val query by viewModel.query.collectAsStateWithLifecycle()
     val categoryFilter by viewModel.categoryFilter.collectAsStateWithLifecycle()
@@ -346,6 +352,7 @@ fun AddExpenseScreen(
                     TransactionRow(
                         transaction = transaction,
                         currencyLabel = currency,
+                        cardBanks = cardBanks,
                         onDelete = { confirming = DestructiveAction.Delete(transaction) },
                         onRefile = { refiling = transaction },
                     )
@@ -735,19 +742,30 @@ private fun ThemeMenu(mode: ThemeMode, onSelect: (ThemeMode) -> Unit) {
     var open by remember { mutableStateOf(false) }
 
     Box {
-        TextButton(
+        // An icon, not the word. The three states are a sun, a crescent and a
+        // half-and-half disc, which say what they mean at a glance and stop the
+        // top bar from being three words of Arabic in a row. The name is still
+        // there for anyone who cannot see the shape: it is the content
+        // description, and it is the menu item's own label.
+        IconButton(
             onClick = { open = true },
             modifier = Modifier.heightIn(min = 48.dp),
         ) {
-            Text(
-                text = stringResource(mode.labelRes),
-                style = MaterialTheme.typography.labelLarge,
+            Icon(
+                painter = painterResource(mode.iconRes),
+                contentDescription = stringResource(mode.labelRes),
             )
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             ThemeMode.entries.forEach { option ->
                 DropdownMenuItem(
                     text = { Text(stringResource(option.labelRes)) },
+                    leadingIcon = {
+                        Icon(
+                            painter = painterResource(option.iconRes),
+                            contentDescription = null,
+                        )
+                    },
                     onClick = {
                         onSelect(option)
                         open = false
@@ -765,6 +783,14 @@ private fun ThemeMenu(mode: ThemeMode, onSelect: (ThemeMode) -> Unit) {
         }
     }
 }
+
+@get:DrawableRes
+private val ThemeMode.iconRes: Int
+    get() = when (this) {
+        ThemeMode.System -> R.drawable.ic_theme_auto
+        ThemeMode.Light -> R.drawable.ic_theme_light
+        ThemeMode.Dark -> R.drawable.ic_theme_dark
+    }
 
 @get:StringRes
 private val ThemeMode.labelRes: Int
@@ -1082,10 +1108,16 @@ fun SignedAmount(
 private fun TransactionRow(
     transaction: Transaction,
     currencyLabel: String,
+    cardBanks: Map<String, String>,
     onDelete: () -> Unit,
     onRefile: () -> Unit,
 ) {
     val category = SaudiCategories.byId(transaction.categoryId)
+    // The record's own bank first. Falling back to the card is not a guess: a card
+    // belongs to one bank, so a record that names both answers it for every other
+    // record on that card - including the years captured before the app recorded a
+    // bank at all.
+    val mark = bankMark(transaction.bankId ?: transaction.accountLast4?.let(cardBanks::get))
 
     Row(
         modifier = Modifier
@@ -1120,15 +1152,23 @@ private fun TransactionRow(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            Text(
-                // Date and category on one line: two facts about the same row, and
-                // stacking them would make a two-line row into a three-line one.
-                text = category
-                    ?.let { "${transaction.dayLabel()}  ·  ${stringResource(it.labelRes)}" }
-                    ?: transaction.dayLabel(),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (mark != null || transaction.accountLast4 != null) {
+                    CardMark(mark = mark, last4 = transaction.accountLast4)
+                    Spacer(Modifier.width(6.dp))
+                }
+                Text(
+                    // Date and category on one line: two facts about the same row,
+                    // and stacking them would make a two-line row a three-line one.
+                    text = category
+                        ?.let { "${transaction.dayLabel()}  ·  ${stringResource(it.labelRes)}" }
+                        ?: transaction.dayLabel(),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
         SignedAmount(transaction = transaction, currencyLabel = currencyLabel)
         TextButton(
@@ -1349,4 +1389,35 @@ private fun RefileSheet(
             edgePadding = 20.dp,
         )
     }
+}
+
+/**
+ * Which card, and whose.
+ *
+ * A tinted chip rather than another coloured bar: the row already carries the
+ * category's colour down its leading edge, and a second colour system competing
+ * with it would make both mean less. The bank's colour is inside a shape that is
+ * clearly a label, so the two never read as the same kind of signal.
+ *
+ * The digits are kept even when the bank is known. Two cards from one bank is the
+ * ordinary case, and "الراجحي" alone cannot tell them apart.
+ */
+@Composable
+private fun CardMark(mark: BankMark?, last4: String?) {
+    val colour = mark?.colour ?: MaterialTheme.colorScheme.onSurfaceVariant
+    // Digits alone, with no leading dots to say "and four more". In a right-to-left
+    // row the dots land on the wrong side of the number and read as part of it; the
+    // chip is already unmistakably a tag, and does that work without them.
+    val text = listOfNotNull(mark?.label, last4).joinToString(" ")
+
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelSmall,
+        color = colour,
+        maxLines = 1,
+        modifier = Modifier
+            .clip(RoundedCornerShape(4.dp))
+            .background(colour.copy(alpha = 0.14f))
+            .padding(horizontal = 6.dp, vertical = 1.dp),
+    )
 }

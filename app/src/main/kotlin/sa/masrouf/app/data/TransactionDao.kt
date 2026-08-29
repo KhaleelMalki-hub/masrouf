@@ -173,6 +173,35 @@ interface TransactionDao {
         source: String?,
     ): Int
 
+    /**
+     * Stamps a stored record with the bank whose parser read its message.
+     *
+     * Keyed on the fingerprint, which is derived from the message itself, so
+     * re-reading the inbox finds exactly the row a message produced rather than one
+     * that resembles it. Guarded on null so a re-read can never move a record from
+     * one bank to another: if the answer ever differed, one of the two readings is
+     * wrong and silently taking the newer one would hide that.
+     *
+     * @return 1 when a record was stamped, 0 when there was none or it already had
+     *   a bank.
+     */
+    @Query(
+        """
+        UPDATE transactions SET bank_id = :bankId
+        WHERE fingerprint = :fingerprint AND bank_id IS NULL
+        """
+    )
+    suspend fun stampBank(fingerprint: String, bankId: String): Int
+
+    /** Which bank each card belongs to, for the records that know. */
+    @Query(
+        """
+        SELECT DISTINCT account_last4 AS last4, bank_id AS bankId FROM transactions
+        WHERE account_last4 IS NOT NULL AND bank_id IS NOT NULL
+        """
+    )
+    fun observeCardBanks(): Flow<List<CardBank>>
+
     /** Everything with no category yet, for a one-off backfill over the history. */
     @Query("SELECT * FROM transactions WHERE category_id IS NULL")
     suspend fun uncategorised(): List<TransactionEntity>

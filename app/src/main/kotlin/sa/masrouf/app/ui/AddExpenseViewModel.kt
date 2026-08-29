@@ -173,6 +173,17 @@ class AddExpenseViewModel(
         _categoryFilter.value = null
     }
 
+    /**
+     * Which bank each card belongs to.
+     *
+     * Built from the records that know rather than stored per row, so one message
+     * naming a card and its bank labels every other record on that card, back
+     * through the whole history.
+     */
+    val cardBanks: StateFlow<Map<String, String>> =
+        repository.observeCardBanks()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+
     /** Everything confirmed in the selected month, newest first. */
     private val confirmedThisMonth: StateFlow<List<Transaction>> =
         _selectedMonth

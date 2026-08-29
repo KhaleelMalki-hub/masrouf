@@ -1,0 +1,21 @@
+<!-- A sun: a disc with eight rays. Drawn here rather than pulled from an icon
+     library, which would be a dependency for three shapes. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?attr/colorControlNormal">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M12,7a5,5 0 1,0 0,10a5,5 0 1,0 0,-10z" />
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M11,1.5h2v3h-2z M11,19.5h2v3h-2z M1.5,11h3v2h-3z M19.5,11h3v2h-3z" />
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M4.22,5.64l1.42,-1.42l2.12,2.12l-1.42,1.42z
+                          M16.24,17.66l1.42,-1.42l2.12,2.12l-1.42,1.42z
+                          M17.66,4.22l1.42,1.42l-2.12,2.12l-1.42,-1.42z
+                          M5.64,16.24l1.42,1.42l-2.12,2.12l-1.42,-1.42z" />
+</vector>

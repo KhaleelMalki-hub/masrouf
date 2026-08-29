@@ -202,7 +202,14 @@ class TransactionRepository(
         // The single incoming record matched something already stored. Kept out
         // rather than merged: merging fields is a decision that needs a screen and a
         // user, and inventing one here would overwrite whichever telling was better.
-        if (result.newIncoming.isEmpty()) return@withLock false
+        if (result.newIncoming.isEmpty()) {
+            // Already stored, so nothing new to write - except which bank sent it,
+            // if this reading knows and the stored one does not. That is how the
+            // history acquires bank identity: re-reading the inbox produces the
+            // same fingerprints, and each one names the row it belongs to.
+            transaction.bankId?.let { dao.stampBank(transaction.fingerprint, it) }
+            return@withLock false
+        }
 
         dao.insert(entity) != -1L
     }
@@ -213,6 +220,16 @@ class TransactionRepository(
      * The screen counts this list rather than asking the database separately. Two
      * ways to count the same thing is how a badge and a list come to disagree.
      */
+    /**
+     * Which bank each card belongs to, for the records that know.
+     *
+     * A card belongs to one bank, so a single message naming both answers it for
+     * every record that card appears on, including ones captured before the app
+     * recorded a bank.
+     */
+    fun observeCardBanks(): Flow<Map<String, String>> =
+        dao.observeCardBanks().map { rows -> rows.associate { it.last4 to it.bankId } }
+
     fun observePending(): Flow<List<Transaction>> =
         dao.observePending().map { rows -> rows.map(TransactionEntity::toModel) }
 

@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [TransactionEntity::class, MerchantRule::class],
-    version = 4,
+    version = 5,
     exportSchema = true,
 )
 abstract class MasroufDatabase : RoomDatabase() {
@@ -42,6 +42,22 @@ abstract class MasroufDatabase : RoomDatabase() {
          * Existing filed rows are marked automatic; see [CategorySource.LEGACY] for
          * why that is the safe reading and what it costs.
          */
+        /**
+         * Records which bank's parser read each message.
+         *
+         * Left null for existing rows rather than guessed. The sender address is
+         * what identifies the bank and it is not stored, and the body names its own
+         * bank in only about 1,000 of 22,000 real messages. The history fills in
+         * when the message inbox is read again, which is exact: the same message
+         * produces the same fingerprint, so the row it belongs to is known and not
+         * matched by resemblance.
+         */
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE transactions ADD COLUMN bank_id TEXT")
+            }
+        }
+
         private val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE transactions ADD COLUMN category_source TEXT")
@@ -123,7 +139,7 @@ abstract class MasroufDatabase : RoomDatabase() {
          */
         fun open(context: Context): MasroufDatabase =
             Room.databaseBuilder(context.applicationContext, MasroufDatabase::class.java, NAME)
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                 .build()
     }
 }

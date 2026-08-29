@@ -5,7 +5,7 @@
   user reads. English lives in values-en.
 -->
 <resources>
-    <string name="app_name">مصروف</string>
+    <string name="app_name">مصروفي</string>
 
     <string name="add_expense_title">تسجيل مصروف</string>
     <string name="amount_label">المبلغ</string>
@@ -86,7 +86,7 @@
     <string name="category_shopping">تسوق</string>
     <string name="category_transfers">تحويلات</string>
     <string name="category_other">أخرى</string>
-    <string name="dashboard_title">مصروف</string>
+    <string name="dashboard_title">مصروفي</string>
     <string name="greeting_month">شهر %1$s</string>
     <string name="add_expense">سجّل مصروف</string>
     <string name="import_history">اقرأ رسائل البنك القديمة</string>

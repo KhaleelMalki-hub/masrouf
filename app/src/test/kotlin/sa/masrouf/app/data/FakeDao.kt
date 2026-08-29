@@ -103,6 +103,23 @@ class FakeDao : TransactionDao {
         return hits.size
     }
 
+    override suspend fun stampBank(fingerprint: String, bankId: String): Int {
+        val target = state.value.firstOrNull { it.fingerprint == fingerprint && it.bankId == null }
+            ?: return 0
+        state.value = state.value.map {
+            if (it.id == target.id) it.copy(bankId = bankId) else it
+        }
+        return 1
+    }
+
+    override fun observeCardBanks(): Flow<List<CardBank>> = state.map { rows ->
+        rows.mapNotNull { row ->
+            val last4 = row.accountLast4 ?: return@mapNotNull null
+            val bank = row.bankId ?: return@mapNotNull null
+            CardBank(last4, bank)
+        }.distinct()
+    }
+
     override suspend fun uncategorised(): List<TransactionEntity> =
         state.value.filter { it.categoryId == null }
 
