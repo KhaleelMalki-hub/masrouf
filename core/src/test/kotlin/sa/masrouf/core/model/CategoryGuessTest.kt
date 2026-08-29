@@ -108,9 +108,12 @@ class CategoryGuessTest {
         // "HM", for H&M.
         assertNull(CategoryGuess.forMerchant("TAHA AHMED"))
         assertNull(CategoryGuess.forMerchant("TAREQ MOHAMMED AHMED A"))
-        // "SEC", for the electricity company.
-        assertNull(CategoryGuess.forMerchant("CHEESECAKE FACTORY"))
-        assertNull(CategoryGuess.forMerchant("WOMEN SECRET"))
+        // "SEC", for the electricity company. Asserted as "not a utility bill"
+        // rather than "unfiled": both of these have since earned rules of their
+        // own, and what must never come back is the electricity company reaching
+        // into their names.
+        assertNotEquals(SaudiCategories.BILLS, CategoryGuess.forMerchant("CHEESECAKE FACTORY"))
+        assertNotEquals(SaudiCategories.BILLS, CategoryGuess.forMerchant("WOMEN SECRET"))
         // "DR", for a doctor. FIRST DROP CAFE is not here because it is genuinely
         // food by its own word, which is the answer either way and proves nothing.
         assertNull(CategoryGuess.forMerchant("Dropelmagara"))

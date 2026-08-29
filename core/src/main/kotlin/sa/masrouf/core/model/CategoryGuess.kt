@@ -203,6 +203,7 @@ object CategoryGuess {
         // spelling matched here and the short one fell through to a grocery rule
         // further down, so the same laundry was filed under two categories.
         "LAUNDR" to SaudiCategories.SERVICES,
+        "NOOR ALMA" to SaudiCategories.SERVICES,
         "MGHASL" to SaudiCategories.SERVICES,
         "مغسلة" to SaudiCategories.SERVICES,
         "مغاسل" to SaudiCategories.SERVICES,
@@ -260,6 +261,49 @@ object CategoryGuess {
         "مكتب العمل" to SaudiCategories.FEES,
         "راتب عامل" to SaudiCategories.FEES,
         "أجر عامل" to SaudiCategories.FEES,
+
+        // Read off the unfiled remainder of the same history, name by name. Only
+        // where the name says what was bought: a chain anyone would recognise, or a
+        // word that means something. The local shops and the people's names in that
+        // remainder are left alone, because guessing at them would produce wrong
+        // categories rather than empty ones, and only their owner can say.
+        "LC WAIKIKI" to SaudiCategories.SHOPPING,
+        "MANGO" to SaudiCategories.SHOPPING,
+        "BERSHKA" to SaudiCategories.SHOPPING,
+        "PULL & BEAR" to SaudiCategories.SHOPPING,
+        "VICTORIA SECRET" to SaudiCategories.SHOPPING,
+        "WOMEN SECRET" to SaudiCategories.SHOPPING,
+        "SACO" to SaudiCategories.SHOPPING,
+        "YOYOSO" to SaudiCategories.SHOPPING,
+        "WOOL WORL" to SaudiCategories.SHOPPING,
+        "RAIES JEWELRY" to SaudiCategories.SHOPPING,
+        "JAMALOUKI" to SaudiCategories.SHOPPING,
+        "ALHADAYA" to SaudiCategories.SHOPPING,
+        "DOKKANAFKAR" to SaudiCategories.SHOPPING,
+        "HALAAS" to SaudiCategories.SHOPPING,
+        "NEXT" to SaudiCategories.SHOPPING,
+        "APSCO" to SaudiCategories.SHOPPING,
+        "CHEESECAKE" to SaudiCategories.FOOD,
+        "CHEESE CAKE" to SaudiCategories.FOOD,
+        "URTH CAFF" to SaudiCategories.FOOD,
+        "STEAK HOUSE" to SaudiCategories.FOOD,
+        "GODIVA" to SaudiCategories.FOOD,
+        "DUTCH ICE" to SaudiCategories.FOOD,
+        "WRAPS ARABIA" to SaudiCategories.FOOD,
+        "NUTRITIONAL FOOD" to SaudiCategories.FOOD,
+        "FOOD GATE" to SaudiCategories.FOOD,
+        "BWW" to SaudiCategories.FOOD,
+        "THE SHAKER" to SaudiCategories.FOOD,
+        "F6OR" to SaudiCategories.FOOD,
+        "SECTION B" to SaudiCategories.FOOD,
+        "SGH" to SaudiCategories.HEALTH,
+        "SAUDI GER" to SaudiCategories.HEALTH,
+        "AL SAEDY" to SaudiCategories.HEALTH,
+        "ALJABR LA" to SaudiCategories.SERVICES,
+        "ALDRDEES" to SaudiCategories.TRANSPORT,
+        "FLYAKEED" to SaudiCategories.TRANSPORT,
+        "ALRAJHITAKAFUL" to SaudiCategories.BILLS,
+        "TAP TAMEE" to SaudiCategories.BILLS,
 
         // ---- Added from a real 22,084-record history --------------------------
         // Every name below was taken from that export's own merchant column, in
