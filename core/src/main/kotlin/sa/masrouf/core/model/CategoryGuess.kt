@@ -262,6 +262,26 @@ object CategoryGuess {
         "راتب عامل" to SaudiCategories.FEES,
         "أجر عامل" to SaudiCategories.FEES,
 
+        // Confirmed by the user after the pattern in their own records pointed at
+        // an answer the name could not give:
+        //
+        //   CELEBRITY  80.00 exactly, eight times, every other week, always in the
+        //              evening - the shape of a standing barber's appointment.
+        //   NAQUI      2.00 exactly, eleven times. A water refill.
+        //   TARWAH     forty purchases averaging 7.20, thirty-two of them between
+        //   TAMYAT     19:00 and 23:00; and one whose six purchases are all between
+        //   BLACK SEE  15:00 and 17:00. Small, frequent, and at the hours people
+        //              buy coffee and something to eat.
+        //
+        // The evidence narrowed each one to a shape; it never named it. The user
+        // did that, and these rules are their answer, not the inference.
+        "CELEBRITY" to SaudiCategories.SERVICES,
+        "NAQUI" to SaudiCategories.GROCERIES,
+        "TARWAH" to SaudiCategories.FOOD,
+        "THRWAH" to SaudiCategories.FOOD,
+        "TAMYAT" to SaudiCategories.FOOD,
+        "BLACK SEE" to SaudiCategories.FOOD,
+
         // Named by the user, who is the only person who could: a women's salon, a
         // children's barber, a juice shop and a طعمية shop, none of which say so
         // in the name the card network sends.
