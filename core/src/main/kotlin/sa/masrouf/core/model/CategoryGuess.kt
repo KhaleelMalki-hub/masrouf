@@ -203,6 +203,12 @@ object CategoryGuess {
         // spelling matched here and the short one fell through to a grocery rule
         // further down, so the same laundry was filed under two categories.
         "LAUNDR" to SaudiCategories.SERVICES,
+        // Found while looking for something else, which is where most of these come
+        // from: three opticians and a tyre shop, sitting unfiled.
+        "MAGRABI" to SaudiCategories.HEALTH,
+        "OPTICAL" to SaudiCategories.HEALTH,
+        "TIRE SERV" to SaudiCategories.TRANSPORT,
+
         // Recovered by asking the history for a longer spelling of each unfiled
         // merchant. Card networks cut the name at different lengths, so one rare
         // record often carries the full name of a shop that appears truncated
