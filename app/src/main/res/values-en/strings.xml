@@ -120,4 +120,5 @@
     <string name="category_fees">Fees and wages</string>
     <string name="category_housing">Housing</string>
     <string name="refile_running">Re-filing…</string>
+    <string name="category_services">Personal care</string>
 </resources>

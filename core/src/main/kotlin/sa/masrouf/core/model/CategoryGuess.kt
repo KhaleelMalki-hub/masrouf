@@ -198,11 +198,18 @@ object CategoryGuess {
         "مختبر" to SaudiCategories.HEALTH,
 
         // Services that belong nowhere else, named so they stop sitting unfiled.
-        "LAUNDRY" to SaudiCategories.OTHER,
-        "MGHASL" to SaudiCategories.OTHER,
-        "مغسلة" to SaudiCategories.OTHER,
-        "BARBER" to SaudiCategories.OTHER,
-        "SALON" to SaudiCategories.OTHER,
+        // "LAUNDR", not "LAUNDRY": the card network truncates, and one shop was
+        // arriving as both "AL QIMMA LAUNDRY" and "AL QIMMA LAUNDR". The full
+        // spelling matched here and the short one fell through to a grocery rule
+        // further down, so the same laundry was filed under two categories.
+        "LAUNDR" to SaudiCategories.SERVICES,
+        "MGHASL" to SaudiCategories.SERVICES,
+        "مغسلة" to SaudiCategories.SERVICES,
+        "مغاسل" to SaudiCategories.SERVICES,
+        "BARBER" to SaudiCategories.SERVICES,
+        "SALON" to SaudiCategories.SERVICES,
+        "SALOON" to SaudiCategories.SERVICES,
+        "حلاق" to SaudiCategories.SERVICES,
 
         // Wallets and the user's own name on a transfer: money moving between
         // places they control, not spending on anything.
@@ -352,7 +359,6 @@ object CategoryGuess {
         "TOY AND S" to SaudiCategories.ENTERTAINMENT,
         "BLVD" to SaudiCategories.ENTERTAINMENT,
         "MOAAREF PHARAMCY" to SaudiCategories.HEALTH,
-        "SALOON ENAYATI" to SaudiCategories.HEALTH,
         "TAMEENI" to SaudiCategories.BILLS,
         "SAUDI CREDIT BUREAU" to SaudiCategories.BILLS,
         "AWQAF" to SaudiCategories.CHARITY,

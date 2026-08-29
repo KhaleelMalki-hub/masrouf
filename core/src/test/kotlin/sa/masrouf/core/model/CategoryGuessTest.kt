@@ -181,4 +181,27 @@ class CategoryGuessTest {
         assertEquals(SaudiCategories.HEALTH, CategoryGuess.forMerchant("Al Noor T"))
         assertNotEquals(SaudiCategories.HEALTH, CategoryGuess.forMerchant("Noor AlMa"))
     }
+
+    /**
+     * One laundry filed under two categories, because the card network truncated
+     * its name and only the long spelling matched.
+     *
+     * "AL QIMMA LAUNDRY" matched the laundry rule; "AL QIMMA LAUNDR" matched
+     * nothing there and fell through to a grocery rule further down. Fifty records
+     * in one category and one in another, for the same shop.
+     */
+    @Test
+    fun `a truncated laundry is still a laundry`() {
+        assertEquals(SaudiCategories.SERVICES, CategoryGuess.forMerchant("AL QIMMA LAUNDRY"))
+        assertEquals(SaudiCategories.SERVICES, CategoryGuess.forMerchant("AL QIMMA LAUNDR"))
+    }
+
+    /** A salon is personal care. It was filed as healthcare, which it is not. */
+    @Test
+    fun `laundries and salons are personal care, not the residue category`() {
+        listOf("MGHASL ZKIEAH", "Noor AlMaabadi Laundry", "SALOON ENAYATI", "LE SALON")
+            .forEach { name ->
+                assertEquals(SaudiCategories.SERVICES, CategoryGuess.forMerchant(name), name)
+            }
+    }
 }

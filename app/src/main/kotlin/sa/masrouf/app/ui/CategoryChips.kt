@@ -74,6 +74,7 @@ val Category.labelRes: Int
         SaudiCategories.SHOPPING.id -> R.string.category_shopping
         SaudiCategories.HOUSING.id -> R.string.category_housing
         SaudiCategories.EDUCATION.id -> R.string.category_education
+        SaudiCategories.SERVICES.id -> R.string.category_services
         SaudiCategories.ENTERTAINMENT.id -> R.string.category_entertainment
         SaudiCategories.FEES.id -> R.string.category_fees
         SaudiCategories.CHARITY.id -> R.string.category_charity

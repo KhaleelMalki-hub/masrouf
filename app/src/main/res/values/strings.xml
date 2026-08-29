@@ -137,4 +137,5 @@
     <string name="category_fees">رسوم وأجور</string>
     <string name="category_housing">رسوم شهرية (سكن)</string>
     <string name="refile_running">يعيد التصنيف…</string>
+    <string name="category_services">مغاسل وعناية</string>
 </resources>

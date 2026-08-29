@@ -43,6 +43,15 @@ object SaudiCategories {
      */
     val HOUSING = Category(id = "housing", labelAr = "رسوم شهرية (سكن)", labelEn = "Housing")
 
+    /**
+     * Laundries, barbers, salons.
+     *
+     * Measured, not invented: of 110 records filed under [OTHER] in a real history,
+     * about 105 were one of these three. [OTHER] is meant to be the residue, and a
+     * residue that is 95% one thing is a category that was never given a name.
+     */
+    val SERVICES = Category(id = "services", labelAr = "مغاسل وعناية", labelEn = "Personal care")
+
     /** School and university fees, courses, books bought for a course. */
     val EDUCATION = Category(id = "education", labelAr = "مدارس وتعليم", labelEn = "Education")
 
@@ -97,7 +106,7 @@ object SaudiCategories {
      */
     val ALL: List<Category> = listOf(
         FOOD, GROCERIES, TRANSPORT, HOUSING, BILLS, HEALTH, EDUCATION, SHOPPING,
-        ENTERTAINMENT, FEES, CHARITY, CASH, TRANSFERS, INCOME, OTHER,
+        SERVICES, ENTERTAINMENT, FEES, CHARITY, CASH, TRANSFERS, INCOME, OTHER,
     )
 
     private val BY_ID: Map<String, Category> = ALL.associateBy(Category::id)
