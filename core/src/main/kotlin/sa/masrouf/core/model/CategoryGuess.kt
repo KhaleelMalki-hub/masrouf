@@ -352,6 +352,13 @@ object CategoryGuess {
         "راتب عامل" to SaudiCategories.FEES,
         "أجر عامل" to SaudiCategories.FEES,
 
+        // "الخدمة", an app the user bought a service from. Ten records and every
+        // one of them an internet purchase, never once at a terminal. The amounts
+        // sit where Apple and YouTube Premium sit in the same months - 16 to 39
+        // riyals, with two larger ones - and no other merchant in the history
+        // charges any of them. Filed with the subscriptions for that reason.
+        "ALKHDMAH" to SaudiCategories.BILLS,
+
         // شركة المياه الوطنية, named by the user: water delivery, ordered online.
         // "ELAF COMP" and not "ELAF", because Elaf Hotels is a different business
         // with three records of its own in the same history.
