@@ -253,4 +253,14 @@ class CategoryGuessTest {
         assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("Mrsool"))
         assertEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("SMSA"))
     }
+
+    /**
+     * One restaurant under the name the card network mangles it into, and under
+     * its own. Twenty-eight records arrive as "sheps" and one as "CHEFS".
+     */
+    @Test
+    fun `both spellings of the burger place are food`() {
+        assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("sheps"))
+        assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("CHEFS"))
+    }
 }

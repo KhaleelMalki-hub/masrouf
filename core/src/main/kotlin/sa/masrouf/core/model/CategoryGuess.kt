@@ -203,6 +203,18 @@ object CategoryGuess {
         // spelling matched here and the short one fell through to a grocery rule
         // further down, so the same laundry was filed under two categories.
         "LAUNDR" to SaudiCategories.SERVICES,
+        // A burger restaurant. The card network sends it as "sheps"; it appears
+        // once, out of twenty-nine, under its real name. Both spellings, because
+        // the mangled one is the one that arrives.
+        "SHEPS" to SaudiCategories.FOOD,
+        "CHEFS" to SaudiCategories.FOOD,
+
+        // A barber, named by the user, and the visits agree: fifteen of twenty-
+        // seven gaps are between 15 and 21 days, the amount is a round 50 riyals
+        // twelve times, and it went on across four different cards - so not a
+        // subscription tied to one of them.
+        "HANY IBRAHIM" to SaudiCategories.SERVICES,
+
         // Mobile Service, car servicing, named by the user. The name arrives as
         // "MS.21535", "MS 21534." and "MS.21515_" - a branch code that
         // `normalizeMerchant` strips as a trailing reference, leaving "MS". Two
