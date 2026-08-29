@@ -203,6 +203,21 @@ object CategoryGuess {
         // spelling matched here and the short one fell through to a grocery rule
         // further down, so the same laundry was filed under two categories.
         "LAUNDR" to SaudiCategories.SERVICES,
+        // Kitchen Trends, who fitted the user's kitchen: 74,000 riyals across six
+        // in-person card payments in six weeks, each one minutes after a transfer
+        // arrived to cover it. Home Centre an hour after the largest, and a kitchen
+        // design firm in the same season - the same project, so the same category.
+        //
+        // Filed as shopping rather than housing because housing here is the monthly
+        // charge the user named it for, and IKEA and Home Centre are already
+        // shopping. A kitchen is a large version of the same purchase, not a rent.
+        "DISTINCTI" to SaudiCategories.SHOPPING,
+        "HOME CENT" to SaudiCategories.SHOPPING,
+        "KITCHEN DESIGN" to SaudiCategories.SHOPPING,
+        // Not "KITCHEN": The Social Kitchen is a restaurant, and a keyword that
+        // reached it would file dinner as furniture.
+        "THE SOCIAL KITCHEN" to SaudiCategories.FOOD,
+
         // A burger restaurant. The card network sends it as "sheps"; it appears
         // once, out of twenty-nine, under its real name. Both spellings, because
         // the mangled one is the one that arrives.

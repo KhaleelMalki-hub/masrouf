@@ -263,4 +263,13 @@ class CategoryGuessTest {
         assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("sheps"))
         assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("CHEFS"))
     }
+
+    /** A kitchen fitter and a restaurant with "kitchen" in its name are not alike. */
+    @Test
+    fun `the kitchen fitter is furniture and the social kitchen is dinner`() {
+        assertEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("DISTINCTI"))
+        assertEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("HOME CENTRE 40092"))
+        assertEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("Kitchen Design Est"))
+        assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("THE SOCIAL KITCHEN"))
+    }
 }
