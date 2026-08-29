@@ -262,6 +262,14 @@ object CategoryGuess {
         "راتب عامل" to SaudiCategories.FEES,
         "أجر عامل" to SaudiCategories.FEES,
 
+        // Named by the user, who is the only person who could: a women's salon, a
+        // children's barber, a juice shop and a طعمية shop, none of which say so
+        // in the name the card network sends.
+        "LAMASAT" to SaudiCategories.SERVICES,
+        "BABY SALO" to SaudiCategories.SERVICES,
+        "SIGNATURE" to SaudiCategories.FOOD,
+        "TAMIA ALSULTAN" to SaudiCategories.FOOD,
+
         // Read off the unfiled remainder of the same history, name by name. Only
         // where the name says what was bought: a chain anyone would recognise, or a
         // word that means something. The local shops and the people's names in that
