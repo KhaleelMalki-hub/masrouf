@@ -473,6 +473,13 @@ object CategoryGuess {
         "BINDAWOOD" to SaudiCategories.GROCERIES,
         "HYPER MAR" to SaudiCategories.GROCERIES,
         "AL QIMMA" to SaudiCategories.GROCERIES,
+        // The hypermarket under a new merchant descriptor. "HYPER MAR" runs to
+        // 2024-10-06 and stops; "AlJoumaa2" starts 2024-09-15 and continues. On the
+        // one day they overlap, a 124-riyal basket goes through the old name at
+        // 14:04 and a 1,261-riyal one through the new at 14:58. The amounts match a
+        // supermarket either side: bread-and-milk runs around 12 to 24 riyals, with
+        // an occasional full shop.
+        "ALJOUMAA" to SaudiCategories.GROCERIES,
         "ALZAIDI" to SaudiCategories.TRANSPORT,
         "ALZAIDY" to SaudiCategories.TRANSPORT,
         "NAFT" to SaudiCategories.TRANSPORT,
