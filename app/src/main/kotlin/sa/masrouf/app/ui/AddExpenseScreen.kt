@@ -131,7 +131,9 @@ fun AddExpenseScreen(
     val cardBalances by viewModel.cardBalances.collectAsStateWithLifecycle()
     val monthUnfiled by viewModel.monthUnfiled.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
-    val fabExpanded by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
+    val fabExpanded by remember {
+        derivedStateOf { listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0 }
+    }
     // Once per process. Reads the stored bodies that predate the balance column;
     // after the first run every body is marked and the call finds nothing to do.
     LaunchedEffect(Unit) { viewModel.backfillBalancesOnce() }
@@ -379,12 +381,17 @@ fun AddExpenseScreen(
                     active = categoryFilter == HistoryFilter.Unfiled,
                     onOpen = { viewModel.toggleCategoryFilter(null) },
                 )
-                HistoryFilters(
-                    query = query,
-                    onQueryChange = viewModel::onQueryChanged,
-                    activeFilter = categoryFilter,
-                    onClear = viewModel::clearFilters,
-                )
+                // A search box over an empty month is a control with nothing to
+                // act on. It stays while a filter is on, because clearing the
+                // filter is what brings the rows back.
+                if (monthRows.isNotEmpty() || query.isNotBlank() || categoryFilter != null) {
+                    HistoryFilters(
+                        query = query,
+                        onQueryChange = viewModel::onQueryChanged,
+                        activeFilter = categoryFilter,
+                        onClear = viewModel::clearFilters,
+                    )
+                }
             }
 
             if (monthRows.isEmpty()) {
