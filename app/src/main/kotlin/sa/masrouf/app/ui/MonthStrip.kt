@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Icon
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -164,6 +166,7 @@ fun BandLegend(
         bands.forEach { band ->
             BandRow(
                 colour = band.colour,
+                icon = band.category.icon,
                 name = band.label,
                 amount = band.amount.forDisplay(currencyLabel),
                 selected = when (selected) {
@@ -188,6 +191,7 @@ fun BandLegend(
 @Composable
 private fun BandRow(
     colour: Color,
+    icon: ImageVector,
     name: String,
     amount: String,
     fraction: Float,
@@ -228,11 +232,13 @@ private fun BandRow(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(width = SWATCH_WIDTH, height = SWATCH_HEIGHT)
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(colour),
+                // The glyph is the swatch now: same colour, and a shape that
+                // matches the disc on every row of the history below.
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = colour,
+                    modifier = Modifier.size(18.dp),
                 )
                 Text(
                     text = name,

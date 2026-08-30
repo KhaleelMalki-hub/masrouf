@@ -129,4 +129,8 @@
     <string name="card_credit_left">Credit left</string>
     <string name="card_as_of">as of %1$s</string>
     <string name="card_no_balance">Bank sends no balance</string>
+    <plurals name="unfiled_banner">
+        <item quantity="one">1 transaction to file</item>
+        <item quantity="other">%1$s transactions to file</item>
+    </plurals>
 </resources>

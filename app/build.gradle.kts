@@ -68,6 +68,10 @@ dependencies {
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.material3)
+    // Material Symbols, one per category. Official glyphs rather than hand-drawn
+    // ones, because the app is Material 3 as Google specifies it, and R8 keeps
+    // only the seventeen that are referenced.
+    implementation(libs.compose.icons.extended)
     implementation(libs.compose.ui.tooling.preview)
     debugImplementation(libs.compose.ui.tooling)
 

@@ -13,6 +13,17 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.EaseOutQuart
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
+import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -111,6 +122,7 @@ fun AddExpenseScreen(
     val monthTotal by viewModel.monthTotal.collectAsStateWithLifecycle()
     val invested by viewModel.monthInvested.collectAsStateWithLifecycle()
     val cardBalances by viewModel.cardBalances.collectAsStateWithLifecycle()
+    val monthUnfiled by viewModel.monthUnfiled.collectAsStateWithLifecycle()
     // Once per process. Reads the stored bodies that predate the balance column;
     // after the first run every body is marked and the call finds nothing to do.
     LaunchedEffect(Unit) { viewModel.backfillBalancesOnce() }
@@ -346,6 +358,11 @@ fun AddExpenseScreen(
             }
 
             item {
+                UnfiledBanner(
+                    count = monthUnfiled,
+                    active = categoryFilter == HistoryFilter.Unfiled,
+                    onOpen = { viewModel.toggleCategoryFilter(null) },
+                )
                 HistoryFilters(
                     query = query,
                     onQueryChange = viewModel::onQueryChanged,
@@ -1167,17 +1184,26 @@ private fun TransactionRow(
             .clickable(onClick = onRefile),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // The category's own dye, as a thread down the edge of the row. Without it
-        // the strip is the only place colour means anything and the history reads
-        // as an unrelated list; with it a month can be scanned for one category
-        // without reading a single word.
+        // The category, as a glyph in a disc tinted with its own colour. This was a
+        // 3dp coloured stripe down the edge of the row until the product doc named
+        // side-stripe borders as the thing this app must not look like. The disc
+        // carries the same colour and adds what the stripe could not: a shape you
+        // can recognise before you read.
         Box(
             modifier = Modifier
                 .padding(vertical = 8.dp)
-                .size(width = 3.dp, height = 34.dp)
-                .clip(RoundedCornerShape(2.dp))
-                .background(bandColour(category)),
-        )
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(bandColour(category).copy(alpha = 0.16f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = category.icon,
+                contentDescription = null,
+                tint = bandColour(category),
+                modifier = Modifier.size(20.dp),
+            )
+        }
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -1544,3 +1570,54 @@ private fun InvestedRow(
 @ReadOnlyComposable
 private fun MerchantNames.MerchantName.forLocale(): String =
     if (LocalConfiguration.current.locales[0].language == "ar") ar else en
+
+/**
+ * How much of the month is still to be filed, as a thing you can act on.
+ *
+ * The number was already in the legend, as the "بلا تصنيف" band, and nobody used
+ * it: a band in a chart reads as a fact, not as work waiting. One line above the
+ * history that names the count and opens the worklist on tap is the difference
+ * between 2,457 records nobody filed and a queue somebody works through.
+ *
+ * Gone once the filter is on, because then the list itself is the answer, and
+ * gone when the count is zero, because a banner saying "nothing to do" is noise.
+ */
+@Composable
+private fun UnfiledBanner(count: Int, active: Boolean, onOpen: () -> Unit) {
+    AnimatedVisibility(
+        visible = count > 0 && !active,
+        enter = fadeIn(tween(200)) + expandVertically(tween(250, easing = EaseOutQuart)),
+        exit = fadeOut(tween(150)) + shrinkVertically(tween(200, easing = EaseOutQuart)),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 12.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.secondaryContainer)
+                .clickable(onClick = onOpen)
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.HelpOutline,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                modifier = Modifier.size(20.dp),
+            )
+            Text(
+                text = pluralStringResource(R.plurals.unfiled_banner, count, count.toString()),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                modifier = Modifier.weight(1f),
+            )
+            Icon(
+                imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                modifier = Modifier.size(18.dp),
+            )
+        }
+    }
+}

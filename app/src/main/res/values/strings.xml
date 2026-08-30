@@ -146,4 +146,11 @@
     <string name="card_credit_left">المتبقي من الحد</string>
     <string name="card_as_of">حتى %1$s</string>
     <string name="card_no_balance">البنك لا يرسل الرصيد</string>
+    <plurals name="unfiled_banner">
+        <item quantity="one">عملية واحدة بلا تصنيف</item>
+        <item quantity="two">عمليتان بلا تصنيف</item>
+        <item quantity="few">%1$s عمليات بلا تصنيف</item>
+        <item quantity="many">%1$s عملية بلا تصنيف</item>
+        <item quantity="other">%1$s عملية بلا تصنيف</item>
+    </plurals>
 </resources>

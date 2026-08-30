@@ -230,6 +230,12 @@ class AddExpenseViewModel(
                 .toList()
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    /** How many confirmed records this month have no category the build can name. */
+    val monthUnfiled: StateFlow<Int> =
+        confirmedThisMonth
+            .map { rows -> rows.count { SaudiCategories.byId(it.categoryId) == null } }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+
     /**
      * What this month put into investments, or null when it put in nothing.
      *
