@@ -26,6 +26,17 @@ data class EventSignature(
     /** Folded merchant or counterparty. Used to break ties, never to decide a match alone. */
     val merchantKey: String?,
     val source: Source,
+    /**
+     * The message body, normalised, when the record came from one.
+     *
+     * Two messages from the SAME source are one event only if their bodies are
+     * one text. A bank that redelivers an SMS redelivers it byte for byte; a bank
+     * announcing two purchases a minute apart writes two bodies, because it
+     * stamps each with its own time. Without this the second of two 250-riyal
+     * deposits at Tamra Capital, 69 seconds after the first, was dropped as a
+     * redelivery of it. It was not; the user had made two.
+     */
+    val body: String? = null,
 ) {
     val day: LocalDate get() = RiyadhTime.localDate(occurredAt)
 
@@ -37,6 +48,7 @@ data class EventSignature(
             source: Source,
             last4: String? = null,
             merchantRaw: String? = null,
+            body: String? = null,
         ): EventSignature = EventSignature(
             amount = amount,
             direction = direction,
@@ -44,6 +56,7 @@ data class EventSignature(
             occurredAt = occurredAt,
             merchantKey = merchantRaw?.let(ArabicText::normalizeMerchant)?.takeIf { it.isNotBlank() },
             source = source,
+            body = body?.let(ArabicText::normalize)?.takeIf { it.isNotBlank() },
         )
     }
 }

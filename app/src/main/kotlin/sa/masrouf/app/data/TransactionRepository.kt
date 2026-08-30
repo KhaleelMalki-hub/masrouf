@@ -619,4 +619,5 @@ internal fun TransactionEntity.toSignature(): EventSignature = EventSignature(
     occurredAt = Instant.ofEpochMilli(occurredAtMillis),
     merchantKey = merchantKey,
     source = enumValueOf(source),
+    body = rawText?.let(ArabicText::normalize)?.takeIf { it.isNotBlank() },
 )

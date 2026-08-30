@@ -273,4 +273,42 @@ class DuplicateDetectorTest {
         )
         assertEquals(incoming.size, result.matches.size + result.newIncoming.size)
     }
+
+    /**
+     * Two purchases a minute apart are two purchases.
+     *
+     * The user paid Tamra Capital 250 riyals at 13:31 and again at 13:32. The
+     * second arrived inside the redelivery window with the same amount, card and
+     * merchant, and was dropped as a redelivery of the first. A redelivered SMS is
+     * the same SMS; these were two bodies with two bank stamps.
+     */
+    @Test
+    fun `two same-source messages with different bodies are two events`() {
+        val at = Instant.parse("2026-08-30T10:31:23Z")
+        val first = EventSignature.of(
+            Money.ofMajor("250.00"), Direction.DEBIT, at, Source.SMS, "1887", "Tamra Cap",
+            body = "شراء انترنت\nبـ250 SAR\nمن 0104*\nمن Tamra Cap\nمدى *1887\nفي 30/08/26 13:31",
+        )
+        val second = EventSignature.of(
+            Money.ofMajor("250.00"), Direction.DEBIT, at.plusSeconds(69), Source.SMS, "1887", "Tamra Cap",
+            body = "شراء انترنت\nبـ250 SAR\nمن 0104*\nمن Tamra Cap\nمدى *1887\nفي 30/08/26 13:32",
+        )
+
+        val result = DuplicateDetector().reconcile(existing = listOf(first), incoming = listOf(second))
+
+        assertEquals(listOf(0), result.newIncoming)
+    }
+
+    /** And the same SMS delivered twice is still one event. */
+    @Test
+    fun `a redelivered message with an identical body is one event`() {
+        val at = Instant.parse("2026-08-30T10:31:23Z")
+        val body = "شراء انترنت\nبـ250 SAR\nمن Tamra Cap\nمدى *1887\nفي 30/08/26 13:31"
+        val first = EventSignature.of(Money.ofMajor("250.00"), Direction.DEBIT, at, Source.SMS, "1887", "Tamra Cap", body = body)
+        val again = EventSignature.of(Money.ofMajor("250.00"), Direction.DEBIT, at.plusSeconds(40), Source.SMS, "1887", "Tamra Cap", body = body)
+
+        val result = DuplicateDetector().reconcile(existing = listOf(first), incoming = listOf(again))
+
+        assertEquals(emptyList<Int>(), result.newIncoming)
+    }
 }

@@ -137,7 +137,14 @@ class DuplicateDetector(
 
         val bothFromMessages = !a.source.isStatement && !b.source.isStatement
         return if (bothFromMessages) {
-            Duration.between(a.occurredAt, b.occurredAt).abs() <= messageRedeliveryWindow
+            // Within the window, and - when both came by the same route and both
+            // bodies are known - the same text. A redelivered SMS is the same SMS;
+            // two purchases a minute apart are two bodies with two bank stamps.
+            // Across routes (the bank's push and its SMS for one purchase) the
+            // bodies always differ, so only time decides there.
+            val sameRoute = a.source == b.source && a.body != null && b.body != null
+            Duration.between(a.occurredAt, b.occurredAt).abs() <= messageRedeliveryWindow &&
+                (!sameRoute || a.body == b.body)
         } else {
             abs(a.day.toEpochDay() - b.day.toEpochDay()) <= statementDayWindow
         }
