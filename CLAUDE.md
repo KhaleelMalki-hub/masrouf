@@ -3,6 +3,9 @@
 Personal Arabic-first Android expense manager for Saudi bank messages and
 statements. Single user, on-device, offline. Not a product, not published.
 
+Session state and the open backlog live in `docs/HANDOFF.md`; read it before
+starting work.
+
 ## Commands
 
 ```bash
