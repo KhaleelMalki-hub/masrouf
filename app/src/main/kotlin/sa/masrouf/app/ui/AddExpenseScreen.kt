@@ -106,6 +106,7 @@ fun AddExpenseScreen(
     val form by viewModel.form.collectAsStateWithLifecycle()
     val recent by viewModel.recent.collectAsStateWithLifecycle()
     val monthTotal by viewModel.monthTotal.collectAsStateWithLifecycle()
+    val invested by viewModel.monthInvested.collectAsStateWithLifecycle()
     val pending by viewModel.pending.collectAsStateWithLifecycle()
     val shares by viewModel.monthShares.collectAsStateWithLifecycle()
     val selectedMonth by viewModel.selectedMonth.collectAsStateWithLifecycle()
@@ -254,6 +255,7 @@ fun AddExpenseScreen(
                     onNext = viewModel::showNextMonth,
                     onPickMonth = { pickingMonth = true },
                     previousTotal = previousTotal,
+                    invested = invested,
                     activeFilter = categoryFilter,
                     onToggleCategory = viewModel::toggleCategoryFilter,
                 )
@@ -817,6 +819,7 @@ private fun MonthPanel(
     onNext: () -> Unit,
     onPickMonth: () -> Unit,
     previousTotal: Money?,
+    invested: Money?,
     activeFilter: HistoryFilter?,
     onToggleCategory: (Category?) -> Unit,
 ) {
@@ -862,6 +865,19 @@ private fun MonthPanel(
                 )
             }
             MonthComparison(current = total, previous = previousTotal, currencyLabel = currencyLabel)
+            if (invested != null) {
+                // Beside the total, never inside it. Excluding investments from
+                // spending without showing them anywhere made the money vanish from
+                // the app, and a number that is absent cannot be questioned.
+                Text(
+                    text = stringResource(
+                        R.string.month_invested,
+                        invested.forDisplay(currencyLabel),
+                    ),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = bandColour(SaudiCategories.INVESTMENT),
+                )
+            }
             if (pendingCount > 0) {
                 Text(
                     text = pluralStringResource(

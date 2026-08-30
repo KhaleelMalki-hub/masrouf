@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 import sa.masrouf.app.capture.HistoryImport
 import sa.masrouf.app.data.TransactionRepository
 import sa.masrouf.app.data.categoryShares
+import sa.masrouf.app.data.investedTotal
 import sa.masrouf.app.data.spendingTotal
 import sa.masrouf.core.model.Category
 import sa.masrouf.core.model.Direction
@@ -217,6 +218,16 @@ class AddExpenseViewModel(
                 }
                 .toList()
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /**
+     * What this month put into investments, or null when it put in nothing.
+     *
+     * Shown beside the total rather than inside it. The money did not leave.
+     */
+    val monthInvested: StateFlow<Money?> =
+        confirmedThisMonth
+            .map { rows -> rows.investedTotal().takeIf { !it.isZero } }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     /**
      * What the previous month came to, for comparison.

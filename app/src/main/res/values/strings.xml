@@ -140,4 +140,5 @@
     <string name="category_services">مغاسل وعناية</string>
     <string name="refile_forget">دع التطبيق يقرّر</string>
     <string name="category_investment">استثمار</string>
+    <string name="month_invested">واستثمرت %1$s</string>
 </resources>

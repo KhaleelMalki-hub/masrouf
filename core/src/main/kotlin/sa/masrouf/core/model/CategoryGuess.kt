@@ -326,6 +326,9 @@ object CategoryGuess {
         // أول قطرة, the same coffee shop as FIRST DROP CAFE, arriving letter-spaced
         // through a different terminal.
         "A W A L Q" to SaudiCategories.FOOD,
+        // wizebutter.com: nut butters and the like, bought online. Groceries and
+        // not a restaurant - it is food to keep, not a meal.
+        "WIZEBUTTER" to SaudiCategories.GROCERIES,
         "RETRO7" to SaudiCategories.FOOD,
         // زد, a sandwich shop: seven visits averaging fifteen riyals.
         "ZED AL ZA" to SaudiCategories.FOOD,

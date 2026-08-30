@@ -428,6 +428,20 @@ fun List<Transaction>.spendingTotal(): Money =
         .fold(Money.ZERO) { running, transaction -> running + transaction.amount }
 
 /**
+ * What the month put into investments.
+ *
+ * Its own number rather than a band in the strip, because it is deliberately not
+ * part of the total the strip adds up to - see [countsAsSpending]. Excluding it
+ * from spending without showing it anywhere made 14,710 riyals disappear from the
+ * app entirely, which is worse than counting them wrongly: a number that is absent
+ * cannot be questioned.
+ */
+fun List<Transaction>.investedTotal(): Money =
+    filter { it.status == Status.CONFIRMED }
+        .filter { it.direction == Direction.DEBIT && it.categoryId == SaudiCategories.INVESTMENT.id }
+        .fold(Money.ZERO) { running, transaction -> running + transaction.amount }
+
+/**
  * The narrow view of a stored row that decides whether two records are one event.
  *
  * Built from the entity rather than the model because the card fragment lives only
