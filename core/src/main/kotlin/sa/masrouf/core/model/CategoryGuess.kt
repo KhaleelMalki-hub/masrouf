@@ -641,88 +641,12 @@ object CategoryGuess {
     /**
      * @return a suggested category, or null when nothing matches. Callers must
      *   leave a null unfiled rather than defaulting it.
+     *
+     * The matching itself lives in [MerchantMatch], shared with the display-name
+     * list, because the truncation rules it encodes are the whole reason either
+     * list works and a second copy of them would drift from this one.
      */
-    fun forMerchant(merchantRaw: String?): Category? {
-        val folded = merchantRaw?.let(ArabicText::normalizeMerchant)?.takeIf { it.isNotBlank() }
-            ?: return null
-        // First match wins, and the list is ordered so the specific sits above the
-        // general - "HUNGERSTATION" before any bare "STATION" rule would be.
-        // An exact match beats a partial one, whatever the order of the list.
-        //
-        // Without this, "Amazon SA" - which normalises to exactly "AMAZON" - was
-        // caught by the "AMAZON NO" rule through the truncation rule below, because
-        // "AMAZONNO" does start with "AMAZON". Six hundred records went to
-        // groceries. Reordering cannot fix it: whichever of the two rules comes
-        // first swallows the other's merchant.
-        val exact = RULES.firstOrNull { (keyword, _) ->
-            ArabicText.normalizeMerchant(keyword).replace(" ", "") == folded.replace(" ", "")
-        }
-        if (exact != null) return exact.second
-
-        return RULES.firstOrNull { (keyword, _) ->
-            matches(folded, ArabicText.normalizeMerchant(keyword))
-        }?.second
-    }
-
-    /**
-     * Whether a merchant name is this rule's.
-     *
-     * Two things a plain `contains` gets wrong, both found on a real 1,925-merchant
-     * list where the rules covered only 34% of transactions:
-     *
-     * **Card networks truncate.** The merchant arrives as "HUNGERSTA", not
-     * "HUNGERSTATION", so the keyword is LONGER than the name it is meant to match
-     * and `contains` can never fire. 510 transactions turned on that one case.
-     * A truncated name is therefore accepted when the keyword starts with it,
-     * which is what truncation means.
-     *
-     * **Spacing is not stable.** The same station is "ALDREES" one day and
-     * "AL DREES" the next, so both sides are compared with spaces removed.
-     *
-     * The length floor is what keeps the prefix rule safe: without it "AL" would
-     * match ALDREES, ALBAIK and half the list. Six characters is long enough that
-     * a prefix is evidence rather than a coincidence.
-     */
-    private fun matches(foldedMerchant: String, foldedKeyword: String): Boolean {
-        if (foldedKeyword.length < MIN_SUBSTRING_LENGTH) {
-            return matchesWholeWord(foldedMerchant, foldedKeyword)
-        }
-        val merchant = foldedMerchant.replace(" ", "")
-        val keyword = foldedKeyword.replace(" ", "")
-        if (merchant.contains(keyword)) return true
-        return merchant.length >= MIN_TRUNCATED_LENGTH && keyword.startsWith(merchant)
-    }
-
-    /**
-     * A short keyword has to be a whole word, never a fragment of one.
-     *
-     * Measured on the same 22,084-record history: as substrings, "HM" filed TAHA
-     * AHMED and TAREQ MOHAMMED as shopping, "SEC" filed the Cheesecake Factory and
-     * Victoria's Secret as a utility bill, "DR" filed FIRST DROP CAFE as healthcare,
-     * and "LAB" filed BURGER & LABSTER. Each was a rule for a real thing - H&M, the
-     * electricity company, a doctor, a laboratory - reaching into words that have
-     * nothing to do with it, and every one of them produced a category the user
-     * would then have to notice and undo.
-     *
-     * The Arabic definite article is stripped from the merchant's words before
-     * comparing, because Arabic attaches it: "المركز الطبي" carries the word طبي and
-     * should match, while "موقف" merely contains those letters and must not.
-     */
-    private fun matchesWholeWord(foldedMerchant: String, foldedKeyword: String): Boolean {
-        val keyword = foldedKeyword.split(" ")
-        return foldedMerchant
-            .split(" ")
-            .map { it.removePrefix(DEFINITE_ARTICLE) }
-            .windowed(keyword.size)
-            .any { it == keyword }
-    }
-
-    private const val MIN_TRUNCATED_LENGTH = 6
-
-    /** Below this, a keyword matches a whole word only. See [matchesWholeWord]. */
-    private const val MIN_SUBSTRING_LENGTH = 4
-
-    private const val DEFINITE_ARTICLE = "\u0627\u0644"
+    fun forMerchant(merchantRaw: String?): Category? = MerchantMatch.firstMatch(merchantRaw, RULES)
 
     /**
      * A transaction type can decide a category on its own when the merchant cannot.

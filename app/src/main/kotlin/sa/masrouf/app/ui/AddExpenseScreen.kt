@@ -865,19 +865,6 @@ private fun MonthPanel(
                 )
             }
             MonthComparison(current = total, previous = previousTotal, currencyLabel = currencyLabel)
-            if (invested != null) {
-                // Beside the total, never inside it. Excluding investments from
-                // spending without showing them anywhere made the money vanish from
-                // the app, and a number that is absent cannot be questioned.
-                Text(
-                    text = stringResource(
-                        R.string.month_invested,
-                        invested.forDisplay(currencyLabel),
-                    ),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = bandColour(SaudiCategories.INVESTMENT),
-                )
-            }
             if (pendingCount > 0) {
                 Text(
                     text = pluralStringResource(
@@ -906,6 +893,23 @@ private fun MonthPanel(
                 selected = activeFilter,
                 onSelect = onToggleCategory,
             )
+            if (invested != null) {
+                // Below the legend and below a rule, because the bands above have to
+                // add up to the number at the top and this deliberately does not.
+                // It gets a row rather than a sentence so it reads as the category
+                // it is - colour, amount, and tappable to filter like the others -
+                // while the divider says plainly that it sits outside the total.
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 6.dp),
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                )
+                InvestedRow(
+                    amount = invested,
+                    currencyLabel = currencyLabel,
+                    selected = activeFilter == HistoryFilter.OfCategory(SaudiCategories.INVESTMENT),
+                    onClick = { onToggleCategory(SaudiCategories.INVESTMENT) },
+                )
+            }
             if (activeFilter == null) {
                 // The legend has been the filter since it was built, and it was not
                 // discovered: rows of a chart do not read as controls. One line
@@ -1455,4 +1459,55 @@ private fun CardMark(mark: BankMark?, last4: String?) {
             .background(colour.copy(alpha = 0.14f))
             .padding(horizontal = 6.dp, vertical = 1.dp),
     )
+}
+
+/**
+ * The month's investments, shown as a category row outside the total.
+ *
+ * Deliberately the same shape as a legend row - swatch, name, amount, tappable -
+ * because it is a category in every sense except one: it is not spending, so it
+ * cannot be a band in a strip whose bands add up to the number above them.
+ */
+@Composable
+private fun InvestedRow(
+    amount: Money,
+    currencyLabel: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(6.dp))
+            .clickable(onClick = onClick)
+            .then(
+                if (selected) {
+                    Modifier.background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                } else {
+                    Modifier
+                }
+            )
+            .padding(horizontal = 10.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(width = 4.dp, height = 16.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(bandColour(SaudiCategories.INVESTMENT)),
+            )
+            Text(
+                text = stringResource(R.string.month_invested),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(start = 10.dp),
+            )
+        }
+        Text(
+            text = amount.forDisplay(currencyLabel),
+            style = MoneyStyle.merge(MaterialTheme.typography.bodyMedium),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
 }
