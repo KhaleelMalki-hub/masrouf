@@ -391,4 +391,23 @@ class CategoryGuessTest {
         assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("Healthy p"))
         assertEquals(SaudiCategories.HEALTH, CategoryGuess.forMerchant("DR.MAZEN FAKEEH HEALTH"))
     }
+
+    /**
+     * An investment house that was filed as a restaurant on its name alone.
+     *
+     * The records are deposits: 5,000, then 2,000 three times in one day, all
+     * round, all growing through 2026. Money moved, not money spent.
+     */
+    @Test
+    fun `the investment house is a transfer, not a meal`() {
+        listOf("Tamra", "Tamra Cap", "TAMRA CAPITAL")
+            .forEach { assertEquals(SaudiCategories.TRANSFERS, CategoryGuess.forMerchant(it), it) }
+    }
+
+    /** أول قطرة and First Drop are one coffee shop under two terminals. */
+    @Test
+    fun `the letter-spaced arabic name is the same cafe`() {
+        assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("A W A L Q A T R A"))
+        assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("FIRST DROP CAFE"))
+    }
 }

@@ -315,6 +315,25 @@ object CategoryGuess {
         // subscription tied to one of them.
         "HANY IBRAHIM" to SaudiCategories.SERVICES,
 
+        // Corrected: "TAMRA CAP" was filed as a restaurant by a rule added earlier
+        // in this session, on the name alone. Tamra Capital is an investment house,
+        // and the records read like deposits - 5,000 then 2,000 three times in a
+        // day, all round, all growing through 2026. Money moved, not money spent.
+        "TAMRA" to SaudiCategories.TRANSFERS,
+
+        // أول قطرة, the same coffee shop as FIRST DROP CAFE, arriving letter-spaced
+        // through a different terminal.
+        "A W A L Q" to SaudiCategories.FOOD,
+        "RETRO7" to SaudiCategories.FOOD,
+        "ROCOCOA" to SaudiCategories.FOOD,
+        "INTERNATIONAL OVEN" to SaudiCategories.FOOD,
+
+        // وزارة العدل: court and notary fees. Three characters, so a whole word only.
+        "ADL" to SaudiCategories.FEES,
+
+        // ولاء بلس: 246.67 four days running, which is an instalment, not a purchase.
+        "WALAPLUS" to SaudiCategories.BILLS,
+
         // Mobile Service, car servicing, named by the user. The name arrives as
         // "MS.21535", "MS 21534." and "MS.21515_" - a branch code that
         // `normalizeMerchant` strips as a trailing reference, leaving "MS". Two
@@ -508,7 +527,6 @@ object CategoryGuess {
         "QOOT" to SaudiCategories.FOOD,
         "AL AMTEAZ" to SaudiCategories.FOOD,
         "BAYT BIRAJR" to SaudiCategories.FOOD,
-        "TAMRA CAP" to SaudiCategories.FOOD,
         "BAYTOTI" to SaudiCategories.FOOD,
         "IWAITER" to SaudiCategories.FOOD,
         "GOURMALIST" to SaudiCategories.FOOD,
