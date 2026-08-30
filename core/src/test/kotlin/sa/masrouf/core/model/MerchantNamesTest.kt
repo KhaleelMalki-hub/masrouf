@@ -15,11 +15,11 @@ class MerchantNamesTest {
 
     @Test
     fun `the descriptors a card network sends are shown as people say them`() {
-        assertEquals("هنقرستيشن", MerchantNames.forMerchant("HUNGERSTA"))
-        assertEquals("هنقرستيشن", MerchantNames.forMerchant("HUNGERSTATION LLC"))
-        assertEquals("بنده", MerchantNames.forMerchant("AZIZIA PANDA UNITED P"))
-        assertEquals("الدريس", MerchantNames.forMerchant("ALDREES 1"))
-        assertEquals("نينجا", MerchantNames.forMerchant("www.anani"))
+        assertEquals("هنقرستيشن", MerchantNames.forMerchant("HUNGERSTA")?.ar)
+        assertEquals("هنقرستيشن", MerchantNames.forMerchant("HUNGERSTATION LLC")?.ar)
+        assertEquals("بنده", MerchantNames.forMerchant("AZIZIA PANDA UNITED P")?.ar)
+        assertEquals("الدريس", MerchantNames.forMerchant("ALDREES 1")?.ar)
+        assertEquals("نينجا", MerchantNames.forMerchant("www.anani")?.ar)
     }
 
     /**
@@ -28,8 +28,8 @@ class MerchantNamesTest {
      */
     @Test
     fun `amazon now is named apart from amazon`() {
-        assertEquals("أمازون ناو", MerchantNames.forMerchant("Amazon No"))
-        assertEquals("أمازون", MerchantNames.forMerchant("Amazon SA"))
+        assertEquals("أمازون ناو", MerchantNames.forMerchant("Amazon No")?.ar)
+        assertEquals("أمازون", MerchantNames.forMerchant("Amazon SA")?.ar)
     }
 
     /** A shop seen twice reads perfectly well as itself. */
@@ -55,7 +55,25 @@ class MerchantNamesTest {
             "Healthy pie bakery" to "هيلثي باي",
             "Health" to "الوقف الصحي",
         ).forEach { (raw, expected) ->
-            assertEquals(expected, MerchantNames.forMerchant(raw), raw)
+            assertEquals(expected, MerchantNames.forMerchant(raw)?.ar, raw)
         }
+    }
+
+    /**
+     * Both languages, because the app switches between them.
+     *
+     * A merchant list that stayed Arabic under an English interface would be worse
+     * than the descriptors it replaced. The English name is not the descriptor
+     * either: "AZIZIA PANDA UNITED P" reads as Panda in either language.
+     */
+    @Test
+    fun `every name is given in both languages`() {
+        val panda = MerchantNames.forMerchant("AZIZIA PANDA UNITED P")
+        assertEquals("بنده", panda?.ar)
+        assertEquals("Panda", panda?.en)
+
+        val station = MerchantNames.forMerchant("HUNGERSTA")
+        assertEquals("هنقرستيشن", station?.ar)
+        assertEquals("HungerStation", station?.en)
     }
 }

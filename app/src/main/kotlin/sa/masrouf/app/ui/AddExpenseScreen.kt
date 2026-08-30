@@ -50,6 +50,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,6 +61,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -1174,7 +1176,7 @@ private fun TransactionRow(
                 // still what is stored and searched; this only changes what a person
                 // reads, and a list of forty rows written the card network's way is
                 // slower to read than the same list written theirs.
-                text = MerchantNames.forMerchant(transaction.merchantRaw)
+                text = MerchantNames.forMerchant(transaction.merchantRaw)?.forLocale()
                     ?: transaction.merchantRaw
                     ?: transaction.note
                     ?: stringResource(transaction.type.labelRes),
@@ -1517,3 +1519,14 @@ private fun InvestedRow(
         )
     }
 }
+
+/**
+ * The merchant name in the language the interface is being read in.
+ *
+ * Not the device language: the app has its own switch, and someone reading the
+ * English interface on an Arabic phone is asking for English.
+ */
+@Composable
+@ReadOnlyComposable
+private fun MerchantNames.MerchantName.forLocale(): String =
+    if (LocalConfiguration.current.locales[0].language == "ar") ar else en
