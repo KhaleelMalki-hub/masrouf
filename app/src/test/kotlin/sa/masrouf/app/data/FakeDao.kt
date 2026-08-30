@@ -96,6 +96,14 @@ class FakeDao : TransactionDao {
         return hits.size
     }
 
+    override suspend fun setCategoryForMerchantAtBank(merchantKey: String, bankId: String, categoryId: String?, source: String?): Int {
+        val hits = state.value.filter { it.merchantKey == merchantKey && it.bankId == bankId }
+        state.value = state.value.map {
+            if (it.merchantKey == merchantKey && it.bankId == bankId) it.copy(categoryId = categoryId, categorySource = source) else it
+        }
+        return hits.size
+    }
+
     override suspend fun clearAutomaticCategories(): Int {
         val hits = state.value.filter {
             it.categoryId != null && it.categorySource == CategorySource.AUTOMATIC.name

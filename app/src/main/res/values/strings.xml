@@ -169,4 +169,7 @@
         <item quantity="many">%1$s مدفوعاً متكرراً</item>
         <item quantity="other">%1$s مدفوع متكرر</item>
     </plurals>
+    <string name="refile_scope_one">هذه فقط</string>
+    <string name="refile_scope_bank">عبر %1$s</string>
+    <string name="refile_scope_all">كل المتجر</string>
 </resources>

@@ -310,6 +310,26 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions WHERE merchant_key = :merchantKey")
     suspend fun uncategorisedOrMerchant(merchantKey: String): List<TransactionEntity>
 
+    /**
+     * Files one merchant's records that arrived through one bank.
+     *
+     * For a name two shops share. A card network sends "Ammar" for a cafe and for
+     * a bakery, and the only thing that tells them apart is which bank's message
+     * announced the purchase.
+     */
+    @Query(
+        """
+        UPDATE transactions SET category_id = :categoryId, category_source = :source
+        WHERE merchant_key = :merchantKey AND bank_id = :bankId
+        """
+    )
+    suspend fun setCategoryForMerchantAtBank(
+        merchantKey: String,
+        bankId: String,
+        categoryId: String?,
+        source: String?,
+    ): Int
+
     /** Everything with no category yet, for a one-off backfill over the history. */
     @Query("SELECT * FROM transactions WHERE category_id IS NULL")
     suspend fun uncategorised(): List<TransactionEntity>

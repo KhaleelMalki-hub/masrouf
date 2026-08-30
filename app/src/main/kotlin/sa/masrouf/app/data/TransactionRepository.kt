@@ -188,8 +188,7 @@ class TransactionRepository(
         // built-in guess, and outranks having no category at all. Applied here
         // rather than in the recorder because the recorder has no database and
         // should not grow one.
-        val learned = transaction.merchantKey
-            ?.let { key -> rules?.categoryFor(key) }
+        val learned = transaction.merchantKey?.let { key -> learnedCategory(key, transaction.bankId) }
         val entity = transaction
             .let { if (it.categoryId == null && learned != null) it.copy(categoryId = learned) else it }
             .toEntity(accountLast4)
@@ -387,6 +386,32 @@ class TransactionRepository(
     }
 
     /**
+     * The learned category for a merchant, the bank-specific rule first.
+     *
+     * Two rules can exist for one name: "AMMAR@barq" and "AMMAR". The first is
+     * the more specific decision and wins where it applies.
+     */
+    private suspend fun learnedCategory(merchantKey: String, bankId: String?): String? {
+        val rules = rules ?: return null
+        return bankId?.let { rules.categoryFor(ruleKey(merchantKey, it)) } ?: rules.categoryFor(merchantKey)
+    }
+
+    /**
+     * Files every record of one merchant that arrived through one bank, and
+     * remembers that decision for that bank alone.
+     *
+     * The card network sends the same word for two shops; the bank that announced
+     * the purchase is what tells them apart. Records of the same name through
+     * other banks are untouched, and keep whatever rule they had.
+     *
+     * @return how many existing records were refiled.
+     */
+    suspend fun fileMerchantAtBank(merchantKey: String, bankId: String, categoryId: String): Int {
+        rules?.upsert(MerchantRule(merchantKey = ruleKey(merchantKey, bankId), categoryId = categoryId))
+        return dao.setCategoryForMerchantAtBank(merchantKey, bankId, categoryId, CategorySource.MANUAL.name)
+    }
+
+    /**
      * Files a record under a category, or clears it when [categoryId] is null.
      *
      * @return false when no such record exists.
@@ -437,7 +462,9 @@ class TransactionRepository(
         inTransaction {
             dao.uncategorised().forEach { row ->
                 val model = runCatching { row.toModel() }.getOrNull() ?: return@forEach
-                val category = row.merchantKey?.let(learned::get)
+                val category = row.merchantKey?.let { key ->
+                    row.bankId?.let { bank -> learned[ruleKey(key, bank)] } ?: learned[key]
+                }
                     ?: CategoryGuess.suggest(model.merchantRaw, model.type)?.id
                     ?: return@forEach
                 if (dao.setCategory(row.id, category, CategorySource.AUTOMATIC.name) == 1) filed++
@@ -496,6 +523,9 @@ class TransactionRepository(
         const val BALANCE_NONE = "NONE"
 
         const val REPARSE_BATCH = 500
+
+        /** A learned rule scoped to one bank: "AMMAR@barq". The bare key is the general rule. */
+        fun ruleKey(merchantKey: String, bankId: String) = "$merchantKey@$bankId"
 
         /** How far either side of an incoming record to look for what it may duplicate. */
         private val NEIGHBOUR_WINDOW: Duration = Duration.ofDays(1)

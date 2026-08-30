@@ -64,6 +64,9 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -166,12 +169,15 @@ fun AddExpenseScreen(
                     target.merchantKey?.let(viewModel::forgetMerchant)
                     refiling = null
                 },
-                onPick = { category ->
+                onPick = { category, scope ->
                     val key = target.merchantKey
-                    if (key != null && category != null) {
-                        viewModel.fileMerchant(key, category.id)
-                    } else {
-                        viewModel.setCategory(target.id, category?.id)
+                    val bank = target.bankId
+                    when {
+                        category == null || key == null || scope == RefileScope.THIS_ONE ->
+                            viewModel.setCategory(target.id, category?.id)
+                        scope == RefileScope.THIS_BANK && bank != null ->
+                            viewModel.fileMerchantAtBank(key, bank, category.id)
+                        else -> viewModel.fileMerchant(key, category.id)
                     }
                     refiling = null
                 },
@@ -1486,11 +1492,14 @@ private fun HistoryFilters(
 @Composable
 private fun RefileSheet(
     transaction: Transaction,
-    onPick: (Category?) -> Unit,
+    onPick: (Category?, RefileScope) -> Unit,
     onForget: () -> Unit,
 ) {
     val current = SaudiCategories.byId(transaction.categoryId)
     val merchant = transaction.merchantRaw ?: stringResource(transaction.type.labelRes)
+    var scope by remember { mutableStateOf(RefileScope.WHOLE_MERCHANT) }
+    val bank = transaction.bankId?.let { bankMark(it) }
+    val isArabic = LocalConfiguration.current.locales[0].language == "ar"
 
     Column(
         modifier = Modifier
@@ -1504,16 +1513,35 @@ private fun RefileSheet(
             modifier = Modifier.padding(horizontal = 20.dp),
         )
         if (transaction.merchantKey != null) {
-            Text(
-                text = stringResource(R.string.refile_all_note),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 20.dp),
-            )
+            // How far the decision reaches. The whole merchant is the useful
+            // default - one tap files forty rows - but a card network sends the
+            // same word for a cafe and a bakery, and then the bank that announced
+            // the purchase is the only thing that tells them apart. "This one" is
+            // for the odd purchase that belongs to neither rule.
+            SingleChoiceSegmentedButtonRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+            ) {
+                val options = buildList {
+                    add(RefileScope.THIS_ONE to stringResource(R.string.refile_scope_one))
+                    if (bank != null) {
+                        add(RefileScope.THIS_BANK to stringResource(R.string.refile_scope_bank, if (isArabic) bank.labelAr else bank.labelEn))
+                    }
+                    add(RefileScope.WHOLE_MERCHANT to stringResource(R.string.refile_scope_all))
+                }
+                options.forEachIndexed { index, (value, label) ->
+                    SegmentedButton(
+                        selected = scope == value,
+                        onClick = { scope = value },
+                        shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
+                    ) { Text(label, maxLines = 1) }
+                }
+            }
         }
         CategoryChips(
             selected = current,
-            onSelect = onPick,
+            onSelect = { onPick(it, scope) },
             edgePadding = 20.dp,
         )
         if (transaction.merchantKey != null) {
@@ -1678,3 +1706,6 @@ private fun UnfiledBanner(count: Int, active: Boolean, onOpen: () -> Unit) {
         }
     }
 }
+
+/** How far a filing decision made on one row reaches. */
+enum class RefileScope { THIS_ONE, THIS_BANK, WHOLE_MERCHANT }

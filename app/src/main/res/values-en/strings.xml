@@ -146,4 +146,7 @@
         <item quantity="one">1 recurring payment</item>
         <item quantity="other">%1$s recurring payments</item>
     </plurals>
+    <string name="refile_scope_one">This one</string>
+    <string name="refile_scope_bank">Via %1$s</string>
+    <string name="refile_scope_all">Whole merchant</string>
 </resources>

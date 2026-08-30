@@ -457,6 +457,13 @@ class AddExpenseViewModel(
         }
     }
 
+    /** Files one merchant as it arrives through one bank; see the repository. */
+    fun fileMerchantAtBank(merchantKey: String, bankId: String, categoryId: String) {
+        viewModelScope.launch {
+            _importState.value = ImportState.Filed(repository.fileMerchantAtBank(merchantKey, bankId, categoryId))
+        }
+    }
+
     /** Refiles a record the user categorised wrongly the first time. */
     fun setCategory(id: String, categoryId: String?) {
         viewModelScope.launch { repository.setCategory(id, categoryId) }

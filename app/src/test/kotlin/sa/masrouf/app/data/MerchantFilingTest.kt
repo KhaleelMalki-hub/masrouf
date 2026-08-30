@@ -217,4 +217,28 @@ class MerchantFilingTest {
 
         assertEquals(null, dao.rows.single().categoryId)
     }
+
+    /**
+     * One word, two shops. The card network sends "Ammar" for a cafe and for a
+     * bakery; the bank that announced the purchase is the only thing that tells
+     * them apart, so a rule can be scoped to a bank and outranks the general one.
+     */
+    @Test
+    fun `a bank-scoped rule outranks the general rule for the same name`() = runTest {
+        repository.fileMerchant("AMMAR", SaudiCategories.FOOD.id)
+        repository.recordCaptured(record("cafe", "AMMAR", 0).copy(bankId = "alrajhi"))
+        repository.recordCaptured(record("bakery", "AMMAR", 60).copy(bankId = "barq"))
+        assertEquals(SaudiCategories.FOOD.id, dao.rows.single { it.id == "bakery" }.categoryId)
+
+        assertEquals(1, repository.fileMerchantAtBank("AMMAR", "barq", SaudiCategories.GROCERIES.id))
+
+        assertEquals(SaudiCategories.GROCERIES.id, dao.rows.single { it.id == "bakery" }.categoryId)
+        assertEquals(SaudiCategories.FOOD.id, dao.rows.single { it.id == "cafe" }.categoryId)
+
+        // And the next bakery message files itself; the next cafe one stays a cafe.
+        repository.recordCaptured(record("bakery2", "AMMAR", 120).copy(bankId = "barq"))
+        repository.recordCaptured(record("cafe2", "AMMAR", 180).copy(bankId = "alrajhi"))
+        assertEquals(SaudiCategories.GROCERIES.id, dao.rows.single { it.id == "bakery2" }.categoryId)
+        assertEquals(SaudiCategories.FOOD.id, dao.rows.single { it.id == "cafe2" }.categoryId)
+    }
 }
