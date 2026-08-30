@@ -96,6 +96,7 @@ import sa.masrouf.app.R
 import sa.masrouf.core.model.Category
 import sa.masrouf.core.model.Direction
 import sa.masrouf.core.model.MerchantNames
+import sa.masrouf.core.model.countsAsSpending
 import sa.masrouf.core.model.SaudiCategories
 import sa.masrouf.core.model.Source
 import sa.masrouf.core.model.Transaction
@@ -126,6 +127,8 @@ fun AddExpenseScreen(
     onSwitchLanguage: () -> Unit = {},
     themeMode: ThemeMode = ThemeMode.System,
     onThemeModeChange: (ThemeMode) -> Unit = {},
+    salary: Money? = null,
+    onSalaryChange: (Money?) -> Unit = {},
 ) {
     val form by viewModel.form.collectAsStateWithLifecycle()
     val recent by viewModel.recent.collectAsStateWithLifecycle()
@@ -156,6 +159,16 @@ fun AddExpenseScreen(
     var confirmingAll by remember { mutableStateOf(false) }
     var pickingMonth by remember { mutableStateOf(false) }
     var refiling by remember { mutableStateOf<Transaction?>(null) }
+    var editingSalary by remember { mutableStateOf(false) }
+
+    if (editingSalary) {
+        SalaryDialog(
+            current = salary,
+            currencyLabel = currency,
+            onSave = { onSalaryChange(it); editingSalary = false },
+            onCancel = { editingSalary = false },
+        )
+    }
 
     refiling?.let { target ->
         ModalBottomSheet(
@@ -255,6 +268,7 @@ fun AddExpenseScreen(
                 },
                 onFileHistory = viewModel::fileHistory,
                 onRefileAll = { confirming = DestructiveAction.RefileAll },
+                onEditSalary = { editingSalary = true },
             )
         },
         floatingActionButton = {
@@ -294,6 +308,8 @@ fun AddExpenseScreen(
                 MonthPanel(
                     month = selectedMonth,
                     total = monthTotal.grouped(),
+                    totalMoney = monthTotal,
+                    salary = salary,
                     shares = shares,
                     currencyLabel = currency,
                     pendingCount = pending.size,
@@ -429,6 +445,7 @@ fun AddExpenseScreen(
                         transaction = transaction,
                         currencyLabel = currency,
                         cardBanks = cardBanks,
+                        salary = salary,
                         onDelete = { confirming = DestructiveAction.Delete(transaction) },
                         onRefile = { refiling = transaction },
                     )
@@ -484,6 +501,7 @@ private fun MoreMenu(
     onImportHistory: () -> Unit,
     onFileHistory: () -> Unit,
     onRefileAll: () -> Unit,
+    onEditSalary: () -> Unit,
 ) {
     var open by remember { mutableStateOf(false) }
 
@@ -510,6 +528,13 @@ private fun MoreMenu(
                 text = { Text(stringResource(R.string.file_history)) },
                 onClick = {
                     onFileHistory()
+                    open = false
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.salary_menu)) },
+                onClick = {
+                    onEditSalary()
                     open = false
                 },
             )
@@ -775,7 +800,7 @@ private fun AddExpenseTopBar(
     onImportHistory: () -> Unit,
     onFileHistory: () -> Unit,
     onRefileAll: () -> Unit,
-) {
+    onEditSalary: () -> Unit) {
     TopAppBar(
         title = { Text(stringResource(R.string.dashboard_title)) },
         actions = {
@@ -784,6 +809,7 @@ private fun AddExpenseTopBar(
                 onImportHistory = onImportHistory,
                 onFileHistory = onFileHistory,
                 onRefileAll = onRefileAll,
+                onEditSalary = onEditSalary,
             )
             ThemeMenu(mode = themeMode, onSelect = onThemeModeChange)
             // The label is the language you would switch TO, not the one you are
@@ -881,6 +907,8 @@ private val ThemeMode.labelRes: Int
 private fun MonthPanel(
     month: LocalDate,
     total: String,
+    totalMoney: Money,
+    salary: Money?,
     shares: List<Pair<Category?, Money>>,
     currencyLabel: String,
     pendingCount: Int,
@@ -956,6 +984,7 @@ private fun MonthPanel(
                 )
             }
             MonthComparison(current = total, previous = previousTotal, currencyLabel = currencyLabel)
+            SalaryShare(spent = totalMoney, salary = salary, currencyLabel = currencyLabel)
             if (pendingCount > 0) {
                 Text(
                     text = pluralStringResource(
@@ -1225,10 +1254,13 @@ private fun TransactionRow(
     modifier: Modifier = Modifier,
     currencyLabel: String,
     cardBanks: Map<String, String>,
+    salary: Money?,
     onDelete: () -> Unit,
     onRefile: () -> Unit,
 ) {
     val category = SaudiCategories.byId(transaction.categoryId)
+    val aboveSalary = salary != null && transaction.direction == Direction.DEBIT &&
+        transaction.countsAsSpending && transaction.amount.halalas >= salary.halalas
     // The record's own bank first. Falling back to the card is not a guess: a card
     // belongs to one bank, so a record that names both answers it for every other
     // record on that card - including the years captured before the app recorded a
@@ -1286,6 +1318,21 @@ private fun TransactionRow(
                 overflow = TextOverflow.Ellipsis,
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
+                if (aboveSalary) {
+                    // One purchase worth a whole month's salary is the thing the
+                    // user asked to have marked. A label, not a colour: colour
+                    // already means category on this row.
+                    Text(
+                        text = stringResource(R.string.above_salary),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(MaterialTheme.colorScheme.errorContainer)
+                            .padding(horizontal = 6.dp, vertical = 1.dp),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                }
                 if (mark != null || transaction.accountLast4 != null) {
                     CardMark(mark = mark, last4 = transaction.accountLast4)
                     Spacer(Modifier.width(8.dp))
@@ -1709,3 +1756,69 @@ private fun UnfiledBanner(count: Int, active: Boolean, onOpen: () -> Unit) {
 
 /** How far a filing decision made on one row reaches. */
 enum class RefileScope { THIS_ONE, THIS_BANK, WHOLE_MERCHANT }
+
+/**
+ * The month against the salary.
+ *
+ * One line, only when the user has said what the salary is. It states a share
+ * while the month is under it and the excess once it is over; it never colours
+ * itself, never warns, never suggests. A person who typed their salary in wants
+ * the arithmetic, and the product does not do budgets.
+ */
+@Composable
+private fun SalaryShare(spent: Money, salary: Money?, currencyLabel: String) {
+    if (salary == null || salary.isZero) return
+    val text = if (spent.halalas <= salary.halalas) {
+        val percent = (spent.halalas * 100 / salary.halalas).toInt()
+        stringResource(R.string.salary_share, "$percent%")
+    } else {
+        stringResource(R.string.salary_over, Money.ofHalalas(spent.halalas - salary.halalas).forDisplay(currencyLabel))
+    }
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+/** Where the salary is typed. One field; clearing it removes the line. */
+@Composable
+private fun SalaryDialog(
+    current: Money?,
+    currencyLabel: String,
+    onSave: (Money?) -> Unit,
+    onCancel: () -> Unit,
+) {
+    var typed by remember { mutableStateOf(current?.grouped()?.replace(",", "") ?: "") }
+    val parsed = AmountInput.parse(typed)
+
+    AlertDialog(
+        onDismissRequest = onCancel,
+        title = { Text(stringResource(R.string.salary_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = stringResource(R.string.salary_body),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                OutlinedTextField(
+                    value = typed,
+                    onValueChange = { typed = it },
+                    singleLine = true,
+                    suffix = { Text(currencyLabel) },
+                    isError = parsed is AmountInput.Result.Invalid,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = parsed !is AmountInput.Result.Invalid,
+                onClick = { onSave((parsed as? AmountInput.Result.Valid)?.amount) },
+            ) { Text(stringResource(R.string.save)) }
+        },
+        dismissButton = { TextButton(onClick = onCancel) { Text(stringResource(R.string.cancel)) } },
+    )
+}

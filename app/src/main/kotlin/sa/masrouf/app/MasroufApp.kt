@@ -29,10 +29,15 @@ class MasroufApp : Application() {
     suspend fun runMaintenance() {
         val done = preferences.maintenanceVersion
         if (done < 1) {
-            transactions.purgeCredentialBodies()
+            transactions.purgeRejectedBodies()
             transactions.reparseStoredBodies()
             transactions.backfillBalances()
             preferences.maintenanceVersion = 1
+        }
+        if (done < 2) {
+            // The gate learned card-limit notices after pass 1 had run.
+            transactions.purgeRejectedBodies()
+            preferences.maintenanceVersion = 2
         }
         transactions.fileUncategorised()
     }

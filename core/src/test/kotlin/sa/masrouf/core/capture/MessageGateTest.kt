@@ -129,4 +129,15 @@ class MessageGateTest {
         assertEquals(MessageGate.Rejection.ONE_TIME_PASSWORD, decision.reason)
         assertTrue(MessageGate.mustNotPersistBody(message(body)))
     }
+
+    /** A limit change carries an amount and is not a transaction. Stored once as 200,000 riyals spent. */
+    @Test
+    fun `a card limit change is not a purchase`() {
+        val body = "تم تغيير الحد اليومي للشراء عبر الانترنت لبطاقة رقم ***907\nالى SAR 200000\nفي 24/12/2024 09:28"
+
+        val decision = MessageGate.evaluate(message(body))
+
+        assertIs<MessageGate.Decision.Reject>(decision)
+        assertEquals(MessageGate.Rejection.NOT_FINANCIAL, decision.reason)
+    }
 }

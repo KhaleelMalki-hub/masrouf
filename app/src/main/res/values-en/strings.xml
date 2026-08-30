@@ -149,4 +149,10 @@
     <string name="refile_scope_one">This one</string>
     <string name="refile_scope_bank">Via %1$s</string>
     <string name="refile_scope_all">Whole merchant</string>
+    <string name="salary_menu">Monthly salary</string>
+    <string name="salary_title">Monthly salary</string>
+    <string name="salary_body">Used to compare each month against it, and to mark any single purchase that matches or exceeds it. Leave empty to remove.</string>
+    <string name="salary_share">%1$s of your salary</string>
+    <string name="salary_over">%1$s more than your salary</string>
+    <string name="above_salary">above salary</string>
 </resources>

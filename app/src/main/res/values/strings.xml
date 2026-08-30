@@ -172,4 +172,10 @@
     <string name="refile_scope_one">هذه فقط</string>
     <string name="refile_scope_bank">عبر %1$s</string>
     <string name="refile_scope_all">كل المتجر</string>
+    <string name="salary_menu">الراتب الشهري</string>
+    <string name="salary_title">الراتب الشهري</string>
+    <string name="salary_body">يُستخدم لمقارنة مصروف كل شهر به، ولوسم أي عملية تساويه أو تتجاوزه. اتركه فارغاً لإزالته.</string>
+    <string name="salary_share">%1$s من راتبك</string>
+    <string name="salary_over">أكثر من راتبك بـ %1$s</string>
+    <string name="above_salary">فوق الراتب</string>
 </resources>

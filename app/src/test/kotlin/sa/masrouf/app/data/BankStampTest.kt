@@ -120,7 +120,7 @@ class BankStampTest {
         )
         repository.recordCaptured(record("real", last4 = "2887", bankId = null, minute = 180), "2887")
 
-        assertEquals(1, repository.purgeCredentialBodies())
+        assertEquals(1, repository.purgeRejectedBodies())
         assertEquals(listOf("real"), dao.rows.map { it.id })
     }
 }

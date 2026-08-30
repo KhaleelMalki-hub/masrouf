@@ -104,6 +104,12 @@ object MessageGate {
      * This is what it was for.
      */
     private val MARKETING_MARKERS = listOf(
+        // A card's limit being changed. "تم تغيير الحد اليومي للشراء عبر الانترنت
+        // لبطاقة رقم ***907 الى SAR 200000" carries an amount and was stored as a
+        // 200,000-riyal purchase, which is what the month total then said.
+        "تغيير الحد",
+        "الحد اليومي",
+        "تحديث الحد",
         "الجائزة",
         "جائزة",
         "للفوز",

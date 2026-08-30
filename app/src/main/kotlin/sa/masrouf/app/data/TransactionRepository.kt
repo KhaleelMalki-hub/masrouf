@@ -254,18 +254,22 @@ class TransactionRepository(
     fun observeCardBalances(): Flow<List<CardBalance>> = dao.observeCardBalances()
 
     /**
-     * Removes stored rows whose body the gate now recognises as a credential.
+     * Removes stored rows whose body the gate now rejects.
      *
-     * Fifty-eight English one-time codes were stored as confirmed purchases before
-     * the gate knew the phrase "secure code". Each doubled the purchase it
-     * authorised and each kept a credential on disk. The gate is the authority on
-     * what is sensitive, so this asks it rather than keeping a second list here.
+     * The gate runs before every parser, so a row whose body it rejects should
+     * never have existed; it exists because the gate learned the phrase later.
+     * Fifty-eight English one-time codes were stored as confirmed purchases, and a
+     * card-limit notice was stored as a 200,000-riyal purchase. The gate is the
+     * authority on what is not a transaction, so this asks it rather than keeping
+     * a second list here.
      *
      * @return how many rows were removed.
      */
-    suspend fun purgeCredentialBodies(): Int {
+    suspend fun purgeRejectedBodies(): Int {
         val doomed = dao.allWithBody()
-            .filter { row -> MessageGate.mustNotPersistBody(RawMessage(body = row.rawText!!, receivedAt = Instant.EPOCH)) }
+            .filter { row ->
+                MessageGate.evaluate(RawMessage(body = row.rawText!!, receivedAt = Instant.EPOCH)) is MessageGate.Decision.Reject
+            }
             .map { it.id }
         if (doomed.isEmpty()) return 0
         return dao.deleteAll(doomed)

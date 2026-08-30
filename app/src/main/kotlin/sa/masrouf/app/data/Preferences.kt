@@ -35,8 +35,21 @@ class Preferences(context: Context) {
         get() = prefs.getInt(MAINTENANCE_KEY, 0)
         set(value) = prefs.edit().putInt(MAINTENANCE_KEY, value).apply()
 
+    /**
+     * The monthly salary in halalas, or null when the user has not said.
+     *
+     * Entered, not inferred. Salary messages stopped in 2021 and income has arrived
+     * as transfers since, indistinguishable from money moved between the user's
+     * own accounts. One number the user types is honest; a guess from transfers
+     * would be a number the app is unsure of, shown as if it were sure.
+     */
+    var salaryHalalas: Long?
+        get() = prefs.getLong(SALARY_KEY, -1L).takeIf { it >= 0L }
+        set(value) = prefs.edit().let { e -> if (value == null) e.remove(SALARY_KEY) else e.putLong(SALARY_KEY, value) }.apply()
+
     private companion object {
         const val THEME_KEY = "theme_mode"
+        const val SALARY_KEY = "salary_halalas"
         const val MAINTENANCE_KEY = "maintenance_version"
     }
 }

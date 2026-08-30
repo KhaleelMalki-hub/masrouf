@@ -29,6 +29,7 @@ import sa.masrouf.app.capture.MasroufNotificationListener
 import sa.masrouf.app.capture.SmsInbox
 import sa.masrouf.app.ui.AddExpenseScreen
 import sa.masrouf.app.ui.AddExpenseViewModel
+import sa.masrouf.core.money.Money
 import sa.masrouf.app.ui.MasroufTheme
 import sa.masrouf.app.ui.ThemeMode
 
@@ -46,6 +47,7 @@ class MainActivity : ComponentActivity() {
             // Read once from storage, then owned by the composition. The setter
             // writes through, so the choice survives a restart.
             var themeMode by remember { mutableStateOf(preferences.themeMode) }
+            var salary by remember { mutableStateOf(preferences.salaryHalalas?.let(Money::ofHalalas)) }
 
             // The system bars follow the APP's theme, not the phone's. The default
             // enableEdgeToEdge() reads the system setting, so forcing the app dark
@@ -119,6 +121,11 @@ class MainActivity : ComponentActivity() {
                     onRequestHistoryAccess = { requestReadSms.launch(Manifest.permission.READ_SMS) },
                     onSwitchLanguage = ::toggleLanguage,
                     themeMode = themeMode,
+                    salary = salary,
+                    onSalaryChange = { chosen ->
+                        salary = chosen
+                        preferences.salaryHalalas = chosen?.halalas
+                    },
                     onThemeModeChange = { chosen ->
                         themeMode = chosen
                         preferences.themeMode = chosen
