@@ -19,6 +19,12 @@ metaphor and matches the launcher icon.
 
 ## Color
 
+Dynamic on Android 12 and later: the scheme is derived from the device wallpaper
+(Material You), which is what following Google's Material 3 means on a phone.
+The seeded schemes below are the fallback for older devices and the reference
+for what the app looks like with no wallpaper to read. Category colours are not
+part of the theme and never change with it.
+
 Seeded, not hand-picked per role. One source colour generates both schemes so the
 tonal relationships are M3's rather than invented.
 

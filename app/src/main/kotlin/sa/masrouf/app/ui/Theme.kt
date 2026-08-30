@@ -1,5 +1,9 @@
 package sa.masrouf.app.ui
 
+import android.os.Build
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
@@ -158,8 +162,21 @@ fun MasroufTheme(
         ThemeMode.Light -> false
         ThemeMode.Dark -> true
     }
+    // Material You where the device offers it: the scheme is derived from the
+    // wallpaper, which is what "Material 3 as Google specifies it" means on
+    // Android 12 and later. The seeded schemes below are the fallback for older
+    // devices, and the record of what the app looks like with no wallpaper to
+    // read. Category colours are untouched either way; they are data, not theme.
+    val context = LocalContext.current
+    val dynamic = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+    val scheme = when {
+        dynamic && dark -> dynamicDarkColorScheme(context)
+        dynamic -> dynamicLightColorScheme(context)
+        dark -> DarkScheme
+        else -> LightScheme
+    }
     MaterialTheme(
-        colorScheme = if (dark) DarkScheme else LightScheme,
+        colorScheme = scheme,
         typography = MasroufTypography,
         content = content,
     )
