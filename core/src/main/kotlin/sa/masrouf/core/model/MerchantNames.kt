@@ -21,7 +21,7 @@ object MerchantNames {
     /** What to show, in each of the app's two languages. */
     data class MerchantName(val ar: String, val en: String)
 
-    private val NAMES: List<Pair<String, MerchantName>> = listOf(
+    private val NAMES: MerchantMatch.Rules<MerchantName> = MerchantMatch.Rules(listOf(
         // Delivery and errands
         "HUNGERSTA" to MerchantName(ar = "هنقرستيشن", en = "HungerStation"),
         "JAHEZ" to MerchantName(ar = "جاهز", en = "Jahez"),
@@ -110,6 +110,9 @@ object MerchantNames {
         "SADAD" to MerchantName(ar = "سداد", en = "SADAD"),
         "ABSHER" to MerchantName(ar = "أبشر", en = "Absher"),
         "TAWAKKALNA" to MerchantName(ar = "توكلنا", en = "Tawakkalna"),
+        // Above GOOGLE, which would otherwise take it: a subscription is judged
+        // per name, and "Google" would merge YouTube with every other Google charge.
+        "YOUTUBE" to MerchantName(ar = "يوتيوب", en = "YouTube"),
         "GOOGLE" to MerchantName(ar = "قوقل", en = "Google"),
         "APPLE" to MerchantName(ar = "آبل", en = "Apple"),
         "NETFLIX" to MerchantName(ar = "نتفلكس", en = "Netflix"),
@@ -157,7 +160,7 @@ object MerchantNames {
         "MS" to MerchantName(ar = "موبايل سيرفس", en = "Mobile Service"),
         "FOURTH FR" to MerchantName(ar = "الإطار الرابع", en = "Fourth Frame"),
         "MY GOLDEN" to MerchantName(ar = "إطاري الذهبي", en = "My Golden Tyre"),
-    )
+    ))
 
     /**
      * @return a name in both languages, or null to show what the bank sent.

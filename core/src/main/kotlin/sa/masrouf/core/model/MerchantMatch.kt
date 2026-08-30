@@ -13,6 +13,22 @@ import sa.masrouf.core.text.ArabicText
 object MerchantMatch {
 
     /**
+     * A rule list with its keywords folded once.
+     *
+     * Folding a keyword costs a normalisation pass, and the first version folded
+     * all 260 of them on every call: the launch-time filing of 2,300 records ran
+     * 600,000 normalisations and took the dashboard's first reading with it.
+     */
+    class Rules<T>(pairs: List<Pair<String, T>>) {
+        internal val entries: List<Entry<T>> = pairs.map { (keyword, value) ->
+            val folded = ArabicText.normalizeMerchant(keyword)
+            Entry(folded, folded.replace(" ", ""), value)
+        }
+    }
+
+    internal class Entry<T>(val folded: String, val glued: String, val value: T)
+
+    /**
      * @return the value of the first rule whose keyword matches, or null.
      *
      * An exact match wins over a partial one whatever the order of the list.
@@ -24,19 +40,13 @@ object MerchantMatch {
      *
      * Otherwise the list order decides, so the specific must sit above the general.
      */
-    fun <T> firstMatch(merchantRaw: String?, rules: List<Pair<String, T>>): T? {
+    fun <T> firstMatch(merchantRaw: String?, rules: Rules<T>): T? {
         val folded = merchantRaw?.let(ArabicText::normalizeMerchant)?.takeIf { it.isNotBlank() }
             ?: return null
         val glued = folded.replace(" ", "")
 
-        val exact = rules.firstOrNull { (keyword, _) ->
-            ArabicText.normalizeMerchant(keyword).replace(" ", "") == glued
-        }
-        if (exact != null) return exact.second
-
-        return rules.firstOrNull { (keyword, _) ->
-            matches(folded, ArabicText.normalizeMerchant(keyword))
-        }?.second
+        rules.entries.firstOrNull { it.glued == glued }?.let { return it.value }
+        return rules.entries.firstOrNull { matches(folded, it.folded) }?.value
     }
 
     private fun matches(foldedMerchant: String, foldedKeyword: String): Boolean {

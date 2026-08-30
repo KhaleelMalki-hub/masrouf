@@ -3,6 +3,7 @@ package sa.masrouf.app.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +22,7 @@ import sa.masrouf.app.data.investedTotal
 import sa.masrouf.app.data.spendingTotal
 import sa.masrouf.core.model.Category
 import sa.masrouf.core.model.Direction
+import sa.masrouf.core.model.RecurringDetector
 import sa.masrouf.core.model.SaudiCategories
 import sa.masrouf.core.model.Status
 import sa.masrouf.core.model.Transaction
@@ -88,6 +90,7 @@ class AddExpenseViewModel(
     private val repository: TransactionRepository,
     private val clock: Clock = Clock.system(RiyadhTime.ZONE),
     private val readInbox: (suspend () -> List<sa.masrouf.core.capture.RawMessage>)? = null,
+    private val maintenance: suspend () -> Unit = {},
 ) : ViewModel() {
 
     /** What the one-off history import is doing, for the dashboard to report. */
@@ -174,6 +177,17 @@ class AddExpenseViewModel(
         _query.value = ""
         _categoryFilter.value = null
     }
+
+    /**
+     * What the user pays on a rhythm, inferred from the history and nothing else.
+     *
+     * The one place the app infers rather than reads, so the detector is
+     * conservative and every row it produces names its evidence: how many times,
+     * how often, how much.
+     */
+    val recurring: StateFlow<List<RecurringDetector.Recurring>> =
+        repository.observeRecurring { Instant.now(clock) }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     /**
      * Which bank each card belongs to.
@@ -394,18 +408,15 @@ class AddExpenseViewModel(
      * behind a confirmation. What it destroys is only what the app decided; a
      * category the user chose is kept.
      */
-    /**
-     * Reads a balance out of every stored body once, on the first launch after the
-     * column existed. Cheap after that: bodies already read are marked and skipped.
-     */
-    fun backfillBalancesOnce() {
-        viewModelScope.launch {
-            // Order matters: a credential row must go before anything reads it.
-            repository.purgeCredentialBodies()
-            repository.reparseStoredBodies()
-            repository.backfillBalances()
-            repository.fileUncategorised()
-        }
+    init {
+        // Launch-time maintenance, from the view model's own scope rather than a
+        // LaunchedEffect: a LaunchedEffect needs a frame, and an activity started
+        // behind the lock screen does not get one. What runs, and how often, is
+        // the application's decision - see MasroufApp.runMaintenance.
+        // Off the main thread: the filing pass alone runs two thousand rows through
+        // two hundred rules, and on Main it froze the first three seconds of every
+        // launch - legend drawn, total stuck at 0.00, strip blank.
+        viewModelScope.launch(Dispatchers.Default) { maintenance() }
     }
 
     fun refileEverything() {
@@ -508,9 +519,10 @@ class AddExpenseViewModel(
     class Factory(
         private val repository: TransactionRepository,
         private val readInbox: (suspend () -> List<sa.masrouf.core.capture.RawMessage>)? = null,
+        private val maintenance: suspend () -> Unit = {},
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-            AddExpenseViewModel(repository, readInbox = readInbox) as T
+            AddExpenseViewModel(repository, readInbox = readInbox, maintenance = maintenance) as T
     }
 }

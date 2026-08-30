@@ -27,7 +27,16 @@ class Preferences(context: Context) {
             .getOrDefault(ThemeMode.System)
         set(value) = prefs.edit().putString(THEME_KEY, value.name).apply()
 
+    /**
+     * Which one-off maintenance passes have run. See [MasroufApp.runMaintenance].
+     * Zero on a fresh install, so every pass runs once, in order.
+     */
+    var maintenanceVersion: Int
+        get() = prefs.getInt(MAINTENANCE_KEY, 0)
+        set(value) = prefs.edit().putInt(MAINTENANCE_KEY, value).apply()
+
     private companion object {
         const val THEME_KEY = "theme_mode"
+        const val MAINTENANCE_KEY = "maintenance_version"
     }
 }

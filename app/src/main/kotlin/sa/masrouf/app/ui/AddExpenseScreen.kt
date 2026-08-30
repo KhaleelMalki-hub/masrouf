@@ -129,14 +129,12 @@ fun AddExpenseScreen(
     val monthTotal by viewModel.monthTotal.collectAsStateWithLifecycle()
     val invested by viewModel.monthInvested.collectAsStateWithLifecycle()
     val cardBalances by viewModel.cardBalances.collectAsStateWithLifecycle()
+    val recurring by viewModel.recurring.collectAsStateWithLifecycle()
     val monthUnfiled by viewModel.monthUnfiled.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     val fabExpanded by remember {
         derivedStateOf { listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0 }
     }
-    // Once per process. Reads the stored bodies that predate the balance column;
-    // after the first run every body is marked and the call finds nothing to do.
-    LaunchedEffect(Unit) { viewModel.backfillBalancesOnce() }
     val pending by viewModel.pending.collectAsStateWithLifecycle()
     val shares by viewModel.monthShares.collectAsStateWithLifecycle()
     val selectedMonth by viewModel.selectedMonth.collectAsStateWithLifecycle()
@@ -302,6 +300,13 @@ fun AddExpenseScreen(
                     invested = invested,
                     activeFilter = categoryFilter,
                     onToggleCategory = viewModel::toggleCategoryFilter,
+                )
+            }
+            item {
+                RecurringPanel(
+                    recurring = recurring,
+                    currencyLabel = currency,
+                    modifier = Modifier.padding(top = 12.dp),
                 )
             }
 

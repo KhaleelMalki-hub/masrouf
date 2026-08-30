@@ -78,6 +78,7 @@ class MainActivity : ComponentActivity() {
                         // Passed as a function so the ViewModel never holds a
                         // ContentResolver, and so the import is testable without one.
                         readInbox = { SmsInbox(contentResolver).read() },
+                        maintenance = app::runMaintenance,
                     ),
                 )
 

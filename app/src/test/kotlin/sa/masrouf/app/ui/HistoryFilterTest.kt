@@ -79,7 +79,10 @@ class HistoryFilterTest {
 
     private suspend fun threeRows() {
         store("filed", "TAMIMI", 0, SaudiCategories.GROCERIES.id)
-        store("unfiled-a", "AL QIMMA EST", 30, null)
+        // A name no shipped rule reaches. AL QIMMA used to be here and earned a
+        // rule since; the view model files what it can at launch, so an unfiled
+        // fixture has to be unfileable.
+        store("unfiled-a", "MEZAB TRADING EST", 30, null)
         store("unfiled-b", "SOME LOCAL SHOP", 60, null)
     }
 

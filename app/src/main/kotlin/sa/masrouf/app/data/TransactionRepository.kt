@@ -1,5 +1,7 @@
 package sa.masrouf.app.data
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -17,6 +19,7 @@ import sa.masrouf.core.model.Category
 import sa.masrouf.core.model.CategoryGuess
 import sa.masrouf.core.model.Direction
 import sa.masrouf.core.model.countsAsSpending
+import sa.masrouf.core.model.RecurringDetector
 import sa.masrouf.core.model.SaudiCategories
 import sa.masrouf.core.model.Source
 import sa.masrouf.core.model.Status
@@ -232,6 +235,17 @@ class TransactionRepository(
      * The screen counts this list rather than asking the database separately. Two
      * ways to count the same thing is how a badge and a list come to disagree.
      */
+    /** The merchants the user pays on a rhythm, largest first. See [RecurringDetector]. */
+    fun observeRecurring(now: () -> Instant): Flow<List<RecurringDetector.Recurring>> =
+        dao.observeConfirmedDebits()
+            .map { rows ->
+                RecurringDetector.detect(rows.mapNotNull { runCatching { it.toModel() }.getOrNull() }, now())
+            }
+            // The map runs where the flow is collected, which is the main thread
+            // under stateIn. Twelve thousand rows through the detector there froze
+            // the screen at launch: no total, no strip, touches ignored.
+            .flowOn(Dispatchers.Default)
+
     /**
      * The last balance each card's messages reported, newest card first.
      *
@@ -272,8 +286,12 @@ class TransactionRepository(
     suspend fun reparseStoredBodies(): Int {
         val parsers = SaudiBanks.ALL.map(::BankMessageParser)
         var filled = 0
-        inTransaction {
-            dao.withMissingParty().forEach { row ->
+        // In batches, each its own transaction, so the screen's reads get a turn
+        // between them. One transaction over 14,000 rows held the database for
+        // ten seconds and the dashboard showed an empty month the whole time.
+        dao.withMissingParty().chunked(REPARSE_BATCH).forEach { batch ->
+          inTransaction {
+            batch.forEach { row ->
                 val message = RawMessage(body = row.rawText ?: return@forEach, receivedAt = Instant.EPOCH)
                 // Every profile's parser reads the amount and intent alike; they
                 // differ in the merchant and card patterns. So the one that reads
@@ -290,6 +308,7 @@ class TransactionRepository(
                 val key = merchant?.let(ArabicText::normalizeMerchant)?.takeIf { it.isNotBlank() }
                 if (dao.fillParty(row.id, merchant, key, last4) == 1) filled++
             }
+          }
         }
         return filled
     }
@@ -475,6 +494,8 @@ class TransactionRepository(
 
         /** Stored in `balance_kind` when a body was read and carried no figure. */
         const val BALANCE_NONE = "NONE"
+
+        const val REPARSE_BATCH = 500
 
         /** How far either side of an incoming record to look for what it may duplicate. */
         private val NEIGHBOUR_WINDOW: Duration = Duration.ofDays(1)

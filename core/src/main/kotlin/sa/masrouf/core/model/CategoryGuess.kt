@@ -29,7 +29,7 @@ object CategoryGuess {
      * chains any Saudi phone sees, not from an invented taxonomy of brands. An
      * entry earns its place by having been seen.
      */
-    private val RULES: List<Pair<String, Category>> = listOf(
+    private val RULES: MerchantMatch.Rules<Category> = MerchantMatch.Rules(listOf(
         // Groceries
         "TAMIMI" to SaudiCategories.GROCERIES,
         "PANDA" to SaudiCategories.GROCERIES,
@@ -636,7 +636,7 @@ object CategoryGuess {
         "TAMEENI" to SaudiCategories.BILLS,
         "SAUDI CREDIT BUREAU" to SaudiCategories.BILLS,
         "AWQAF" to SaudiCategories.CHARITY,
-    )
+    ))
 
     /**
      * @return a suggested category, or null when nothing matches. Callers must
