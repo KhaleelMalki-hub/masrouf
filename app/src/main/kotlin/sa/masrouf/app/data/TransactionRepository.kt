@@ -234,6 +234,9 @@ class TransactionRepository(
      * The screen counts this list rather than asking the database separately. Two
      * ways to count the same thing is how a badge and a list come to disagree.
      */
+    /** The newest SMS-sourced record's instant, or null on an empty history. */
+    suspend fun latestSmsAt(): Instant? = dao.latestSmsMillis()?.let(Instant::ofEpochMilli)
+
     /** See [TransactionDao.retypeSalaryDeposits]. */
     suspend fun retypeSalaryDeposits(): Int = dao.retypeSalaryDeposits()
 

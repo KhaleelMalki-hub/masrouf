@@ -103,6 +103,7 @@ object MerchantNames {
 
         // Bills, telecoms, government
         "STC PAY" to MerchantName(ar = "اس تي سي باي", en = "STC Pay"),
+        "STCPOSTPA" to MerchantName(ar = "فاتورة STC", en = "STC bill"),
         "STCPAY" to MerchantName(ar = "اس تي سي باي", en = "STC Pay"),
         "SAUDI TELECOM" to MerchantName(ar = "الاتصالات السعودية", en = "STC"),
         "MOBILY" to MerchantName(ar = "موبايلي", en = "Mobily"),

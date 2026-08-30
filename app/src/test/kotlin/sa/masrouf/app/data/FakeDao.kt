@@ -150,6 +150,9 @@ class FakeDao : TransactionDao {
 
     override suspend fun retypeSalaryDeposits(): Int = 0
 
+    override suspend fun latestSmsMillis(): Long? =
+        state.value.filter { it.source == "SMS" }.maxOfOrNull { it.occurredAtMillis }
+
     override fun observeLatestSalary(): Flow<Long?> = state.map { rows ->
         rows.filter { it.type == "SALARY" && it.direction == "CREDIT" }.maxByOrNull { it.occurredAtMillis }?.amountHalalas
     }

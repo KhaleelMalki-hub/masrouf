@@ -2,6 +2,12 @@ package sa.masrouf.app
 
 import androidx.room.withTransaction
 import android.app.Application
+import java.time.Duration
+import sa.masrouf.app.capture.SmsInbox
+import sa.masrouf.app.capture.HistoryImport
+import androidx.core.content.ContextCompat
+import android.content.pm.PackageManager
+import android.Manifest
 import sa.masrouf.app.data.MasroufDatabase
 import sa.masrouf.app.data.Preferences
 import sa.masrouf.app.data.TransactionRepository
@@ -45,6 +51,28 @@ class MasroufApp : Application() {
             preferences.maintenanceVersion = 3
         }
         transactions.fileUncategorised()
+        catchUpOnSms()
+    }
+
+    /**
+     * Reads the messages that arrived since the newest stored one.
+     *
+     * The receiver captures live, and it can be killed, throttled, or - as
+     * happened - out-argued by the duplicate detector on the second of two
+     * purchases a minute apart. Re-reading the tail of the inbox on every launch
+     * means a miss costs one launch, not a manual re-import. Two days back rather
+     * than the exact instant, because message timestamps and capture timestamps
+     * are not the same clock. Deduplication keeps the overlap from doubling
+     * anything; that is what it is for.
+     */
+    private suspend fun catchUpOnSms() {
+        val granted = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) ==
+            PackageManager.PERMISSION_GRANTED
+        if (!granted) return
+        val since = transactions.latestSmsAt()?.minus(Duration.ofDays(2)) ?: return
+        val recent = SmsInbox(contentResolver).read(since = since, newestFirst = false)
+        if (recent.isEmpty()) return
+        HistoryImport(transactions).run(recent)
     }
 
     val database: MasroufDatabase by lazy { MasroufDatabase.open(this) }

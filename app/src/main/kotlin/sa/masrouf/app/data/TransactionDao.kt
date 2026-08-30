@@ -332,6 +332,10 @@ interface TransactionDao {
     )
     fun observeLatestSalary(): Flow<Long?>
 
+    /** When the newest stored record happened, for the launch-time catch-up. */
+    @Query("SELECT MAX(occurred_at_millis) FROM transactions WHERE source = 'SMS'")
+    suspend fun latestSmsMillis(): Long?
+
     /** Every record of one merchant, for re-deriving its category from scratch. */
     @Query("SELECT * FROM transactions WHERE merchant_key = :merchantKey")
     suspend fun uncategorisedOrMerchant(merchantKey: String): List<TransactionEntity>

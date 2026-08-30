@@ -102,4 +102,22 @@ class RecurringDetectorTest {
 
         assertEquals(1, RecurringDetector.detect(old + recent, now).size)
     }
+
+    /**
+     * Two bills under one descriptor: STC charges the phone line on the 2nd and
+     * the home internet on the 28th, both as STCPOSTPA. As one stream the gaps
+     * alternate 4 and 26 days and nothing fits; as two amount clusters both are
+     * monthly.
+     */
+    @Test
+    fun `two bills under one merchant are found as two rhythms`() {
+        val phone = listOf(2L, 32, 63, 93, 124).map { tx("STCPOSTPA", it, "1041.00") }
+        val internet = listOf(6L, 37, 67, 98, 128).map { tx("STCPOSTPA", it, "286.00") }
+
+        val found = RecurringDetector.detect(phone + internet, now)
+
+        assertEquals(2, found.size)
+        assertEquals(listOf(Money.ofMajor("1041.00"), Money.ofMajor("286.00")), found.map { it.typicalAmount })
+        assertTrue(found.all { it.cadence == RecurringDetector.Cadence.MONTHLY })
+    }
 }

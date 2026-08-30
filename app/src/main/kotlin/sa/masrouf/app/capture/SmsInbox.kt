@@ -24,11 +24,18 @@ class SmsInbox(private val resolver: ContentResolver) {
      * @param newestFirst matches how the user thinks about their history, and means
      *   an interrupted import has covered the recent months rather than the oldest.
      */
-    fun read(limit: Int = DEFAULT_LIMIT, newestFirst: Boolean = true): List<RawMessage> {
+    fun read(
+        limit: Int = DEFAULT_LIMIT,
+        newestFirst: Boolean = true,
+        /** Only messages received after this instant. Null reads the whole inbox. */
+        since: Instant? = null,
+    ): List<RawMessage> {
         val order = if (newestFirst) "${Telephony.Sms.DATE} DESC" else "${Telephony.Sms.DATE} ASC"
         val columns = arrayOf(Telephony.Sms.ADDRESS, Telephony.Sms.BODY, Telephony.Sms.DATE)
+        val selection = since?.let { "${Telephony.Sms.DATE} > ?" }
+        val args = since?.let { arrayOf(it.toEpochMilli().toString()) }
 
-        return resolver.query(Telephony.Sms.Inbox.CONTENT_URI, columns, null, null, order)
+        return resolver.query(Telephony.Sms.Inbox.CONTENT_URI, columns, selection, args, order)
             ?.use { cursor ->
                 val address = cursor.getColumnIndex(Telephony.Sms.ADDRESS)
                 val body = cursor.getColumnIndex(Telephony.Sms.BODY)

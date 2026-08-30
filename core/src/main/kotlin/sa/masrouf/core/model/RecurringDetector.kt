@@ -98,8 +98,39 @@ object RecurringDetector {
             // months and then as "NETFLIX"; judged per key, the subscription looked
             // like one that stopped in June and one that started in July.
             .groupBy { MerchantNames.forMerchant(it.merchantRaw)?.en ?: it.merchantKey!! }
-            .mapNotNull { (key, rows) -> recurringOrNull(key, rows.sortedBy { it.occurredAt }, now) }
+            .flatMap { (key, rows) -> recurringIn(key, rows.sortedBy { it.occurredAt }, now) }
             .sortedByDescending { it.typicalAmount.halalas }
+
+    /**
+     * One merchant can carry several rhythms.
+     *
+     * STC bills the phone line on the 2nd and the home internet on the 28th under
+     * one descriptor; a person paid every month also receives one-off transfers
+     * under the same name. Judged as one stream those fail on amount or timing, so
+     * when the whole fails, the rows are split into clusters of like amounts and
+     * each cluster is judged on its own.
+     */
+    private fun recurringIn(key: String, rows: List<Transaction>, now: Instant): List<Recurring> {
+        recurringOrNull(key, rows, now)?.let { return listOf(it) }
+        return amountClusters(rows)
+            .filter { it.size >= MIN_OCCURRENCES }
+            .mapNotNull { recurringOrNull(key, it, now) }
+    }
+
+    /** Greedy clusters of amounts within a fifth of their seed, seed taken from the sorted list. */
+    private fun amountClusters(rows: List<Transaction>): List<List<Transaction>> {
+        val remaining = rows.sortedBy { it.amount.halalas }.toMutableList()
+        val clusters = mutableListOf<List<Transaction>>()
+        while (remaining.isNotEmpty()) {
+            val seed = remaining.first().amount.halalas
+            val cluster = remaining.filter { abs(it.amount.halalas - seed) <= seed * CLUSTER_TOLERANCE }
+            clusters += cluster.sortedBy { it.occurredAt }
+            remaining.removeAll(cluster)
+        }
+        return clusters
+    }
+
+    private const val CLUSTER_TOLERANCE = 0.2
 
     private fun recurringOrNull(key: String, allRows: List<Transaction>, now: Instant): Recurring? {
         if (allRows.size < MIN_OCCURRENCES) return null
