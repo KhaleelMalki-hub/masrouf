@@ -41,7 +41,8 @@ object SaudiBanks {
             Regex("""(?m)^من\d{4}\s*;\s*(.+)$"""),
         ),
         cardPatterns = listOf(
-            Regex("""عبر\s*(\d{4})"""),
+            // "عبر:5763;مدى-جوجل باي" as well as "عبر5763": the colon is newer.
+            Regex("""عبر\s*:?\s*(\d{4})"""),
             Regex("""بطاقة\s*:?\s*\**\s*(\d{4})"""),
             // English templates: "By:1335 ;Visa" and "Card:1335 ;Visa".
             Regex("""(?m)^By\s*:\s*(\d{4})"""),
@@ -89,9 +90,18 @@ object SaudiBanks {
             Regex("""(?m)^(?:من|ل)\d{4}\*\s*(.+)$"""),
         ),
         cardPatterns = listOf(
-            Regex("""مدى\s*\*\s*(\d{4})"""),
+            // "بطاقة مدى *2907" and, newer, "بطاقة مدى: **2907".
+            Regex("""مدى\s*:?\s*\*+\s*(\d{4})"""),
             Regex("""لبطاقة\s*\*\s*(\d{4})"""),
             Regex("""بطاقة\s*:?\s*\**\s*(\d{4})"""),
+            // The card's kind between the word and the digits, which the pattern
+            // above cannot cross: "بطاقة ائتمانية ***2887" (2,398 stored bodies
+            // with no card read), "بطاقة فيزا: **2166" (435), "من بطاقة إئتمانية
+            // **3396". Both spellings of the hamza, because both arrive.
+            Regex("""بطاقة\s*(?:ا|إ)ئتمانية\s*:?\s*\*+\s*(\d{4})"""),
+            Regex("""بطاقة\s*فيزا\s*:?\s*\*+\s*(\d{4})"""),
+            // "مدى-أثير*2907": the wallet's own descriptor for a mada card.
+            Regex("""أثير\s*\*\s*(\d{4})"""),
         ),
         ownWalletMerchants = OWN_WALLETS,
     )

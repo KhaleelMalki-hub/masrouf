@@ -76,6 +76,17 @@ object MessageGate {
         "عدم مشاركة الرمز",
         "ONE TIME PASSWORD",
         "OTP",
+        // English templates. "Your secure code is 6659 / For internet purchase
+        // SAR155.81 / Card ending 2887" carries the amount and the card of the
+        // purchase it authorises and arrives seconds before it: 58 of these were
+        // stored as confirmed purchases, each one doubling a real one and each one
+        // keeping a credential in the database. Found in a real history, not
+        // imagined.
+        "SECURE CODE",
+        "VERIFICATION CODE",
+        "ONE TIME PASSWORD",
+        "ONE-TIME PASSWORD",
+        "DO NOT SHARE",
         "VERIFICATION CODE",
     )
 

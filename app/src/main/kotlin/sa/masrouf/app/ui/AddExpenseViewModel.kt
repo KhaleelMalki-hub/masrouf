@@ -399,7 +399,13 @@ class AddExpenseViewModel(
      * column existed. Cheap after that: bodies already read are marked and skipped.
      */
     fun backfillBalancesOnce() {
-        viewModelScope.launch { repository.backfillBalances() }
+        viewModelScope.launch {
+            // Order matters: a credential row must go before anything reads it.
+            repository.purgeCredentialBodies()
+            repository.reparseStoredBodies()
+            repository.backfillBalances()
+            repository.fileUncategorised()
+        }
     }
 
     fun refileEverything() {

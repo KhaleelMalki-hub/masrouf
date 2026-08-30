@@ -140,6 +140,29 @@ class FakeDao : TransactionDao {
             .sortedByDescending { it.atMillis }
     }
 
+    override suspend fun withMissingParty(): List<TransactionEntity> =
+        state.value.filter { it.rawText != null && (it.merchantKey == null || it.accountLast4 == null) }
+
+    override suspend fun fillParty(id: String, merchantRaw: String?, merchantKey: String?, last4: String?): Int {
+        val target = state.value.firstOrNull { it.id == id } ?: return 0
+        state.value = state.value.map {
+            if (it.id == target.id) it.copy(
+                merchantRaw = it.merchantRaw ?: merchantRaw,
+                merchantKey = it.merchantKey ?: merchantKey,
+                accountLast4 = it.accountLast4 ?: last4,
+            ) else it
+        }
+        return 1
+    }
+
+    override suspend fun allWithBody(): List<TransactionEntity> = state.value.filter { it.rawText != null }
+
+    override suspend fun deleteAll(ids: List<String>): Int {
+        val before = state.value.size
+        state.value = state.value.filterNot { it.id in ids }
+        return before - state.value.size
+    }
+
     override suspend fun withoutBalance(): List<TransactionEntity> =
         state.value.filter { it.rawText != null && it.balanceKind == null }
 

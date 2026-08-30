@@ -4,6 +4,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.map
+import sa.masrouf.core.capture.BankMessageParser
+import sa.masrouf.core.capture.MessageGate
+import sa.masrouf.core.capture.ParseResult
+import sa.masrouf.core.capture.RawMessage
+import sa.masrouf.core.capture.SaudiBanks
 import sa.masrouf.core.capture.BalanceReader
 import sa.masrouf.core.dedup.DuplicateDetector
 import sa.masrouf.core.dedup.EventSignature
@@ -234,6 +239,60 @@ class TransactionRepository(
      * absent rather than shown as zero: zero is a balance, and absence is not.
      */
     fun observeCardBalances(): Flow<List<CardBalance>> = dao.observeCardBalances()
+
+    /**
+     * Removes stored rows whose body the gate now recognises as a credential.
+     *
+     * Fifty-eight English one-time codes were stored as confirmed purchases before
+     * the gate knew the phrase "secure code". Each doubled the purchase it
+     * authorised and each kept a credential on disk. The gate is the authority on
+     * what is sensitive, so this asks it rather than keeping a second list here.
+     *
+     * @return how many rows were removed.
+     */
+    suspend fun purgeCredentialBodies(): Int {
+        val doomed = dao.allWithBody()
+            .filter { row -> MessageGate.mustNotPersistBody(RawMessage(body = row.rawText!!, receivedAt = Instant.EPOCH)) }
+            .map { it.id }
+        if (doomed.isEmpty()) return 0
+        return dao.deleteAll(doomed)
+    }
+
+    /**
+     * Re-reads every stored body whose merchant or card was never extracted.
+     *
+     * A row written by an older parser keeps the body but not what a newer parser
+     * can now read out of it. Only gaps are filled: a merchant already stored is
+     * never rewritten, so a name the user has filed stays filed. The sender is
+     * not stored, so every profile's parser is tried and the one that reads the
+     * most out of the body decides.
+     *
+     * @return how many rows gained a merchant or a card.
+     */
+    suspend fun reparseStoredBodies(): Int {
+        val parsers = SaudiBanks.ALL.map(::BankMessageParser)
+        var filled = 0
+        inTransaction {
+            dao.withMissingParty().forEach { row ->
+                val message = RawMessage(body = row.rawText ?: return@forEach, receivedAt = Instant.EPOCH)
+                // Every profile's parser reads the amount and intent alike; they
+                // differ in the merchant and card patterns. So the one that reads
+                // the most wins, not the first that reads anything - the first in
+                // the list understood every body and read a card from none of them.
+                val draft = parsers
+                    .map { it.parse(message) }
+                    .filterIsInstance<ParseResult.Parsed>()
+                    .maxByOrNull { (if (it.draft.merchantRaw != null) 1 else 0) + (if (it.draft.accountLast4 != null) 1 else 0) }
+                    ?.draft ?: return@forEach
+                val merchant = draft.merchantRaw?.takeIf { row.merchantKey == null }
+                val last4 = draft.accountLast4?.takeIf { row.accountLast4 == null }
+                if (merchant == null && last4 == null) return@forEach
+                val key = merchant?.let(ArabicText::normalizeMerchant)?.takeIf { it.isNotBlank() }
+                if (dao.fillParty(row.id, merchant, key, last4) == 1) filled++
+            }
+        }
+        return filled
+    }
 
     /**
      * Reads a balance out of every stored body that has not been read yet.

@@ -6,8 +6,8 @@ statements. Single user, on-device, offline. Not a product, not published.
 ## Commands
 
 ```bash
-./gradlew :core:test              # 215 tests, runs anywhere with a JDK
-./gradlew :app:testDebugUnitTest  # 111 tests, needs the Android SDK
+./gradlew :core:test              # 221 tests, runs anywhere with a JDK
+./gradlew :app:testDebugUnitTest  # 115 tests, needs the Android SDK
 ./gradlew :app:assembleDebug      # needs local.properties with sdk.dir
 ```
 
@@ -73,7 +73,12 @@ app/    Android - Compose, Room, Arabic default with English in values-en
    is refused, not rounded: three decimals in a bank message means the format was
    misread, and rounding replaces a detectable bug with a plausible wrong number.
 
-2. **`MessageGate` runs before any parser, always.** Use `CapturePipeline`; never
+2. **`MessageGate` runs before any parser, always.** And its marker list is written
+   against bodies that actually arrived: 58 English "Your secure code is NNNN"
+   messages reached storage as confirmed purchases, each doubling the purchase it
+   authorised and each keeping a credential on disk, because the markers were
+   Arabic-only. `purgeCredentialBodies()` asks the gate on every launch, so a
+   marker added later also removes what an earlier gate let through. Use `CapturePipeline`; never
    call a `MessageParser` directly. A one-time-password message carries the same
    amount and merchant as the purchase it authorises and arrives seconds earlier,
    so an ungated pipeline silently doubles every online purchase. OTP bodies are

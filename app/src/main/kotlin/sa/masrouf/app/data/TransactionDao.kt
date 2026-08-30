@@ -264,6 +264,34 @@ interface TransactionDao {
     )
     fun observeCardBanks(): Flow<List<CardBank>>
 
+    /** Stored bodies whose merchant or card was never read. For a one-off re-parse. */
+    @Query(
+        """
+        SELECT * FROM transactions
+        WHERE raw_text IS NOT NULL AND (merchant_key IS NULL OR account_last4 IS NULL)
+        """
+    )
+    suspend fun withMissingParty(): List<TransactionEntity>
+
+    /** Fills only what is missing. A merchant already stored is never rewritten. */
+    @Query(
+        """
+        UPDATE transactions SET
+            merchant_raw = COALESCE(merchant_raw, :merchantRaw),
+            merchant_key = COALESCE(merchant_key, :merchantKey),
+            account_last4 = COALESCE(account_last4, :last4)
+        WHERE id = :id
+        """
+    )
+    suspend fun fillParty(id: String, merchantRaw: String?, merchantKey: String?, last4: String?): Int
+
+    /** Rows whose stored body is a credential. They should never have existed. */
+    @Query("SELECT * FROM transactions WHERE raw_text IS NOT NULL")
+    suspend fun allWithBody(): List<TransactionEntity>
+
+    @Query("DELETE FROM transactions WHERE id IN (:ids)")
+    suspend fun deleteAll(ids: List<String>): Int
+
     /** Every record of one merchant, for re-deriving its category from scratch. */
     @Query("SELECT * FROM transactions WHERE merchant_key = :merchantKey")
     suspend fun uncategorisedOrMerchant(merchantKey: String): List<TransactionEntity>

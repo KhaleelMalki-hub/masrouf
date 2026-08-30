@@ -84,4 +84,43 @@ class BankStampTest {
 
         assertEquals(mapOf("8101" to "snb"), repository.observeCardBanks().first())
     }
+
+    /**
+     * A row written by an older parser keeps the body but not what a newer parser
+     * reads out of it. Re-parsing fills the gaps and only the gaps.
+     */
+    @Test
+    fun `re-parsing stored bodies fills a missing merchant and card, and nothing else`() = runTest {
+        val body = "شراء إنترنت\nبطاقة فيزا: **2166\nمبلغ 12.99 SAR\nلدى APPLE COM BILL\nحساب **8982"
+        repository.recordCaptured(
+            record("gap", last4 = null, bankId = null).copy(merchantRaw = null, merchantKey = null, rawText = body),
+        )
+        repository.recordCaptured(
+            record("kept", last4 = null, bankId = null, minute = 180).copy(merchantRaw = "MY NAME", merchantKey = "MY NAME", rawText = body),
+        )
+
+        assertEquals(2, repository.reparseStoredBodies())
+
+        val gap = dao.rows.single { it.id == "gap" }
+        assertEquals("APPLE COM BILL", gap.merchantRaw)
+        assertEquals("2166", gap.accountLast4)
+        // The one that already had a merchant keeps it; only its card is filled.
+        val kept = dao.rows.single { it.id == "kept" }
+        assertEquals("MY NAME", kept.merchantRaw)
+        assertEquals("2166", kept.accountLast4)
+    }
+
+    /** A stored credential is removed, and the gate decides what counts as one. */
+    @Test
+    fun `stored one-time codes are purged`() = runTest {
+        repository.recordCaptured(
+            record("otp", last4 = "2887", bankId = null)
+                .copy(rawText = "Your secure code is 6659\nFor internet purchase SAR155.81\nCard ending 2887"),
+            "2887",
+        )
+        repository.recordCaptured(record("real", last4 = "2887", bankId = null, minute = 180), "2887")
+
+        assertEquals(1, repository.purgeCredentialBodies())
+        assertEquals(listOf("real"), dao.rows.map { it.id })
+    }
 }

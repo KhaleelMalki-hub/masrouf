@@ -109,4 +109,24 @@ class MessageGateTest {
         )
         assertTrue(MessageGate.mustNotPersistBody(message))
     }
+
+    /**
+     * An English one-time code, word for word as one bank sends it.
+     *
+     * Fifty-eight of these reached storage as confirmed purchases before this
+     * marker existed. Each carried the amount and the card of the purchase it
+     * authorised, so each doubled a real one, and each kept a credential in the
+     * database. The body must be rejected AND flagged sensitive, so it is never
+     * written anywhere.
+     */
+    @Test
+    fun `an english secure code is a credential, not a purchase`() {
+        val body = "Your secure code is 6659\nFor internet purchase SAR155.81\nCard ending 2887"
+
+        val decision = MessageGate.evaluate(message(body))
+
+        assertIs<MessageGate.Decision.Reject>(decision)
+        assertEquals(MessageGate.Rejection.ONE_TIME_PASSWORD, decision.reason)
+        assertTrue(MessageGate.mustNotPersistBody(message(body)))
+    }
 }
