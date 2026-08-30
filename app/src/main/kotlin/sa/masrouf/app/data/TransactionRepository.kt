@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.map
+import sa.masrouf.core.capture.BalanceReader
 import sa.masrouf.core.dedup.DuplicateDetector
 import sa.masrouf.core.dedup.EventSignature
 import sa.masrouf.core.dedup.Fingerprint
@@ -173,6 +174,7 @@ class TransactionRepository(
     suspend fun recordCaptured(
         transaction: Transaction,
         accountLast4: String? = null,
+        balance: BalanceReader.Reading? = null,
     ): Boolean = captureLock.withLock {
         // A decision the user already made about this merchant outranks the
         // built-in guess, and outranks having no category at all. Applied here
@@ -183,6 +185,10 @@ class TransactionRepository(
         val entity = transaction
             .let { if (it.categoryId == null && learned != null) it.copy(categoryId = learned) else it }
             .toEntity(accountLast4)
+            .copy(
+                balanceHalalas = balance?.amount?.halalas,
+                balanceKind = balance?.kind?.name ?: BALANCE_NONE,
+            )
 
         // Wide enough to cover the detector's own widest window, which is a day for
         // anything involving a statement. Narrower here and the detector would never
@@ -221,6 +227,34 @@ class TransactionRepository(
      * The screen counts this list rather than asking the database separately. Two
      * ways to count the same thing is how a badge and a list come to disagree.
      */
+    /**
+     * The last balance each card's messages reported, newest card first.
+     *
+     * Straight from storage. A card whose messages never carried a figure is
+     * absent rather than shown as zero: zero is a balance, and absence is not.
+     */
+    fun observeCardBalances(): Flow<List<CardBalance>> = dao.observeCardBalances()
+
+    /**
+     * Reads a balance out of every stored body that has not been read yet.
+     *
+     * For the history captured before balances were recorded. Bodies that say
+     * nothing are marked so, so this touches each one exactly once.
+     *
+     * @return how many bodies carried a figure.
+     */
+    suspend fun backfillBalances(): Int {
+        var found = 0
+        inTransaction {
+            dao.withoutBalance().forEach { row ->
+                val reading = BalanceReader.read(row.rawText)
+                if (reading != null) found++
+                dao.setBalance(row.id, reading?.amount?.halalas, reading?.kind?.name ?: BALANCE_NONE)
+            }
+        }
+        return found
+    }
+
     /**
      * Which bank each card belongs to, for the records that know.
      *
@@ -379,6 +413,9 @@ class TransactionRepository(
 
     companion object {
         const val RECENT_LIMIT = 50
+
+        /** Stored in `balance_kind` when a body was read and carried no figure. */
+        const val BALANCE_NONE = "NONE"
 
         /** How far either side of an incoming record to look for what it may duplicate. */
         private val NEIGHBOUR_WINDOW: Duration = Duration.ofDays(1)

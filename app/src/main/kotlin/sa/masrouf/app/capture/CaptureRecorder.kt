@@ -1,5 +1,6 @@
 package sa.masrouf.app.capture
 
+import sa.masrouf.core.capture.BalanceReader
 import sa.masrouf.core.capture.CapturePipeline
 import sa.masrouf.core.capture.RawMessage
 import sa.masrouf.core.dedup.Fingerprint
@@ -33,6 +34,7 @@ class CaptureRecorder(private val pipeline: CapturePipeline = CapturePipeline())
             val transaction: Transaction,
             val parserId: String,
             val accountLast4: String?,
+            val balance: BalanceReader.Reading? = null,
         ) : Decision
 
         /**
@@ -122,6 +124,10 @@ class CaptureRecorder(private val pipeline: CapturePipeline = CapturePipeline())
                     ),
                     parserId = outcome.parserId,
                     accountLast4 = draft.accountLast4,
+                    // Read here, where the body is in hand, and carried beside the
+                    // transaction like the card fragment is: the model has no field
+                    // for it and the screen that needs it reads storage directly.
+                    balance = BalanceReader.read(draft.rawText ?: message.fullText),
                 )
             }
         }

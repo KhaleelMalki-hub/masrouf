@@ -18,6 +18,9 @@ class FakeDao : TransactionDao {
 
     val rows: List<TransactionEntity> get() = state.value
 
+    /** For tests that need a row in a shape the repository would never write. */
+    fun replaceAll(rows: List<TransactionEntity>) { state.value = rows }
+
     override suspend fun insert(transaction: TransactionEntity): Long {
         if (state.value.any { it.fingerprint == transaction.fingerprint }) return -1L
         state.value = state.value + transaction
@@ -118,6 +121,34 @@ class FakeDao : TransactionDao {
             val bank = row.bankId ?: return@mapNotNull null
             CardBank(last4, bank)
         }.distinct()
+    }
+
+    override fun observeCardBalances(): Flow<List<CardBalance>> = state.map { rows ->
+        rows.filter { it.accountLast4 != null }
+            .groupBy { it.accountLast4!! }
+            .map { (card, group) ->
+                val newest = group.maxBy { it.occurredAtMillis }
+                val figure = group.filter { it.balanceHalalas != null }.maxByOrNull { it.occurredAtMillis }
+                CardBalance(
+                    last4 = card,
+                    halalas = figure?.balanceHalalas,
+                    kind = figure?.balanceKind,
+                    atMillis = newest.occurredAtMillis,
+                    bankId = group.firstOrNull { it.bankId != null }?.bankId,
+                )
+            }
+            .sortedByDescending { it.atMillis }
+    }
+
+    override suspend fun withoutBalance(): List<TransactionEntity> =
+        state.value.filter { it.rawText != null && it.balanceKind == null }
+
+    override suspend fun setBalance(id: String, halalas: Long?, kind: String): Int {
+        val target = state.value.firstOrNull { it.id == id } ?: return 0
+        state.value = state.value.map {
+            if (it.id == target.id) it.copy(balanceHalalas = halalas, balanceKind = kind) else it
+        }
+        return 1
     }
 
     override suspend fun uncategorisedOrMerchant(merchantKey: String): List<TransactionEntity> =

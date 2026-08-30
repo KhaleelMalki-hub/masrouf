@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import sa.masrouf.app.capture.HistoryImport
+import sa.masrouf.app.data.CardBalance
 import sa.masrouf.app.data.TransactionRepository
 import sa.masrouf.app.data.categoryShares
 import sa.masrouf.app.data.investedTotal
@@ -184,6 +185,16 @@ class AddExpenseViewModel(
     val cardBanks: StateFlow<Map<String, String>> =
         repository.observeCardBanks()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+
+    /**
+     * What each card last said was left.
+     *
+     * Fed by the messages alone: no bank connection, no account, nothing leaves the
+     * device. It is as current as the last message from that card, and says so.
+     */
+    val cardBalances: StateFlow<List<CardBalance>> =
+        repository.observeCardBalances()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     /** Everything confirmed in the selected month, newest first. */
     private val confirmedThisMonth: StateFlow<List<Transaction>> =
@@ -377,6 +388,14 @@ class AddExpenseViewModel(
      * behind a confirmation. What it destroys is only what the app decided; a
      * category the user chose is kept.
      */
+    /**
+     * Reads a balance out of every stored body once, on the first launch after the
+     * column existed. Cheap after that: bodies already read are marked and skipped.
+     */
+    fun backfillBalancesOnce() {
+        viewModelScope.launch { repository.backfillBalances() }
+    }
+
     fun refileEverything() {
         if (_importState.value is ImportState.Refiling) return
         viewModelScope.launch {

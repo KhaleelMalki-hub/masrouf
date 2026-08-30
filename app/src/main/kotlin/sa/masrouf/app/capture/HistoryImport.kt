@@ -56,6 +56,7 @@ class HistoryImport(
                     val written = repository.recordCaptured(
                         decision.transaction,
                         decision.accountLast4,
+                        decision.balance,
                     )
                     if (written) stored++ else alreadyKnown++
                 }

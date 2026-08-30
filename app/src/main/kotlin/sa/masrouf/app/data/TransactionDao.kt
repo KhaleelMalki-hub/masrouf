@@ -193,6 +193,68 @@ interface TransactionDao {
     )
     suspend fun stampBank(fingerprint: String, bankId: String): Int
 
+    /**
+     * Every card, with the most recent figure its messages carried, if any.
+     *
+     * One row per card. The figure comes from the latest message that carried one
+     * at all - not the latest message, which may have said nothing; a card's last
+     * message being an OTP must not erase the balance from the purchase before it.
+     * A card whose messages never carry a figure (barq, Al Rajhi, D360 do not) is
+     * still a row, with nulls: it exists and should be shown as such.
+     */
+    @Query(
+        """
+        SELECT c.account_last4 AS last4,
+               b.balance_halalas AS halalas,
+               b.balance_kind AS kind,
+               c.latest AS atMillis,
+               (SELECT bank_id FROM transactions
+                WHERE account_last4 = c.account_last4 AND bank_id IS NOT NULL
+                ORDER BY occurred_at_millis DESC LIMIT 1) AS bankId
+        FROM (
+            SELECT account_last4, MAX(occurred_at_millis) AS latest
+            FROM transactions WHERE account_last4 IS NOT NULL
+            GROUP BY account_last4
+        ) c
+        LEFT JOIN (
+            SELECT t.account_last4, t.balance_halalas, t.balance_kind
+            FROM transactions t
+            JOIN (
+                SELECT account_last4, MAX(occurred_at_millis) AS latest
+                FROM transactions
+                WHERE account_last4 IS NOT NULL AND balance_halalas IS NOT NULL
+                GROUP BY account_last4
+            ) n ON n.account_last4 = t.account_last4 AND n.latest = t.occurred_at_millis
+            WHERE t.balance_halalas IS NOT NULL
+        ) b ON b.account_last4 = c.account_last4
+        ORDER BY c.latest DESC
+        """
+    )
+    fun observeCardBalances(): Flow<List<CardBalance>>
+
+    /** Rows whose body has not yet been read for a balance. For the one-off backfill. */
+    @Query(
+        """
+        SELECT * FROM transactions
+        WHERE raw_text IS NOT NULL AND balance_kind IS NULL
+        """
+    )
+    suspend fun withoutBalance(): List<TransactionEntity>
+
+    /**
+     * Records a reading, or that there was none.
+     *
+     * [kind] is written as `NONE` when the body carried no figure, so the backfill
+     * does not re-read the same 7,000 bodies on every launch.
+     */
+    @Query(
+        """
+        UPDATE transactions SET balance_halalas = :halalas, balance_kind = :kind
+        WHERE id = :id
+        """
+    )
+    suspend fun setBalance(id: String, halalas: Long?, kind: String): Int
+
     /** Which bank each card belongs to, for the records that know. */
     @Query(
         """

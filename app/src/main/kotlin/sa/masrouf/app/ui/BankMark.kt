@@ -17,7 +17,7 @@ import androidx.compose.ui.graphics.Color
  * published, and a wordmark scaled to 16dp is a smear - the short name reads
  * better and is what a person calls the bank anyway.
  */
-data class BankMark(val label: String, val colour: Color)
+data class BankMark(val labelAr: String, val labelEn: String, val colour: Color)
 
 private val LightMarks: Map<String, Color> = mapOf(
     "alrajhi" to Color(0xFF0B5AA2),
@@ -36,26 +36,27 @@ private val DarkMarks: Map<String, Color> = mapOf(
 )
 
 /**
- * The label is the Arabic short name in both locales.
+ * Short names, in each of the app's two languages.
  *
- * These are the names on the cards in a Saudi wallet, and the English forms
- * ("SNB", "Al Rajhi") are not what anyone calls them out loud. A row is scanned,
- * not read, so the shortest recognisable form wins.
+ * A single Arabic label was wrong the moment the interface could be read in
+ * English: "الراجحي 5763" inside an English row is not shorter, it is unreadable.
+ * A row is scanned rather than read, so each language gets the shortest form a
+ * person of that language would recognise.
  */
-private val Labels: Map<String, String> = mapOf(
-    "alrajhi" to "الراجحي",
-    "snb" to "الأهلي",
-    "barq" to "برق",
-    "d360" to "D360",
-    "enbd" to "الإمارات",
+private val Labels: Map<String, Pair<String, String>> = mapOf(
+    "alrajhi" to ("الراجحي" to "Al Rajhi"),
+    "snb" to ("الأهلي" to "SNB"),
+    "barq" to ("برق" to "barq"),
+    "d360" to ("D360" to "D360"),
+    "enbd" to ("الإمارات" to "Emirates NBD"),
 )
 
 @Composable
 @ReadOnlyComposable
 fun bankMark(bankId: String?): BankMark? {
-    val label = Labels[bankId] ?: return null
+    val (ar, en) = Labels[bankId] ?: return null
     val marks = if (MaterialTheme.colorScheme.surface.isDark()) DarkMarks else LightMarks
-    return BankMark(label, marks[bankId] ?: MaterialTheme.colorScheme.onSurfaceVariant)
+    return BankMark(ar, en, marks[bankId] ?: MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 private fun Color.isDark(): Boolean =

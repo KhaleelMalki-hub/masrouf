@@ -124,4 +124,9 @@
     <string name="refile_forget">Let the app decide</string>
     <string name="category_investment">Investment</string>
     <string name="month_invested">Invested this month</string>
+    <string name="cards_title">Your cards</string>
+    <string name="card_balance">Balance</string>
+    <string name="card_credit_left">Credit left</string>
+    <string name="card_as_of">as of %1$s</string>
+    <string name="card_no_balance">Bank sends no balance</string>
 </resources>

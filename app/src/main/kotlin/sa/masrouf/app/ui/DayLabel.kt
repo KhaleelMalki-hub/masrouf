@@ -1,6 +1,8 @@
 package sa.masrouf.app.ui
 
 import sa.masrouf.core.model.Transaction
+import sa.masrouf.core.time.RiyadhTime
+import java.time.Instant
 import java.time.format.DateTimeFormatter
 
 /**
@@ -19,3 +21,6 @@ import java.time.format.DateTimeFormatter
 private val DAY_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yy")
 
 fun Transaction.dayLabel(): String = calendarDay.format(DAY_FORMAT)
+
+/** The same day, for an instant that is not on a transaction. Resolved in Riyadh, as above. */
+fun Instant.dayLabel(): String = RiyadhTime.localDate(this).format(DAY_FORMAT)

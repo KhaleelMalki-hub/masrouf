@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [TransactionEntity::class, MerchantRule::class],
-    version = 5,
+    version = 6,
     exportSchema = true,
 )
 abstract class MasroufDatabase : RoomDatabase() {
@@ -52,6 +52,21 @@ abstract class MasroufDatabase : RoomDatabase() {
          * produces the same fingerprint, so the row it belongs to is known and not
          * matched by resemblance.
          */
+        /**
+         * Records what each message said was left afterwards.
+         *
+         * Columns only. The existing rows are filled in by [BalanceBackfill] on the
+         * next launch rather than here, because reading 22,000 message bodies
+         * belongs on a background thread with a progress state, not inside the
+         * migration that has to finish before the first screen can open.
+         */
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE transactions ADD COLUMN balance_halalas INTEGER")
+                db.execSQL("ALTER TABLE transactions ADD COLUMN balance_kind TEXT")
+            }
+        }
+
         private val MIGRATION_4_5 = object : Migration(4, 5) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE transactions ADD COLUMN bank_id TEXT")
@@ -139,7 +154,7 @@ abstract class MasroufDatabase : RoomDatabase() {
          */
         fun open(context: Context): MasroufDatabase =
             Room.databaseBuilder(context.applicationContext, MasroufDatabase::class.java, NAME)
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                 .build()
     }
 }

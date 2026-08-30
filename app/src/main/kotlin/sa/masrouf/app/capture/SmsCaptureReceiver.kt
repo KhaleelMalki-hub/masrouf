@@ -71,7 +71,7 @@ class SmsCaptureReceiver : BroadcastReceiver() {
                         when (val decision =
                             recorder.decide(message, UUID.randomUUID().toString(), Source.SMS)) {
                             is CaptureRecorder.Decision.Store ->
-                                repository.recordCaptured(decision.transaction, decision.accountLast4)
+                                repository.recordCaptured(decision.transaction, decision.accountLast4, decision.balance)
 
                             is CaptureRecorder.Decision.Skip ->
                                 // Reason only. A refused SMS is usually an OTP, and

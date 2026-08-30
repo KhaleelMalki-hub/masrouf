@@ -86,7 +86,7 @@ class MasroufNotificationListener : NotificationListenerService() {
                 recorder.decide(message, UUID.randomUUID().toString(), Source.NOTIFICATION)) {
                 is CaptureRecorder.Decision.Store -> {
                     val repository = (application as MasroufApp).transactions
-                    repository.recordCaptured(decision.transaction, decision.accountLast4)
+                    repository.recordCaptured(decision.transaction, decision.accountLast4, decision.balance)
                 }
 
                 is CaptureRecorder.Decision.Skip -> {

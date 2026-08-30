@@ -98,6 +98,17 @@ data class TransactionEntity(
 
     /** Which bank's parser read the message. See [sa.masrouf.core.model.Transaction.bankId]. */
     @ColumnInfo(name = "bank_id") val bankId: String? = null,
+
+    /**
+     * What the message said was left afterwards, in halalas, and what kind of
+     * "left" it meant - `ACCOUNT` or `CREDIT_LIMIT`, the names of
+     * [sa.masrouf.core.capture.BalanceReader.Kind]. Null when the message said
+     * nothing. Read at capture and never derived later, because the message is the
+     * only thing that knows, and the raw text it is read from is not kept for OTP
+     * bodies.
+     */
+    @ColumnInfo(name = "balance_halalas") val balanceHalalas: Long? = null,
+    @ColumnInfo(name = "balance_kind") val balanceKind: String? = null,
 )
 
 fun Transaction.toEntity(

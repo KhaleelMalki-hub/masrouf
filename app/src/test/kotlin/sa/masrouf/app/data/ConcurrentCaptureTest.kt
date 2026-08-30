@@ -71,6 +71,9 @@ class ConcurrentCaptureTest {
         ) = 0
         override suspend fun clearAutomaticCategories() = 0
         override suspend fun stampBank(fingerprint: String, bankId: String) = 0
+        override fun observeCardBalances(): Flow<List<CardBalance>> = MutableStateFlow(emptyList())
+        override suspend fun withoutBalance() = emptyList<TransactionEntity>()
+        override suspend fun setBalance(id: String, halalas: Long?, kind: String) = 0
         override fun observeCardBanks(): Flow<List<CardBank>> = MutableStateFlow(emptyList())
         override fun observeEarliest(): Flow<Long?> = MutableStateFlow(null)
         override fun observeMonthsWithData(): Flow<List<String>> = MutableStateFlow(emptyList())

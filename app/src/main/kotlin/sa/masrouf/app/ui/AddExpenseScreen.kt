@@ -110,6 +110,10 @@ fun AddExpenseScreen(
     val recent by viewModel.recent.collectAsStateWithLifecycle()
     val monthTotal by viewModel.monthTotal.collectAsStateWithLifecycle()
     val invested by viewModel.monthInvested.collectAsStateWithLifecycle()
+    val cardBalances by viewModel.cardBalances.collectAsStateWithLifecycle()
+    // Once per process. Reads the stored bodies that predate the balance column;
+    // after the first run every body is marked and the call finds nothing to do.
+    LaunchedEffect(Unit) { viewModel.backfillBalancesOnce() }
     val pending by viewModel.pending.collectAsStateWithLifecycle()
     val shares by viewModel.monthShares.collectAsStateWithLifecycle()
     val selectedMonth by viewModel.selectedMonth.collectAsStateWithLifecycle()
@@ -246,6 +250,13 @@ fun AddExpenseScreen(
             }
 
             item {
+                CardsPanel(
+                    cards = cardBalances,
+                    currencyLabel = currency,
+                    modifier = Modifier.padding(bottom = 16.dp),
+                )
+            }
+            item {
                 MonthPanel(
                     month = selectedMonth,
                     total = monthTotal.grouped(),
@@ -369,8 +380,9 @@ fun AddExpenseScreen(
             }
 
             // Clearance for the floating button, which would otherwise sit on the
-            // last row of the history.
-            item { Spacer(Modifier.height(72.dp)) }
+            // last row of the history. Sized for the English label, which is the
+            // wider of the two: "Record an expense" against "سجّل مصروف".
+            item { Spacer(Modifier.height(96.dp)) }
         }
     }
 
@@ -1455,7 +1467,9 @@ private fun CardMark(mark: BankMark?, last4: String?) {
     // Digits alone, with no leading dots to say "and four more". In a right-to-left
     // row the dots land on the wrong side of the number and read as part of it; the
     // chip is already unmistakably a tag, and does that work without them.
-    val text = listOfNotNull(mark?.label, last4).joinToString(" ")
+    val isArabic = LocalConfiguration.current.locales[0].language == "ar"
+    val text = listOfNotNull(mark?.let { if (isArabic) it.labelAr else it.labelEn }, last4)
+        .joinToString(" ")
 
     Text(
         text = text,
