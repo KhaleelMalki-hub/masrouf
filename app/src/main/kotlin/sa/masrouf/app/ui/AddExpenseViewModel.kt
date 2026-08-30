@@ -178,6 +178,11 @@ class AddExpenseViewModel(
         _categoryFilter.value = null
     }
 
+    /** The salary the bank last announced, for the month line until the user types one. */
+    val detectedSalary: StateFlow<Money?> =
+        repository.observeLatestSalary()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
     /**
      * What the user pays on a rhythm, inferred from the history and nothing else.
      *

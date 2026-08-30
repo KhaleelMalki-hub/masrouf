@@ -155,4 +155,5 @@
     <string name="salary_share">%1$s of your salary</string>
     <string name="salary_over">%1$s more than your salary</string>
     <string name="above_salary">above salary</string>
+    <string name="salary_detected">Last salary in your messages: %1$s. Used unless you enter another.</string>
 </resources>

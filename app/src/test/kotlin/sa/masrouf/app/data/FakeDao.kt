@@ -148,6 +148,12 @@ class FakeDao : TransactionDao {
             .sortedByDescending { it.atMillis }
     }
 
+    override suspend fun retypeSalaryDeposits(): Int = 0
+
+    override fun observeLatestSalary(): Flow<Long?> = state.map { rows ->
+        rows.filter { it.type == "SALARY" && it.direction == "CREDIT" }.maxByOrNull { it.occurredAtMillis }?.amountHalalas
+    }
+
     override fun observeConfirmedDebits(): Flow<List<TransactionEntity>> = state.map { rows ->
         rows.filter { it.status == "CONFIRMED" && it.direction == "DEBIT" && it.merchantKey != null }
             .sortedBy { it.occurredAtMillis }

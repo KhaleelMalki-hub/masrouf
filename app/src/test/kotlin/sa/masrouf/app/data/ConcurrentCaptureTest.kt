@@ -76,6 +76,8 @@ class ConcurrentCaptureTest {
         override suspend fun withoutBalance() = emptyList<TransactionEntity>()
         override suspend fun withMissingParty() = emptyList<TransactionEntity>()
         override fun observeConfirmedDebits(): Flow<List<TransactionEntity>> = MutableStateFlow(emptyList())
+        override suspend fun retypeSalaryDeposits() = 0
+        override fun observeLatestSalary(): Flow<Long?> = MutableStateFlow(null)
         override suspend fun fillParty(id: String, merchantRaw: String?, merchantKey: String?, last4: String?) = 0
         override suspend fun allWithBody() = emptyList<TransactionEntity>()
         override suspend fun deleteAll(ids: List<String>) = 0

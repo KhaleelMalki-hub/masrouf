@@ -234,6 +234,17 @@ class TransactionRepository(
      * The screen counts this list rather than asking the database separately. Two
      * ways to count the same thing is how a badge and a list come to disagree.
      */
+    /** See [TransactionDao.retypeSalaryDeposits]. */
+    suspend fun retypeSalaryDeposits(): Int = dao.retypeSalaryDeposits()
+
+    /**
+     * The salary the bank last announced, or null when it never has.
+     *
+     * Read off a message the bank sent, so it is a fact and not a guess, and it is
+     * the default the screen uses until the user types a figure of their own.
+     */
+    fun observeLatestSalary(): Flow<Money?> = dao.observeLatestSalary().map { it?.let(Money::ofHalalas) }
+
     /** The merchants the user pays on a rhythm, largest first. See [RecurringDetector]. */
     fun observeRecurring(now: () -> Instant): Flow<List<RecurringDetector.Recurring>> =
         dao.observeConfirmedDebits()

@@ -306,6 +306,32 @@ interface TransactionDao {
     @Query("DELETE FROM transactions WHERE id IN (:ids)")
     suspend fun deleteAll(ids: List<String>): Int
 
+    /**
+     * Re-types the salary deposits an older classifier read as transfers.
+     *
+     * Targeted rather than a general re-classification: a general pass would
+     * re-decide every row's type from its body, and a type the user has vouched
+     * for is not something to re-decide in a maintenance pass.
+     */
+    @Query(
+        """
+        UPDATE transactions
+        SET type = 'SALARY', category_id = 'income', category_source = 'AUTOMATIC'
+        WHERE direction = 'CREDIT' AND type <> 'SALARY' AND raw_text LIKE '%ايداع رواتب%'
+        """
+    )
+    suspend fun retypeSalaryDeposits(): Int
+
+    /** The most recent salary the bank announced, in halalas. Read, not inferred. */
+    @Query(
+        """
+        SELECT amount_halalas FROM transactions
+        WHERE type = 'SALARY' AND direction = 'CREDIT' AND status = 'CONFIRMED'
+        ORDER BY occurred_at_millis DESC LIMIT 1
+        """
+    )
+    fun observeLatestSalary(): Flow<Long?>
+
     /** Every record of one merchant, for re-deriving its category from scratch. */
     @Query("SELECT * FROM transactions WHERE merchant_key = :merchantKey")
     suspend fun uncategorisedOrMerchant(merchantKey: String): List<TransactionEntity>

@@ -136,6 +136,9 @@ fun AddExpenseScreen(
     val invested by viewModel.monthInvested.collectAsStateWithLifecycle()
     val cardBalances by viewModel.cardBalances.collectAsStateWithLifecycle()
     val recurring by viewModel.recurring.collectAsStateWithLifecycle()
+    val detectedSalary by viewModel.detectedSalary.collectAsStateWithLifecycle()
+    // What the user typed wins; otherwise what the bank last announced.
+    val effectiveSalary = salary ?: detectedSalary
     val monthUnfiled by viewModel.monthUnfiled.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     val fabExpanded by remember {
@@ -164,6 +167,7 @@ fun AddExpenseScreen(
     if (editingSalary) {
         SalaryDialog(
             current = salary,
+            detected = detectedSalary,
             currencyLabel = currency,
             onSave = { onSalaryChange(it); editingSalary = false },
             onCancel = { editingSalary = false },
@@ -309,7 +313,7 @@ fun AddExpenseScreen(
                     month = selectedMonth,
                     total = monthTotal.grouped(),
                     totalMoney = monthTotal,
-                    salary = salary,
+                    salary = effectiveSalary,
                     shares = shares,
                     currencyLabel = currency,
                     pendingCount = pending.size,
@@ -445,7 +449,7 @@ fun AddExpenseScreen(
                         transaction = transaction,
                         currencyLabel = currency,
                         cardBanks = cardBanks,
-                        salary = salary,
+                        salary = effectiveSalary,
                         onDelete = { confirming = DestructiveAction.Delete(transaction) },
                         onRefile = { refiling = transaction },
                     )
@@ -1785,6 +1789,7 @@ private fun SalaryShare(spent: Money, salary: Money?, currencyLabel: String) {
 @Composable
 private fun SalaryDialog(
     current: Money?,
+    detected: Money?,
     currencyLabel: String,
     onSave: (Money?) -> Unit,
     onCancel: () -> Unit,
@@ -1802,6 +1807,13 @@ private fun SalaryDialog(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                if (detected != null) {
+                    Text(
+                        text = stringResource(R.string.salary_detected, detected.forDisplay(currencyLabel)),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
                 OutlinedTextField(
                     value = typed,
                     onValueChange = { typed = it },

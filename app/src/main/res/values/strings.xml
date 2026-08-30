@@ -178,4 +178,5 @@
     <string name="salary_share">%1$s من راتبك</string>
     <string name="salary_over">أكثر من راتبك بـ %1$s</string>
     <string name="above_salary">فوق الراتب</string>
+    <string name="salary_detected">آخر راتب في رسائلك: %1$s. يُستخدم ما لم تكتب غيره.</string>
 </resources>

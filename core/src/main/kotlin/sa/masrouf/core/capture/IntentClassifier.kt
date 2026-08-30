@@ -133,6 +133,11 @@ object IntentClassifier {
         Rule(TransactionType.ATM_WITHDRAWAL, Direction.DEBIT, listOf("سحب", "حساب")),
 
         Rule(TransactionType.SALARY, Direction.CREDIT, listOf("راتب")),
+        // The plural. "ايداع رواتب / مبلغ SAR 19491 / حساب0104*" is what the same
+        // bank sends now, and رواتب does not contain راتب - the waw sits between
+        // the letters. Sixty-odd salaries filed as incoming transfers, and the app
+        // concluded the salary had stopped in 2021.
+        Rule(TransactionType.SALARY, Direction.CREDIT, listOf("رواتب")),
 
         // Wallet top-ups funded from the user's own card. Not spending: the same
         // riyals are reported again by the wallet as they are actually spent.

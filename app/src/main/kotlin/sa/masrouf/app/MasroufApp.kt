@@ -39,6 +39,11 @@ class MasroufApp : Application() {
             transactions.purgeRejectedBodies()
             preferences.maintenanceVersion = 2
         }
+        if (done < 3) {
+            // "ايداع رواتب" was read as a transfer for five years.
+            transactions.retypeSalaryDeposits()
+            preferences.maintenanceVersion = 3
+        }
         transactions.fileUncategorised()
     }
 
