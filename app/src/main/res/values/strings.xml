@@ -179,4 +179,6 @@
     <string name="salary_over">أكثر من راتبك بـ %1$s</string>
     <string name="above_salary">فوق الراتب</string>
     <string name="salary_detected">آخر راتب في رسائلك: %1$s. يُستخدم ما لم تكتب غيره.</string>
+    <string name="more_actions">المزيد</string>
+    <string name="file_history_none">لا شيء يحتاج تصنيفاً</string>
 </resources>

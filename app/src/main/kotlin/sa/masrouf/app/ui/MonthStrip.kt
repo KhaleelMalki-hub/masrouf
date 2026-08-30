@@ -270,7 +270,8 @@ private fun BandRow(
 private val STRIP_HEIGHT = 76.dp
 private val SWATCH_WIDTH = 4.dp
 private val SWATCH_HEIGHT = 16.dp
-private val ROW_HEIGHT = 38.dp
+/** M3's minimum touch target; the rows are tappable filters. They were 38dp. */
+private val ROW_HEIGHT = 48.dp
 private const val GAP_PX = 3f
 private const val CORNER_PX = 6f
 

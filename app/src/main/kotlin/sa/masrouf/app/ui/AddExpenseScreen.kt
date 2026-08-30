@@ -76,6 +76,15 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.PlainTooltip
+import androidx.compose.material3.rememberTooltipState
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -167,6 +176,17 @@ fun AddExpenseScreen(
     val categoryFilter by viewModel.categoryFilter.collectAsStateWithLifecycle()
     val previousTotal by viewModel.previousMonthTotal.collectAsStateWithLifecycle()
     val importState by viewModel.importState.collectAsStateWithLifecycle()
+    // Outcomes of the bulk actions arrive as a snackbar, M3's own vehicle for a
+    // transient result, and leave on their own. They used to be a line pinned at
+    // the top of the list that stayed until the next action replaced it.
+    val snackbarHost = remember { SnackbarHostState() }
+    val resultText = importResultText(importState)
+    LaunchedEffect(importState) {
+        if (resultText != null) {
+            snackbarHost.showSnackbar(resultText)
+            viewModel.clearImportState()
+        }
+    }
     val currency = stringResource(R.string.currency_sar)
 
     var entryOpen by remember { mutableStateOf(false) }
@@ -278,8 +298,10 @@ fun AddExpenseScreen(
         modifier = modifier
             .fillMaxSize()
             .nestedScroll(topBarScroll.nestedScrollConnection),
+        snackbarHost = { SnackbarHost(snackbarHost) },
         topBar = {
-            AddExpenseTopBar(
+            Column {
+              AddExpenseTopBar(
                 scrollBehavior = topBarScroll,
                 onSwitchLanguage = onSwitchLanguage,
                 themeMode = themeMode,
@@ -293,6 +315,19 @@ fun AddExpenseScreen(
                 onRefileAll = { confirming = DestructiveAction.RefileAll },
                 onEditSalary = { editingSalary = true },
             )
+              // Work in progress, where M3 puts it: a linear indicator under the bar.
+              // Determinate while the inbox is being read, because the count is
+              // known; indeterminate while re-filing, because it is one transaction.
+              when (val st = importState) {
+                  is AddExpenseViewModel.ImportState.Running -> LinearProgressIndicator(
+                      modifier = Modifier.fillMaxWidth(),
+                  )
+                  AddExpenseViewModel.ImportState.Refiling -> LinearProgressIndicator(
+                      modifier = Modifier.fillMaxWidth(),
+                  )
+                  else -> Unit
+              }
+            }
         },
         floatingActionButton = {
             // Extended while the top of the page is in view, a plain FAB once the
@@ -315,7 +350,6 @@ fun AddExpenseScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             if (importState !is AddExpenseViewModel.ImportState.Idle) {
-                item { ImportStatus(state = importState) }
             }
 
             item {
@@ -526,14 +560,8 @@ private fun MoreMenu(
     var open by remember { mutableStateOf(false) }
 
     Box {
-        TextButton(
-            onClick = { open = true },
-            modifier = Modifier.heightIn(min = 48.dp),
-        ) {
-            Text(
-                text = "\u22EE",
-                style = MaterialTheme.typography.titleLarge,
-            )
+        LabelledIconButton(label = stringResource(R.string.more_actions), onClick = { open = true }) {
+            Icon(imageVector = Icons.Outlined.MoreVert, contentDescription = null)
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             DropdownMenuItem(
@@ -576,38 +604,20 @@ private fun MoreMenu(
  * An operation over a thousand records that reports nothing is indistinguishable
  * from one that failed.
  */
+/** What a finished bulk action says, or null while nothing has finished. */
 @Composable
-private fun ImportStatus(state: AddExpenseViewModel.ImportState) {
-    val text = when (state) {
-        is AddExpenseViewModel.ImportState.Running ->
-            stringResource(R.string.import_running, state.examined.toString())
-
-        AddExpenseViewModel.ImportState.Refiling -> stringResource(R.string.refile_running)
-        is AddExpenseViewModel.ImportState.Done ->
-            if (state.stored == 0) {
-                stringResource(R.string.import_none)
-            } else {
-                stringResource(
-                    R.string.import_done,
-                    state.stored.toString(),
-                    state.examined.toString(),
-                )
-            }
-        is AddExpenseViewModel.ImportState.Filed ->
-            stringResource(R.string.file_history_done, state.count.toString())
-        is AddExpenseViewModel.ImportState.Confirmed ->
-            stringResource(R.string.confirm_all_done, state.count.toString())
-        AddExpenseViewModel.ImportState.Idle -> return
-    }
-
-    Text(
-        text = text,
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 8.dp),
-    )
+private fun importResultText(state: AddExpenseViewModel.ImportState): String? = when (state) {
+    is AddExpenseViewModel.ImportState.Done ->
+        if (state.stored == 0) {
+            stringResource(R.string.import_none)
+        } else {
+            stringResource(R.string.import_done, state.stored.toString(), state.examined.toString())
+        }
+    is AddExpenseViewModel.ImportState.Filed ->
+        if (state.count == 0) stringResource(R.string.file_history_none)
+        else stringResource(R.string.file_history_done, state.count.toString())
+    is AddExpenseViewModel.ImportState.Confirmed -> stringResource(R.string.confirm_all_done, state.count.toString())
+    else -> null
 }
 
 /**
@@ -838,14 +848,8 @@ private fun AddExpenseTopBar(
             // of icons read as a status rather than a control; the tooltip-free
             // answer is the standard translate glyph, with the target language as
             // its description for a screen reader.
-            IconButton(
-                onClick = onSwitchLanguage,
-                modifier = Modifier.heightIn(min = 48.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Translate,
-                    contentDescription = stringResource(R.string.language_toggle),
-                )
+            LabelledIconButton(label = stringResource(R.string.language_toggle), onClick = onSwitchLanguage) {
+                Icon(imageVector = Icons.Outlined.Translate, contentDescription = null)
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
@@ -873,14 +877,11 @@ private fun ThemeMenu(mode: ThemeMode, onSelect: (ThemeMode) -> Unit) {
         // top bar from being three words of Arabic in a row. The name is still
         // there for anyone who cannot see the shape: it is the content
         // description, and it is the menu item's own label.
-        IconButton(
+        LabelledIconButton(
+            label = stringResource(mode.labelRes),
             onClick = { open = true },
-            modifier = Modifier.heightIn(min = 48.dp),
         ) {
-            Icon(
-                painter = painterResource(mode.iconRes),
-                contentDescription = stringResource(mode.labelRes),
-            )
+            Icon(painter = painterResource(mode.iconRes), contentDescription = null)
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             ThemeMode.entries.forEach { option ->
@@ -1856,4 +1857,29 @@ private fun SalaryDialog(
         },
         dismissButton = { TextButton(onClick = onCancel) { Text(stringResource(R.string.cancel)) } },
     )
+}
+
+/**
+ * An icon-only action with the name M3 says it must have: a tooltip on a long
+ * press, and the same name for a screen reader.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun LabelledIconButton(
+    label: String,
+    onClick: () -> Unit,
+    content: @Composable () -> Unit,
+) {
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+        tooltip = { PlainTooltip { Text(label) } },
+        state = rememberTooltipState(),
+    ) {
+        IconButton(
+            onClick = onClick,
+            modifier = Modifier
+                .heightIn(min = 48.dp)
+                .semantics { contentDescription = label },
+        ) { content() }
+    }
 }
