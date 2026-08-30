@@ -10,6 +10,7 @@ import sa.masrouf.core.dedup.Fingerprint
 import sa.masrouf.core.model.Category
 import sa.masrouf.core.model.CategoryGuess
 import sa.masrouf.core.model.Direction
+import sa.masrouf.core.model.countsAsSpending
 import sa.masrouf.core.model.SaudiCategories
 import sa.masrouf.core.model.Source
 import sa.masrouf.core.model.Status
@@ -397,7 +398,7 @@ class TransactionRepository(
  */
 fun List<Transaction>.categoryShares(): List<Pair<Category?, Money>> =
     filter { it.status == Status.CONFIRMED }
-        .filter { it.direction == Direction.DEBIT && it.type.countsAsSpending }
+        .filter { it.countsAsSpending }
         .groupBy { SaudiCategories.byId(it.categoryId) }
         .map { (category, rows) ->
             category to rows.fold(Money.ZERO) { sum, row -> sum + row.amount }
@@ -415,13 +416,15 @@ fun List<Transaction>.categoryShares(): List<Pair<Category?, Money>> =
  * `Status` exists to prevent: a number the user never agreed to, presented to them
  * as fact. They are told how many are waiting instead.
  *
- * The "does this count" decision is delegated to [TransactionType.countsAsSpending]
- * rather than listed here, because two surfaces each deciding for themselves is how
- * they come to disagree about the same month.
+ * The "does this count" decision is delegated to [countsAsSpending] rather than
+ * listed here, because two surfaces each deciding for themselves is how they come
+ * to disagree about the same month. That function reads the category as well as the
+ * type: an investment deposit reaches the bank as a card purchase and is not money
+ * the user spent.
  */
 fun List<Transaction>.spendingTotal(): Money =
     filter { it.status == Status.CONFIRMED }
-        .filter { it.direction == Direction.DEBIT && it.type.countsAsSpending }
+        .filter { it.countsAsSpending }
         .fold(Money.ZERO) { running, transaction -> running + transaction.amount }
 
 /**

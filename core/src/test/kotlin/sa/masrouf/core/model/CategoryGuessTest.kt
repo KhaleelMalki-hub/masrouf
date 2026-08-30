@@ -399,9 +399,9 @@ class CategoryGuessTest {
      * round, all growing through 2026. Money moved, not money spent.
      */
     @Test
-    fun `the investment house is a transfer, not a meal`() {
+    fun `the investment house is an investment, not a meal`() {
         listOf("Tamra", "Tamra Cap", "TAMRA CAPITAL")
-            .forEach { assertEquals(SaudiCategories.TRANSFERS, CategoryGuess.forMerchant(it), it) }
+            .forEach { assertEquals(SaudiCategories.INVESTMENT, CategoryGuess.forMerchant(it), it) }
     }
 
     /** أول قطرة and First Drop are one coffee shop under two terminals. */

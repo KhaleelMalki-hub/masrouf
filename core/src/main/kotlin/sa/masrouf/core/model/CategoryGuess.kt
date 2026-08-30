@@ -315,16 +315,20 @@ object CategoryGuess {
         // subscription tied to one of them.
         "HANY IBRAHIM" to SaudiCategories.SERVICES,
 
-        // Corrected: "TAMRA CAP" was filed as a restaurant by a rule added earlier
-        // in this session, on the name alone. Tamra Capital is an investment house,
-        // and the records read like deposits - 5,000 then 2,000 three times in a
-        // day, all round, all growing through 2026. Money moved, not money spent.
-        "TAMRA" to SaudiCategories.TRANSFERS,
+        // Corrected twice: filed as a restaurant by a rule added on the name alone,
+        // then as a transfer, and now as what it is. Tamra Capital is an investment
+        // house and the records read like deposits - 5,000 then 2,000 three times
+        // in a day, all round, all growing through 2026. Money moved, not spent, and
+        // [countsAsSpending] leaves it out of the month for that reason.
+        "TAMRA" to SaudiCategories.INVESTMENT,
+        "MANAFE CAPITAL" to SaudiCategories.INVESTMENT,
 
         // أول قطرة, the same coffee shop as FIRST DROP CAFE, arriving letter-spaced
         // through a different terminal.
         "A W A L Q" to SaudiCategories.FOOD,
         "RETRO7" to SaudiCategories.FOOD,
+        // زد, a sandwich shop: seven visits averaging fifteen riyals.
+        "ZED AL ZA" to SaudiCategories.FOOD,
         "ROCOCOA" to SaudiCategories.FOOD,
         "INTERNATIONAL OVEN" to SaudiCategories.FOOD,
 

@@ -6,7 +6,7 @@ statements. Single user, on-device, offline. Not a product, not published.
 ## Commands
 
 ```bash
-./gradlew :core:test              # 188 tests, runs anywhere with a JDK
+./gradlew :core:test              # 203 tests, runs anywhere with a JDK
 ./gradlew :app:testDebugUnitTest  # 105 tests, needs the Android SDK
 ./gradlew :app:assembleDebug      # needs local.properties with sdk.dir
 ```
@@ -87,9 +87,13 @@ app/    Android - Compose, Room, Arabic default with English in values-en
    `ParserRegistry.CONFIRMATION_THRESHOLD` is 1.0 and is lowered per parser only
    after that parser has been measured against real messages.
 
-5. **`TransactionType.countsAsSpending` is the only place** that decides what
-   enters a monthly total. Do not re-derive it per screen; two surfaces
-   disagreeing about the same month is the failure this prevents.
+5. **`Transaction.countsAsSpending` is the only place** that decides what enters a
+   monthly total. Do not re-derive it per screen; two surfaces disagreeing about
+   the same month is the failure this prevents. It reads the category as well as
+   the type, for one case: a deposit at an investment house reaches the bank as an
+   ordinary card purchase at a terminal, and a month that counts it tells the user
+   they spent money they still have. One function, two inputs - the rule is about
+   there being one decision, not one input.
 
 6. **Dates come from the device, not the message body.** Statement and screenshot
    text is visually ordered, so a date's character order there is not its logical

@@ -52,6 +52,17 @@ object SaudiCategories {
      */
     val SERVICES = Category(id = "services", labelAr = "مغاسل وعناية", labelEn = "Personal care")
 
+    /**
+     * Money moved into an investment account.
+     *
+     * The one category that changes what a month adds up to: see
+     * [sa.masrouf.core.model.countsAsSpending]. A deposit at an investment house
+     * reaches the bank as an ordinary card purchase at a terminal, which is what it
+     * is, and is not what the user is asking about when they ask what the month
+     * went on. The money did not leave; it moved.
+     */
+    val INVESTMENT = Category(id = "investment", labelAr = "استثمار", labelEn = "Investment")
+
     /** School and university fees, courses, books bought for a course. */
     val EDUCATION = Category(id = "education", labelAr = "مدارس وتعليم", labelEn = "Education")
 
@@ -106,7 +117,8 @@ object SaudiCategories {
      */
     val ALL: List<Category> = listOf(
         FOOD, GROCERIES, TRANSPORT, HOUSING, BILLS, HEALTH, EDUCATION, SHOPPING,
-        SERVICES, ENTERTAINMENT, FEES, CHARITY, CASH, TRANSFERS, INCOME, OTHER,
+        SERVICES, ENTERTAINMENT, FEES, CHARITY, CASH, TRANSFERS, INVESTMENT, INCOME,
+        OTHER,
     )
 
     private val BY_ID: Map<String, Category> = ALL.associateBy(Category::id)
