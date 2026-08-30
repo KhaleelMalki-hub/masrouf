@@ -421,4 +421,17 @@ class CategoryGuessTest {
         assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("INTERNATIONAL OVEN CO."))
         assertNull(CategoryGuess.forMerchant("International Regions"))
     }
+
+    /**
+     * Baskin Robbins' franchise descriptor. Recognised by the user from a 24-riyal
+     * "BR-ESKAN-"; every branch in the history carries the same prefix, including
+     * the counter inside a petrol station, which the station rule had taken.
+     */
+    @Test
+    fun `the BR prefix is Baskin Robbins, even inside a petrol station`() {
+        listOf("BR-ESKAN-", "BR-SHUBANI MAKKAH-JBW", "BR-EVENT MALL -JAI", "BR-Sasco Zaidy-JFC")
+            .forEach { assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant(it), it) }
+        // The station itself is still the station.
+        assertEquals(SaudiCategories.TRANSPORT, CategoryGuess.forMerchant("SASCO ELZAIDI STATION"))
+    }
 }

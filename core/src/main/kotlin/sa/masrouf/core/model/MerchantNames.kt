@@ -96,6 +96,7 @@ object MerchantNames {
         "TIM HORTONS" to MerchantName(ar = "تيم هورتنز", en = "Tim Hortons"),
         "MOVENPICK" to MerchantName(ar = "موفنبيك", en = "Mövenpick"),
         "BASKIN" to MerchantName(ar = "باسكن روبنز", en = "Baskin-Robbins"),
+        "BR" to MerchantName(ar = "باسكن روبنز", en = "Baskin-Robbins"),
         "KFC" to MerchantName(ar = "كنتاكي", en = "KFC"),
         "SAADEDDIN" to MerchantName(ar = "سعد الدين", en = "Saadeddin"),
         "JUICES" to MerchantName(ar = "محطة العصير", en = "Juices Station"),

@@ -68,6 +68,11 @@ object CategoryGuess {
         "كافيه" to SaudiCategories.FOOD,
 
         // Transport
+        // Baskin Robbins' franchise descriptor: "BR-ESKAN-", "BR-SHUBANI MAKKAH-JBW",
+        // "BR-EVENT MALL -JAI", and "BR-Sasco Zaidy-JFC" for the counter inside a
+        // petrol station - which is why this sits above the station rules. Two
+        // letters, so it matches as a whole word only; the user recognised it.
+        "BR" to SaudiCategories.FOOD,
         "PETROMIN" to SaudiCategories.TRANSPORT,
         "ALDREES" to SaudiCategories.TRANSPORT,
         "SASCO" to SaudiCategories.TRANSPORT,
