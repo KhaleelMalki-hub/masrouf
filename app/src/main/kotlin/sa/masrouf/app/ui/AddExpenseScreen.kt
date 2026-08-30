@@ -72,6 +72,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import sa.masrouf.app.R
 import sa.masrouf.core.model.Category
 import sa.masrouf.core.model.Direction
+import sa.masrouf.core.model.MerchantNames
 import sa.masrouf.core.model.SaudiCategories
 import sa.masrouf.core.model.Source
 import sa.masrouf.core.model.Transaction
@@ -1169,7 +1170,12 @@ private fun TransactionRow(
                 .padding(start = 12.dp, top = 8.dp, bottom = 8.dp),
         ) {
             Text(
-                text = transaction.merchantRaw
+                // The Arabic name when there is one. The bank's own descriptor is
+                // still what is stored and searched; this only changes what a person
+                // reads, and a list of forty rows written the card network's way is
+                // slower to read than the same list written theirs.
+                text = MerchantNames.forMerchant(transaction.merchantRaw)
+                    ?: transaction.merchantRaw
                     ?: transaction.note
                     ?: stringResource(transaction.type.labelRes),
                 style = MaterialTheme.typography.bodyLarge,
