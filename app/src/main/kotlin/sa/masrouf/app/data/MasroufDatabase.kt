@@ -60,6 +60,10 @@ abstract class MasroufDatabase : RoomDatabase() {
          * belongs on a background thread with a progress state, not inside the
          * migration that has to finish before the first screen can open.
          */
+        /** In order, for the app and for the migration test alike. */
+        val ALL_MIGRATIONS: Array<Migration>
+            get() = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+
         private val MIGRATION_5_6 = object : Migration(5, 6) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE transactions ADD COLUMN balance_halalas INTEGER")
@@ -154,7 +158,7 @@ abstract class MasroufDatabase : RoomDatabase() {
          */
         fun open(context: Context): MasroufDatabase =
             Room.databaseBuilder(context.applicationContext, MasroufDatabase::class.java, NAME)
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+                .addMigrations(*ALL_MIGRATIONS)
                 .build()
     }
 }

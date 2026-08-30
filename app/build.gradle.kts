@@ -10,6 +10,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         applicationId = "sa.masrouf.app"
         // 26 is the first release with java.time. :core is built on java.time
         // throughout, so this floor is what lets it be consumed unchanged instead
@@ -47,6 +48,10 @@ android {
 
     sourceSets["main"].kotlin.srcDir("src/main/kotlin")
     sourceSets["test"].kotlin.srcDir("src/test/kotlin")
+    sourceSets["androidTest"].kotlin.srcDir("src/androidTest/kotlin")
+    // The exported schemas, so MigrationTestHelper can open a database at any
+    // past version and run the real migrations forward over it.
+    sourceSets["androidTest"].assets.srcDir("$projectDir/schemas")
 }
 
 ksp {
@@ -78,6 +83,10 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
+    androidTestImplementation(libs.room.testing)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.junit)
+    androidTestImplementation(libs.junit4)
 
     testImplementation(testFixtures(project(":core")))
     testImplementation(libs.kotlin.test)
