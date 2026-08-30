@@ -434,4 +434,15 @@ class CategoryGuessTest {
         // The station itself is still the station.
         assertEquals(SaudiCategories.TRANSPORT, CategoryGuess.forMerchant("SASCO ELZAIDI STATION"))
     }
+
+    /**
+     * A car wash that arrives under its payment processor's name. "SUREPay SNB" says
+     * nothing about washing cars; the user recognised it. Filed with the car's other
+     * costs - servicing, tyres, fuel - not with the laundries.
+     */
+    @Test
+    fun `the car wash arrives under its payment processor's name`() {
+        assertEquals(SaudiCategories.TRANSPORT, CategoryGuess.forMerchant("SUREPay SNB"))
+        assertEquals(SaudiCategories.TRANSPORT, CategoryGuess.forMerchant("SUREPAY SNB"))
+    }
 }

@@ -371,6 +371,13 @@ object CategoryGuess {
         // route, and a check that this one is right.
         "MS" to SaudiCategories.TRANSPORT,
 
+        // مغسلة ربوة التميز, a car wash, named by the user. The name never reaches
+        // the message: the card network sends the payment processor's "SUREPay SNB",
+        // which says nothing about cars. Three washes between 30 and 35 riyals, and
+        // filed with the car's other costs - servicing, tyres, fuel - rather than
+        // with the laundries, so that transport reads as everything the car costs.
+        "SUREPAY SNB" to SaudiCategories.TRANSPORT,
+
         // A petrol station, named by the user. Thirty-eight fill-ups between 55 and
         // 103 riyals, weekly and then fortnightly: the shape reads as a recurring
         // delivery of a variable quantity of one thing, which is what filling a

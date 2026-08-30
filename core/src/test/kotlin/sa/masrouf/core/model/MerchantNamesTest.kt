@@ -54,6 +54,7 @@ class MerchantNamesTest {
             // the same collision the category rules hit with this exact word.
             "Healthy pie bakery" to "هيلثي باي",
             "Health" to "الوقف الصحي",
+            "SUREPay SNB" to "مغسلة ربوة التميز",
         ).forEach { (raw, expected) ->
             assertEquals(expected, MerchantNames.forMerchant(raw)?.ar, raw)
         }

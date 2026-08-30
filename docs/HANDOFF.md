@@ -65,7 +65,8 @@ inside longer words; `Tamra Capital` filed as a restaurant.
 - `Elaf Comp` = National Water Company; `MS.21535` = Mobile Service car
   servicing; `Wizebutter` = groceries; `SINDI` = men's thobes; `ZED AL ZA` =
   sandwiches; `DISTINCTI` = Kitchen Trends (kitchen fitting, shopping);
-  `LOUBA W HEKAYA` = toy shop; `AlJoumaa2` = the hypermarket under a new name.
+  `LOUBA W HEKAYA` = toy shop; `AlJoumaa2` = the hypermarket under a new name;
+  `SUREPay SNB` = مغسلة ربوة التميز (car wash, 30–35 SAR, filed as transport).
 - Active cards (last four): 5763, 7536, 8134, 2383, 8202, 3761, 7285, 2166,
   9941 (9941 is an IBAN, not a card). Listed in `ActiveCards`.
 - Salary arrives as "ايداع رواتب", 19,491 SAR around the 26th.
