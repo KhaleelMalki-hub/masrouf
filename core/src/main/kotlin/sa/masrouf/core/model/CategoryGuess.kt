@@ -335,6 +335,11 @@ object CategoryGuess {
         // creative agency, a medical centre, a bakery, a regions firm, Alshaya.
         "INTERNATIONAL RECRUI" to SaudiCategories.FEES,
 
+        // A men's thobe shop, named by the user. Five visits over six years
+        // averaging 1,059 riyals - the shape of clothes bought rarely and well,
+        // which no keyword in a shipped list would ever have guessed.
+        "SINDI" to SaudiCategories.SHOPPING,
+
         // مطعم بوقا, named by the user. Eight visits averaging 88 riyals.
         "BOGA" to SaudiCategories.FOOD,
 
