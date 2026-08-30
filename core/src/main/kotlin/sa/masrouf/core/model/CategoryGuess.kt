@@ -328,6 +328,16 @@ object CategoryGuess {
         "ROCOCOA" to SaudiCategories.FOOD,
         "INTERNATIONAL OVEN" to SaudiCategories.FOOD,
 
+        // Recruiting a domestic worker: 15,000 riyals at a terminal, named by the
+        // user. Filed with the fees and wages the same household pays month to
+        // month, alongside مساند. Keyed on the second word too, because
+        // "INTERNATIONAL" alone is five other companies in this history - a
+        // creative agency, a medical centre, a bakery, a regions firm, Alshaya.
+        "INTERNATIONAL RECRUI" to SaudiCategories.FEES,
+
+        // مطعم بوقا, named by the user. Eight visits averaging 88 riyals.
+        "BOGA" to SaudiCategories.FOOD,
+
         // وزارة العدل: court and notary fees. Three characters, so a whole word only.
         "ADL" to SaudiCategories.FEES,
 

@@ -410,4 +410,15 @@ class CategoryGuessTest {
         assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("A W A L Q A T R A"))
         assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("FIRST DROP CAFE"))
     }
+
+    /**
+     * "INTERNATIONAL" is five different companies in this history, so the
+     * recruitment agency has to be keyed on more than the first word.
+     */
+    @Test
+    fun `the recruitment agency does not take every international company with it`() {
+        assertEquals(SaudiCategories.FEES, CategoryGuess.forMerchant("INTERNATIONAL RECRUI"))
+        assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("INTERNATIONAL OVEN CO."))
+        assertNull(CategoryGuess.forMerchant("International Regions"))
+    }
 }
