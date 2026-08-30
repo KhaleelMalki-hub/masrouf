@@ -24,6 +24,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.outlined.HelpOutline
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -123,6 +130,8 @@ fun AddExpenseScreen(
     val invested by viewModel.monthInvested.collectAsStateWithLifecycle()
     val cardBalances by viewModel.cardBalances.collectAsStateWithLifecycle()
     val monthUnfiled by viewModel.monthUnfiled.collectAsStateWithLifecycle()
+    val listState = rememberLazyListState()
+    val fabExpanded by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
     // Once per process. Reads the stored bodies that predate the balance column;
     // after the first run every body is marked and the call finds nothing to do.
     LaunchedEffect(Unit) { viewModel.backfillBalancesOnce() }
@@ -243,14 +252,21 @@ fun AddExpenseScreen(
             )
         },
         floatingActionButton = {
+            // Extended while the top of the page is in view, a plain FAB once the
+            // user is down in the history - M3's own behaviour for a scrolling
+            // list, and it stops the wider English label covering rows.
             ExtendedFloatingActionButton(
                 onClick = { entryOpen = true },
+                expanded = fabExpanded,
+                icon = { Icon(Icons.Outlined.Add, contentDescription = null) },
+                text = { Text(stringResource(R.string.add_expense)) },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
-            ) { Text(stringResource(R.string.add_expense)) }
+            )
         },
     ) { padding ->
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
@@ -387,6 +403,11 @@ fun AddExpenseScreen(
             } else {
                 items(monthRows, key = { it.id }) { transaction ->
                     TransactionRow(
+                        modifier = Modifier.animateItem(
+                            fadeInSpec = tween(Motion.SHORT, easing = Motion.emphasizedDecelerate),
+                            fadeOutSpec = tween(Motion.SHORT, easing = Motion.emphasizedAccelerate),
+                            placementSpec = tween(Motion.MEDIUM, easing = Motion.standard),
+                        ),
                         transaction = transaction,
                         currencyLabel = currency,
                         cardBanks = cardBanks,
@@ -885,10 +906,30 @@ private fun MonthPanel(
 
         Column {
             Row(verticalAlignment = Alignment.Bottom) {
-                Text(
-                    text = total,
-                    style = MoneyStyle.merge(MaterialTheme.typography.displayMedium),
-                )
+                // Shared-axis X, as M3 specifies for moving between siblings: the
+                // new month's total slides in from the side the user is heading
+                // towards, and the old one leaves the other way. Direction comes
+                // from the month, not the number, so a larger total does not
+                // "move forward" on its own.
+                AnimatedContent(
+                    targetState = month to total,
+                    transitionSpec = {
+                        val forward = targetState.first.isAfter(initialState.first)
+                        val towards = if (forward) SlideDirection.Start else SlideDirection.End
+                        (slideIntoContainer(towards, tween(Motion.MEDIUM, easing = Motion.emphasizedDecelerate)) { it / 3 } +
+                            fadeIn(tween(Motion.SHORT, delayMillis = 60)))
+                            .togetherWith(
+                                slideOutOfContainer(towards, tween(Motion.SHORT, easing = Motion.emphasizedAccelerate)) { it / 3 } +
+                                    fadeOut(tween(Motion.SHORT)),
+                            )
+                    },
+                    label = "monthTotal",
+                ) { (_, shown) ->
+                    Text(
+                        text = shown,
+                        style = MoneyStyle.merge(MaterialTheme.typography.displayMedium),
+                    )
+                }
                 Text(
                     text = currencyLabel,
                     style = MaterialTheme.typography.titleMedium,
@@ -932,7 +973,7 @@ private fun MonthPanel(
                 // it is - colour, amount, and tappable to filter like the others -
                 // while the divider says plainly that it sits outside the total.
                 HorizontalDivider(
-                    modifier = Modifier.padding(vertical = 6.dp),
+                    modifier = Modifier.padding(vertical = 8.dp),
                     color = MaterialTheme.colorScheme.outlineVariant,
                 )
                 InvestedRow(
@@ -1163,6 +1204,7 @@ fun SignedAmount(
 @Composable
 private fun TransactionRow(
     transaction: Transaction,
+    modifier: Modifier = Modifier,
     currencyLabel: String,
     cardBanks: Map<String, String>,
     onDelete: () -> Unit,
@@ -1176,8 +1218,11 @@ private fun TransactionRow(
     val mark = bankMark(transaction.bankId ?: transaction.accountLast4?.let(cardBanks::get))
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
+            // One node to a screen reader: the merchant, the amount, the day and the
+            // category are one transaction, not four things to reassemble.
+            .semantics(mergeDescendants = true) {}
             // The row is the way to refile it. A wrong category is the most common
             // thing a person wants to change about a transaction, and it should not
             // require finding a control.
@@ -1225,7 +1270,7 @@ private fun TransactionRow(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (mark != null || transaction.accountLast4 != null) {
                     CardMark(mark = mark, last4 = transaction.accountLast4)
-                    Spacer(Modifier.width(6.dp))
+                    Spacer(Modifier.width(8.dp))
                 }
                 Text(
                     // Date and category on one line: two facts about the same row,
@@ -1389,7 +1434,7 @@ private fun HistoryFilters(
             onValueChange = onQueryChange,
             placeholder = { Text(stringResource(R.string.search_hint)) },
             singleLine = true,
-            shape = RoundedCornerShape(14.dp),
+            shape = RoundedCornerShape(16.dp),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             modifier = Modifier.fillMaxWidth(),
         )
@@ -1526,7 +1571,7 @@ private fun InvestedRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(6.dp))
+            .clip(RoundedCornerShape(8.dp))
             .clickable(onClick = onClick)
             .then(
                 if (selected) {
@@ -1535,7 +1580,7 @@ private fun InvestedRow(
                     Modifier
                 }
             )
-            .padding(horizontal = 10.dp, vertical = 8.dp),
+            .padding(horizontal = 12.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -1549,7 +1594,7 @@ private fun InvestedRow(
             Text(
                 text = stringResource(R.string.month_invested),
                 style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(start = 10.dp),
+                modifier = Modifier.padding(start = 12.dp),
             )
         }
         Text(
@@ -1596,9 +1641,9 @@ private fun UnfiledBanner(count: Int, active: Boolean, onOpen: () -> Unit) {
                 .clip(RoundedCornerShape(12.dp))
                 .background(MaterialTheme.colorScheme.secondaryContainer)
                 .clickable(onClick = onOpen)
-                .padding(horizontal = 14.dp, vertical = 12.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Icon(
                 imageVector = Icons.Outlined.HelpOutline,

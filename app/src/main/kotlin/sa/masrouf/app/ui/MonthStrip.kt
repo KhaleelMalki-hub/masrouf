@@ -1,5 +1,9 @@
 package sa.masrouf.app.ui
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -160,7 +164,9 @@ fun BandLegend(
     val largest = bands.maxOfOrNull { it.amount.halalas }?.takeIf { it > 0L } ?: 1L
 
     Column(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .animateContentSize(tween(Motion.MEDIUM, easing = Motion.standard)),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         bands.forEach { band ->
@@ -199,27 +205,33 @@ private fun BandRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // The fill grows to its new share rather than jumping, so paging months reads
+    // as the same categories changing size, not as a new chart replacing the old.
+    val shown by animateFloatAsState(
+        targetValue = fraction,
+        animationSpec = tween(Motion.MEDIUM, easing = Motion.emphasizedDecelerate),
+        label = "bandFill",
+    )
+    val highlight by animateColorAsState(
+        targetValue = if (selected) MaterialTheme.colorScheme.surfaceContainerHighest else Color.Transparent,
+        animationSpec = tween(Motion.SHORT, easing = Motion.standard),
+        label = "bandHighlight",
+    )
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(6.dp))
+            .clip(RoundedCornerShape(8.dp))
             // The legend already names every category, so it is also the filter.
             // A separate filter menu would be the same list printed twice.
             .clickable(onClick = onClick)
-            .then(
-                if (selected) {
-                    Modifier.background(MaterialTheme.colorScheme.surfaceContainerHighest)
-                } else {
-                    Modifier
-                }
-            ),
+            .background(highlight),
     ) {
         // The proportion, drawn behind the text rather than beside it. A swatch
         // tells you which colour a category is; this tells you how big it is
         // without anyone having to read two numbers and divide.
         Box(
             modifier = Modifier
-                .fillMaxWidth(fraction)
+                .fillMaxWidth(shown)
                 .height(ROW_HEIGHT)
                 .background(colour.copy(alpha = 0.22f)),
         )
@@ -227,7 +239,7 @@ private fun BandRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(ROW_HEIGHT)
-                .padding(horizontal = 10.dp),
+                .padding(horizontal = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -243,7 +255,7 @@ private fun BandRow(
                 Text(
                     text = name,
                     style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(start = 10.dp),
+                    modifier = Modifier.padding(start = 12.dp),
                 )
             }
             Text(

@@ -52,7 +52,7 @@ fun CardsPanel(
     val open = cards.filter { it.last4 in ActiveCards.LAST4 }
     if (open.isEmpty()) return
 
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
             text = stringResource(R.string.cards_title),
             style = MaterialTheme.typography.titleSmall,
@@ -61,7 +61,7 @@ fun CardsPanel(
         )
         LazyRow(
             contentPadding = PaddingValues(horizontal = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             items(open, key = { it.last4 }) { card ->
                 CardTile(card = card, currencyLabel = currencyLabel)
@@ -82,7 +82,7 @@ private fun CardTile(card: CardBalance, currencyLabel: String) {
             .width(168.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surfaceContainer)
-            .padding(14.dp),
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
