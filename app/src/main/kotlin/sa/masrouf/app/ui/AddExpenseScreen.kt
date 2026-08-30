@@ -67,6 +67,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Translate
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.graphics.Color
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -141,6 +150,9 @@ fun AddExpenseScreen(
     val effectiveSalary = salary ?: detectedSalary
     val monthUnfiled by viewModel.monthUnfiled.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
+    // The bar leaves on the way down and returns on the way up, as M3 top bars do
+    // over a scrolling list; the month is the thing to look at, not the title.
+    val topBarScroll = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val fabExpanded by remember {
         derivedStateOf { listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0 }
     }
@@ -182,6 +194,10 @@ fun AddExpenseScreen(
         ) {
             RefileSheet(
                 transaction = target,
+                onDelete = {
+                    refiling = null
+                    confirming = DestructiveAction.Delete(target)
+                },
                 onForget = {
                     target.merchantKey?.let(viewModel::forgetMerchant)
                     refiling = null
@@ -259,9 +275,12 @@ fun AddExpenseScreen(
     }
 
     Scaffold(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .nestedScroll(topBarScroll.nestedScrollConnection),
         topBar = {
             AddExpenseTopBar(
+                scrollBehavior = topBarScroll,
                 onSwitchLanguage = onSwitchLanguage,
                 themeMode = themeMode,
                 onThemeModeChange = onThemeModeChange,
@@ -284,8 +303,6 @@ fun AddExpenseScreen(
                 expanded = fabExpanded,
                 icon = { Icon(Icons.Outlined.Add, contentDescription = null) },
                 text = { Text(stringResource(R.string.add_expense)) },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
             )
         },
     ) { padding ->
@@ -400,8 +417,8 @@ fun AddExpenseScreen(
 
             item {
                 Text(
-                    text = stringResource(R.string.history_all).uppercase(),
-                    style = MaterialTheme.typography.labelMedium,
+                    text = stringResource(R.string.history_all),
+                    style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -450,7 +467,6 @@ fun AddExpenseScreen(
                         currencyLabel = currency,
                         cardBanks = cardBanks,
                         salary = effectiveSalary,
-                        onDelete = { confirming = DestructiveAction.Delete(transaction) },
                         onRefile = { refiling = transaction },
                     )
                 }
@@ -797,6 +813,7 @@ private fun SheetLabel(text: String) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddExpenseTopBar(
+    scrollBehavior: TopAppBarScrollBehavior,
     onSwitchLanguage: () -> Unit,
     themeMode: ThemeMode,
     onThemeModeChange: (ThemeMode) -> Unit,
@@ -807,6 +824,7 @@ private fun AddExpenseTopBar(
     onEditSalary: () -> Unit) {
     TopAppBar(
         title = { Text(stringResource(R.string.dashboard_title)) },
+        scrollBehavior = scrollBehavior,
         actions = {
             MoreMenu(
                 importRunning = importRunning,
@@ -816,16 +834,17 @@ private fun AddExpenseTopBar(
                 onEditSalary = onEditSalary,
             )
             ThemeMenu(mode = themeMode, onSelect = onThemeModeChange)
-            // The label is the language you would switch TO, not the one you are
-            // in: a control that names the current state reads as a status, and
-            // people tap it expecting nothing to happen.
-            TextButton(
+            // An icon, like the other two actions. A two-letter text button in a row
+            // of icons read as a status rather than a control; the tooltip-free
+            // answer is the standard translate glyph, with the target language as
+            // its description for a screen reader.
+            IconButton(
                 onClick = onSwitchLanguage,
                 modifier = Modifier.heightIn(min = 48.dp),
             ) {
-                Text(
-                    text = stringResource(R.string.language_toggle),
-                    style = MaterialTheme.typography.labelLarge,
+                Icon(
+                    imageVector = Icons.Outlined.Translate,
+                    contentDescription = stringResource(R.string.language_toggle),
                 )
             }
         },
@@ -940,7 +959,7 @@ private fun MonthPanel(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 8.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(MaterialTheme.shapes.large)
             .background(MaterialTheme.colorScheme.surfaceContainer)
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -1117,7 +1136,7 @@ private fun AccessPrompt(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(4.dp))
+            .clip(MaterialTheme.shapes.medium)
             .background(MaterialTheme.colorScheme.surfaceContainer)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -1259,7 +1278,6 @@ private fun TransactionRow(
     currencyLabel: String,
     cardBanks: Map<String, String>,
     salary: Money?,
-    onDelete: () -> Unit,
     onRefile: () -> Unit,
 ) {
     val category = SaudiCategories.byId(transaction.categoryId)
@@ -1271,9 +1289,8 @@ private fun TransactionRow(
     // bank at all.
     val mark = bankMark(transaction.bankId ?: transaction.accountLast4?.let(cardBanks::get))
 
-    Row(
+    ListItem(
         modifier = modifier
-            .fillMaxWidth()
             // One node to a screen reader: the merchant, the amount, the day and the
             // category are one transaction, not four things to reassemble.
             .semantics(mergeDescendants = true) {}
@@ -1281,46 +1298,42 @@ private fun TransactionRow(
             // thing a person wants to change about a transaction, and it should not
             // require finding a control.
             .clickable(onClick = onRefile),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        // The category, as a glyph in a disc tinted with its own colour. This was a
-        // 3dp coloured stripe down the edge of the row until the product doc named
-        // side-stripe borders as the thing this app must not look like. The disc
-        // carries the same colour and adds what the stripe could not: a shape you
-        // can recognise before you read.
-        Box(
-            modifier = Modifier
-                .padding(vertical = 8.dp)
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(bandColour(category).copy(alpha = 0.16f)),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = category.icon,
-                contentDescription = null,
-                tint = bandColour(category),
-                modifier = Modifier.size(20.dp),
-            )
-        }
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = 12.dp, top = 8.dp, bottom = 8.dp),
-        ) {
+        // Transparent so the list stays one surface; M3's default container would
+        // paint every row and turn the history into a stack of cards.
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+        leadingContent = {
+            // The category, as a glyph in a disc tinted with its own colour. This was
+            // a 3dp coloured stripe down the edge of the row until the product doc
+            // named side-stripe borders as the thing this app must not look like.
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(bandColour(category).copy(alpha = 0.16f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = category.icon,
+                    contentDescription = null,
+                    tint = bandColour(category),
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+        },
+        headlineContent = {
             Text(
                 // The Arabic name when there is one. The bank's own descriptor is
-                // still what is stored and searched; this only changes what a person
-                // reads, and a list of forty rows written the card network's way is
-                // slower to read than the same list written theirs.
+                // still what is stored and searched; this only changes what a
+                // person reads.
                 text = MerchantNames.forMerchant(transaction.merchantRaw)?.forLocale()
                     ?: transaction.merchantRaw
                     ?: transaction.note
                     ?: stringResource(transaction.type.labelRes),
-                style = MaterialTheme.typography.bodyLarge,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+        },
+        supportingContent = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (aboveSalary) {
                     // One purchase worth a whole month's salary is the thing the
@@ -1331,7 +1344,7 @@ private fun TransactionRow(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onErrorContainer,
                         modifier = Modifier
-                            .clip(RoundedCornerShape(4.dp))
+                            .clip(MaterialTheme.shapes.extraSmall)
                             .background(MaterialTheme.colorScheme.errorContainer)
                             .padding(horizontal = 6.dp, vertical = 1.dp),
                     )
@@ -1353,19 +1366,13 @@ private fun TransactionRow(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-        }
-        SignedAmount(transaction = transaction, currencyLabel = currencyLabel)
-        TextButton(
-            onClick = onDelete,
-            modifier = Modifier.heightIn(min = 48.dp),
-        ) {
-            Text(
-                text = "\u00D7",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
+        },
+        // No delete control on the row. M3 lists carry at most one trailing element,
+        // and a close glyph on every row took the width the category needed, so
+        // the category read as "...". Deleting is in the row's own sheet, where
+        // the row's name is on screen when the question is asked.
+        trailingContent = { SignedAmount(transaction = transaction, currencyLabel = currencyLabel) },
+    )
 }
 
 /** Which irreversible thing the user just asked for. */
@@ -1503,7 +1510,9 @@ private fun HistoryFilters(
             onValueChange = onQueryChange,
             placeholder = { Text(stringResource(R.string.search_hint)) },
             singleLine = true,
-            shape = RoundedCornerShape(16.dp),
+            // The search bar's own shape in M3 is the full pill.
+            shape = MaterialTheme.shapes.extraLarge,
+            leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             modifier = Modifier.fillMaxWidth(),
         )
@@ -1545,6 +1554,7 @@ private fun RefileSheet(
     transaction: Transaction,
     onPick: (Category?, RefileScope) -> Unit,
     onForget: () -> Unit,
+    onDelete: () -> Unit,
 ) {
     val current = SaudiCategories.byId(transaction.categoryId)
     val merchant = transaction.merchantRaw ?: stringResource(transaction.type.labelRes)
@@ -1595,18 +1605,31 @@ private fun RefileSheet(
             onSelect = { onPick(it, scope) },
             edgePadding = 20.dp,
         )
-        if (transaction.merchantKey != null) {
-            // The undo for a filing decision. Without it a choice made once - often
-            // from a truncated name that looked like something else - outranks every
-            // built-in rule for ever, and the only way out is to already know the
-            // right answer and pick it again by hand.
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            if (transaction.merchantKey != null) {
+                // The undo for a filing decision. Without it a choice made once -
+                // often from a truncated name that looked like something else -
+                // outranks every built-in rule for ever.
+                TextButton(onClick = onForget, modifier = Modifier.heightIn(min = 48.dp)) {
+                    Text(stringResource(R.string.refile_forget))
+                }
+            } else {
+                Spacer(Modifier.width(1.dp))
+            }
+            // Destructive, so it sits apart from the filing controls and in the
+            // error colour, and it still goes through the confirmation that names
+            // the amount and the day.
             TextButton(
-                onClick = onForget,
-                modifier = Modifier
-                    .padding(start = 12.dp)
-                    .heightIn(min = 48.dp),
+                onClick = onDelete,
+                modifier = Modifier.heightIn(min = 48.dp),
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
             ) {
-                Text(stringResource(R.string.refile_forget))
+                Text(stringResource(R.string.delete))
             }
         }
     }
@@ -1729,7 +1752,7 @@ private fun UnfiledBanner(count: Int, active: Boolean, onOpen: () -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 12.dp)
-                .clip(RoundedCornerShape(12.dp))
+                .clip(MaterialTheme.shapes.medium)
                 .background(MaterialTheme.colorScheme.secondaryContainer)
                 .clickable(onClick = onOpen)
                 .padding(horizontal = 16.dp, vertical = 12.dp),

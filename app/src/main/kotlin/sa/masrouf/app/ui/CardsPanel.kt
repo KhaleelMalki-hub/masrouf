@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -77,14 +79,14 @@ private fun CardTile(card: CardBalance, currencyLabel: String) {
     val tint = mark?.colour ?: MaterialTheme.colorScheme.outline
     val isCredit = card.kind == BalanceReader.Kind.CREDIT_LIMIT.name
 
-    Column(
-        modifier = Modifier
-            .width(168.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainer)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+    Card(
+        modifier = Modifier.width(168.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
     ) {
+      Column(
+        modifier = Modifier.padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+      ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = mark?.let { if (isArabic) it.labelAr else it.labelEn } ?: "",
@@ -129,6 +131,7 @@ private fun CardTile(card: CardBalance, currencyLabel: String) {
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.outline,
         )
+    }
     }
 }
 

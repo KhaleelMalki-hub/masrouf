@@ -68,7 +68,7 @@ fun RecurringPanel(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
+            .clip(MaterialTheme.shapes.large)
             .background(MaterialTheme.colorScheme.surfaceContainerLow)
             .animateContentSize(tween(Motion.MEDIUM, easing = Motion.standard)),
     ) {
