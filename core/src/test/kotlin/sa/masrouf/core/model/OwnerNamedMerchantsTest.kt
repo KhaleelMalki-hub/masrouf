@@ -28,7 +28,6 @@ class OwnerNamedMerchantsTest {
             "tap*Time" to SaudiCategories.TRANSPORT,
             // Bathrobes, towels, pillows, a mattress. Arrives truncated too.
             "Reefi Store" to SaudiCategories.SHOPPING,
-            "reefi" to SaudiCategories.SHOPPING,
             // A watch shop. "ONTIME PL" reads as a delivery service and is not one.
             "ONTIME PL" to SaudiCategories.SHOPPING,
             // Found unfiled beside the tyre shop.
@@ -86,6 +85,34 @@ class OwnerNamedMerchantsTest {
         for (merchant in transport) {
             assertEquals(SaudiCategories.TRANSPORT, CategoryGuess.forMerchant(merchant), merchant)
         }
+    }
+
+    /**
+     * The guard a five-letter keyword needed and did not get.
+     *
+     * "REEFI" was added for a linens shop. MerchantMatch takes any keyword of four
+     * characters or more as a substring, so it also matched "Al Saj Al Reefi
+     * Restau" - 29 rows of a restaurant, moved to shopping by the refile pass
+     * before anyone looked at them. الريفي is an ordinary Arabic word; no stem of
+     * it can be safe in a list matched this way.
+     *
+     * Same shape, same session: "FLYIN" for flyin.com also matched Flying Tiger
+     * Copenhagen, a stationery chain.
+     */
+    @Test
+    fun `a short keyword does not swallow the merchants that contain it`() {
+        assertEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("Reefi Store"))
+        assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("Al Saj Al Reefi Restau"))
+        assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("ALSAAJ ALREEFI"))
+
+        assertEquals(SaudiCategories.TRAVEL, CategoryGuess.forMerchant("Flyin"))
+        // The truncated linens spelling reaches no rule: at five characters it is
+        // shorter than the truncation rule's floor, and a keyword short enough to
+        // catch it is the substring that caused all this. Two rows; the user files
+        // them once, as with the recruiter.
+        assertEquals(null, CategoryGuess.forMerchant("reefi"))
+        assertEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("FLYING TI"))
+        assertEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("FLYING TIGER COPENHAGE"))
     }
 
     /**

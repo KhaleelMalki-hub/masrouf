@@ -30,8 +30,16 @@ private val LightBands = mapOf(
     SaudiCategories.HOUSING.id to Color(0xFF1F5F8B),
     SaudiCategories.EDUCATION.id to Color(0xFF3F6E2E),
     SaudiCategories.SERVICES.id to Color(0xFF00696E),
-    SaudiCategories.TRAVEL.id to Color(0xFF0F6B5C),
-    SaudiCategories.BONUS.id to Color(0xFF2F7A3A),
+    // Blue-violet, not the teal it started as: teal put it 5.9 from charity and
+    // 5.8 from groceries in the same strip. Measured against every other light
+    // band, its nearest neighbour is now investment at 15.7.
+    SaudiCategories.TRAVEL.id to Color(0xFF2F4FB0),
+    // Gold. It shipped as a byte-identical copy of INCOME - 0xFF2F7A3A twice -
+    // so in the light theme a month's salary and its bonus drew as one solid
+    // block, and the income screen's whole premise ("never summed into one bar")
+    // was false in one of the two themes it ships with. Nearest other band is now
+    // bills at 20.3.
+    SaudiCategories.BONUS.id to Color(0xFFB5891C),
     SaudiCategories.ENTERTAINMENT.id to Color(0xFF7A3E8F),
     SaudiCategories.FEES.id to Color(0xFF8C4A6B),
     SaudiCategories.CHARITY.id to Color(0xFF1F7A6B),
@@ -52,8 +60,13 @@ private val DarkBands = mapOf(
     SaudiCategories.HOUSING.id to Color(0xFF8FC9EE),
     SaudiCategories.EDUCATION.id to Color(0xFFAEDB94),
     SaudiCategories.SERVICES.id to Color(0xFF6FD4DA),
-    SaudiCategories.TRAVEL.id to Color(0xFF7CD9C4),
-    SaudiCategories.BONUS.id to Color(0xFFB9E6A2),
+    // Periwinkle, for the reason its light twin changed: the teal was 2.1 from
+    // charity, which is invisible. Nearest other dark band is investment at 9.7.
+    SaudiCategories.TRAVEL.id to Color(0xFFB0B8FF),
+    // Gold, matching its light twin. The old pale green cleared INCOME by 11.9,
+    // which is a difference you can measure and not one you can see at 3dp - a
+    // deposit chip is a 3x12dp sliver. Nearest other dark band is bills at 19.9.
+    SaudiCategories.BONUS.id to Color(0xFFEBC15F),
     SaudiCategories.ENTERTAINMENT.id to Color(0xFFE0AEF5),
     SaudiCategories.FEES.id to Color(0xFFF3A8C8),
     SaudiCategories.CHARITY.id to Color(0xFF7FD8C6),

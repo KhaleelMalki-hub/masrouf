@@ -130,6 +130,22 @@ class MasroufApp : Application() {
             transactions.purgeRejectedBodies()
             preferences.maintenanceVersion = 12
         }
+        if (done < 13) {
+            // Pass 9 left 710 rows still carrying an account number as their party.
+            // Only SNB's patterns had the guard; reparseStoredBodies tries every
+            // profile and keeps whichever reads the most, so D360's unguarded lines
+            // wrote the number straight back into the field pass 9 had just
+            // cleared. All four profiles are guarded now, so the repair can run
+            // again and stick.
+            //
+            // Then refile: two keywords added this session were short enough to
+            // match inside longer names - "REEFI" took a restaurant's 29 rows to
+            // shopping and "FLYIN" took a stationery chain to travel - and both
+            // were committed to the database by pass 11.
+            transactions.repairNumericParties()
+            transactions.refileAll()
+            preferences.maintenanceVersion = 13
+        }
         transactions.fileUncategorised()
         catchUpOnSms()
     }

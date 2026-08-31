@@ -20,8 +20,6 @@ import sa.masrouf.app.data.IncomeMonth
 import sa.masrouf.app.data.TransactionRepository
 import sa.masrouf.app.data.categoryShares
 import sa.masrouf.app.data.investedTotal
-import sa.masrouf.app.data.bonusTotal
-import sa.masrouf.app.data.earnedTotal
 import sa.masrouf.app.data.spendingTotal
 import sa.masrouf.core.model.Category
 import sa.masrouf.core.model.Direction
@@ -269,12 +267,6 @@ class AddExpenseViewModel(
             .map { rows -> rows.investedTotal().takeIf { !it.isZero } }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
-    /** What the month brought in as salary, or null when none arrived. */
-    val monthEarned: StateFlow<Money?> =
-        confirmedThisMonth
-            .map { rows -> rows.earnedTotal().takeIf { !it.isZero } }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
-
     /**
      * Salary and bonuses by month, newest first, for the income screen.
      *
@@ -294,16 +286,8 @@ class AddExpenseViewModel(
      */
     val incomeDeposits: StateFlow<Map<YearMonth, List<Transaction>>> =
         repository.observeIncomeRows()
-            .map { rows ->
-                rows.groupBy { YearMonth.from(RiyadhTime.localDate(it.occurredAt)) }
-            }
+            .map { rows -> rows.groupBy { YearMonth.from(RiyadhTime.localDate(it.occurredAt)) } }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
-
-    /** What the month brought in as employer bonuses, or null when none arrived. */
-    val monthBonus: StateFlow<Money?> =
-        confirmedThisMonth
-            .map { rows -> rows.bonusTotal().takeIf { !it.isZero } }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     /**
      * What the previous month came to, for comparison.

@@ -156,8 +156,6 @@ fun AddExpenseScreen(
     val recent by viewModel.recent.collectAsStateWithLifecycle()
     val monthTotal by viewModel.monthTotal.collectAsStateWithLifecycle()
     val invested by viewModel.monthInvested.collectAsStateWithLifecycle()
-    val earned by viewModel.monthEarned.collectAsStateWithLifecycle()
-    val bonus by viewModel.monthBonus.collectAsStateWithLifecycle()
     val cardBalances by viewModel.cardBalances.collectAsStateWithLifecycle()
     val recurring by viewModel.recurring.collectAsStateWithLifecycle()
     val detectedSalary by viewModel.detectedSalary.collectAsStateWithLifecycle()
@@ -417,8 +415,6 @@ fun AddExpenseScreen(
                     onPickMonth = { pickingMonth = true },
                     previousTotal = previousTotal,
                     invested = invested,
-                    earned = earned,
-                    bonus = bonus,
                     activeFilter = categoryFilter,
                     onToggleCategory = viewModel::toggleCategoryFilter,
                 )
@@ -987,8 +983,6 @@ private fun MonthPanel(
     onPickMonth: () -> Unit,
     previousTotal: Money?,
     invested: Money?,
-    earned: Money?,
-    bonus: Money?,
     activeFilter: HistoryFilter?,
     onToggleCategory: (Category?) -> Unit,
 ) {
@@ -1084,30 +1078,28 @@ private fun MonthPanel(
                 onSelect = onToggleCategory,
             )
             // Below the legend and below a rule, because the bands above have to add
-            // up to the number at the top and these deliberately do not. Each gets a
+            // up to the number at the top and this deliberately does not. It gets a
             // row rather than a sentence so it reads as the category it is - colour,
             // amount, and tappable to filter like the others - while the divider
             // says plainly that it sits outside the total.
-            val outside = listOfNotNull(
-                invested?.let { Triple(SaudiCategories.INVESTMENT, R.string.month_invested, it) },
-                earned?.let { Triple(SaudiCategories.INCOME, R.string.month_earned, it) },
-                bonus?.let { Triple(SaudiCategories.BONUS, R.string.month_bonus, it) },
-            )
-            if (outside.isNotEmpty()) {
+            //
+            // Income and bonuses were here too for one session. They came out when
+            // they got a destination of their own: a figure shown in two places is
+            // two places that can disagree, and the screen that owns it is the one
+            // that can say more than a single month's total.
+            if (invested != null) {
                 HorizontalDivider(
                     modifier = Modifier.padding(vertical = 8.dp),
                     color = MaterialTheme.colorScheme.outlineVariant,
                 )
-                for ((category, label, amount) in outside) {
-                    OutsideTotalRow(
-                        category = category,
-                        label = label,
-                        amount = amount,
-                        currencyLabel = currencyLabel,
-                        selected = activeFilter == HistoryFilter.OfCategory(category),
-                        onClick = { onToggleCategory(category) },
-                    )
-                }
+                OutsideTotalRow(
+                    category = SaudiCategories.INVESTMENT,
+                    label = R.string.month_invested,
+                    amount = invested,
+                    currencyLabel = currencyLabel,
+                    selected = activeFilter == HistoryFilter.OfCategory(SaudiCategories.INVESTMENT),
+                    onClick = { onToggleCategory(SaudiCategories.INVESTMENT) },
+                )
             }
             if (activeFilter == null) {
                 // The legend has been the filter since it was built, and it was not
@@ -1735,14 +1727,14 @@ private fun CardMark(mark: BankMark?, last4: String?) {
 /**
  * A category that sits outside the month's total.
  *
- * Investments leaving, salary and bonuses arriving: none of them is spending, and
- * none of them belongs in the bands above. But a figure excluded from the total and
- * shown nowhere else simply vanishes - 2.2 million riyals of salary existed only as
- * scattered rows until its owner asked where it had gone.
+ * An investment leaving is not spending and does not belong in the bands above.
+ * But a figure excluded from the total and shown nowhere else simply vanishes -
+ * 14,710 riyals did exactly that, and a number that is absent cannot be questioned.
  *
- * One composable rather than three: what matters is that they all read as
- * categories - colour, name, amount, tappable to filter - and sit below the rule
- * that says they are not part of the number at the top.
+ * Written to take its category rather than hard-coding one, because for a session
+ * it carried income and bonuses too. Those moved to their own destination, and this
+ * kept the shape: the next figure the total has to exclude gets a row, not a
+ * fourth copy of one.
  */
 private fun OutsideTotalRow(
     category: Category,

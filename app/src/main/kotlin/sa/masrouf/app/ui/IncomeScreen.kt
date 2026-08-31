@@ -330,6 +330,18 @@ private fun DepositRow(deposit: Transaction, currencyLabel: String) {
                     bandColour(if (isBonus) SaudiCategories.BONUS else SaudiCategories.INCOME)
                 ),
         )
+        // The word, not only the chip. Colour was the sole carrier of which kind a
+        // deposit was, and a 3x12dp sliver is not a carrier - the two greens it
+        // shipped with were identical in the light theme and 11.9 apart in the
+        // dark, which is a difference you can measure and not one you can see.
+        Text(
+            text = stringResource(
+                if (isBonus) R.string.category_bonus else R.string.category_income
+            ),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = 8.dp),
+        )
         Text(
             text = deposit.occurredAt.dayLabel(),
             style = MaterialTheme.typography.labelSmall,

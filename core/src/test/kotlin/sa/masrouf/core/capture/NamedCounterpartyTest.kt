@@ -46,6 +46,30 @@ class NamedCounterpartyTest {
     }
 
     /**
+     * Every profile, not just the one whose message this is.
+     *
+     * reparseStoredBodies tries all of them and keeps whichever reads the most, so
+     * one unguarded pattern anywhere claims every bank's bodies. D360's two lines
+     * and Emirates NBD's were left without the guard SNB got, and 710 rows came
+     * back from the repair pass still carrying an account number as their party -
+     * with the real name one line below it.
+     */
+    @Test
+    fun `no profile reads an account line as the party`() {
+        val body = "حوالة محلية واردة\nعبر:ANB\nمبلغ:SAR 1000\nالى:3016\nمن:SENDER NAME\nمن:0018"
+
+        for (profile in SaudiBanks.ALL) {
+            val party = (BankMessageParser(profile).parse(RawMessage(body, Instant.EPOCH))
+                as? ParseResult.Parsed)?.draft?.merchantRaw
+            assertEquals(
+                null,
+                party?.takeIf { it.any(Char::isDigit) },
+                "${profile.id} read an account as the party: $party",
+            )
+        }
+    }
+
+    /**
      * The guard. An account line must never become the party, whichever word
      * introduces it - which is what the negative lookaheads are for.
      */

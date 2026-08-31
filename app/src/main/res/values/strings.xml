@@ -143,8 +143,6 @@
     <string name="refile_forget">دع التطبيق يقرّر</string>
     <string name="category_investment">استثمار</string>
     <string name="month_invested">استثمار هذا الشهر</string>
-    <string name="month_earned">دخل هذا الشهر</string>
-    <string name="month_bonus">مكافآت هذا الشهر</string>
     <string name="income_empty">لا يوجد دخل مسجّل بعد</string>
     <string name="income_split">راتب %1$s · مكافآت %2$s</string>
     <string name="nav_spending">مصروفي</string>

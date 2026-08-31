@@ -261,7 +261,12 @@ object CategoryGuess {
         // shopping rather than housing, which here means the monthly cost of a
         // home, not the things put inside one - the same reading that already sends
         // the kitchen fitters and the furniture shops to shopping.
-        "REEFI" to SaudiCategories.SHOPPING,
+        // Not "REEFI": five characters, so MerchantMatch takes it as a substring,
+        // and "Al Saj Al Reefi Restau" contains it - 29 rows of a restaurant were
+        // filed as shopping by refileAll before anyone looked. الريفي is an
+        // ordinary Arabic word and a bare stem of it can never be safe here. Both
+        // spellings the terminal actually sends are written out instead.
+        "REEFI STORE" to SaudiCategories.SHOPPING,
 
         // A watch shop, named by the user. The card network truncates it to
         // "ONTIME PL", which reads as a delivery service and is not one.
@@ -646,6 +651,10 @@ object CategoryGuess {
         "SHRIMPANA" to SaudiCategories.FOOD,
         "BURNT" to SaudiCategories.FOOD,
         "AL SAJ AL REEFI" to SaudiCategories.FOOD,
+        // The same restaurant, spelled with a doubled alef by another terminal.
+        // Neither spelling can be reached by a stem of الريفي - it is an ordinary
+        // Arabic word - so both are written out.
+        "ALSAAJ ALREEFI" to SaudiCategories.FOOD,
         "ALFATER" to SaudiCategories.FOOD,
         "ALMUSBAH" to SaudiCategories.FOOD,
         "EXPRESS FOOD" to SaudiCategories.FOOD,
@@ -691,6 +700,16 @@ object CategoryGuess {
         "NATIONAL PARKING" to SaudiCategories.TRANSPORT,
         "SAUDI AIRLINES" to SaudiCategories.TRAVEL,
         "SAUDIA AIRLINES" to SaudiCategories.TRAVEL,
+        // "FLYIN" is flyin.com, and it is also the first five letters of Flying
+        // Tiger Copenhagen - a stationery chain, 5 rows, filed as travel. It was
+        // wrong before this session too, as transport; the session moved it to
+        // travel and made it visible.
+        //
+        // The order is the fix and it is load-bearing. The stationery chain is
+        // listed FIRST so the substring pass reaches it before "FLYIN" can, and its
+        // own truncated form "FLYING TI" is an exact glued match, which beats any
+        // partial whatever the order. "FLYIN" then only ever sees what is left.
+        "FLYING TI" to SaudiCategories.SHOPPING,
         "FLYIN" to SaudiCategories.TRAVEL,
         "TAKER" to SaudiCategories.TRANSPORT,
         "ZARA" to SaudiCategories.SHOPPING,

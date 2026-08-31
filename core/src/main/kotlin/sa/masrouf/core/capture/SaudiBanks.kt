@@ -82,7 +82,7 @@ object SaudiBanks {
         // honest.
         senderIds = setOf("SNB ALAHLI", "SNBALAHLI", "SNB NEO", "ALAHLI"),
         merchantPatterns = listOf(
-            Regex("""(?m)^من\s+(?![*\d])(.+)$"""),
+            Regex("""(?m)^من\s+(?!\**\d)(.+)$"""),
             Regex("""(?m)^لدى\s*:?\s*(.+)$"""),
         ),
         counterpartyPatterns = listOf(
@@ -95,8 +95,8 @@ object SaudiBanks {
             //
             // The negative lookaheads keep these off the account lines, which some
             // templates introduce with the very same words.
-            Regex("""(?m)^مرسل\s*:?\s*(?:من\s+)?(?![*\d])(.+)$"""),
-            Regex("""(?m)^مستفيد\s*:?\s*(?![*\d])(.+)$"""),
+            Regex("""(?m)^مرسل\s*+:?+\s*+(?:من\s+)?+(?!\**\d)(.+)$"""),
+            Regex("""(?m)^مستفيد\s*+:?+\s*+(?!\**\d)(.+)$"""),
             // "من1007* NAME" (incoming) and "ل0106* NAME" (outgoing).
             Regex("""(?m)^(?:من|ل)\d{4}\*\s*(.+)$"""),
         ),
@@ -125,8 +125,25 @@ object SaudiBanks {
         id = "d360",
         senderIds = setOf("D360 BANK", "D360BANK", "D360"),
         counterpartyPatterns = listOf(
-            Regex("""(?m)^(?:إلى|الى)\s*:?\s*(.+)$"""),
-            Regex("""(?m)^من\s*:?\s*(.+)$"""),
+            // `(?!\**\d)`, not `(?![*\d])`: D360 masks a name with LEADING asterisks
+            // ("من: ****RECIPIENT NAME") and writes an account as digits with
+            // trailing ones ("حساب: 2207****"). Refusing every asterisk refuses the
+            // masked name too; refusing asterisks-then-digit refuses only the
+            // account.
+            //
+            // Possessive quantifiers, and they are the whole fix. With plain `\s*:?\s*`
+            // the engine gives the colon back to satisfy the lookahead and captures
+            // ":3016" instead of refusing - the guard reads as present and does
+            // nothing. `*+` and `?+` cannot be given back.
+            //
+            // The same negative lookahead SNB's patterns carry, and for the same
+            // reason. reparseStoredBodies tries every profile and keeps whichever
+            // reads the most, so an unguarded pattern here claims other banks'
+            // bodies too: "الى:3016 / من:KHALEEL MALKI" gave up the account number
+            // while the name sat one line below it. 710 rows survived the repair
+            // pass because these two lines did not have the guard.
+            Regex("""(?m)^(?:إلى|الى)\s*+:?+\s*+(?!\**\d)(.+)$"""),
+            Regex("""(?m)^من\s*+:?+\s*+(?!\**\d)(.+)$"""),
         ),
         cardPatterns = listOf(
             Regex("""(?m)^حساب\s*:?\s*\**\s*(\d{4})"""),
@@ -165,8 +182,8 @@ object SaudiBanks {
             Regex("""(?m)^At\s*:\s*(.+)$""", RegexOption.IGNORE_CASE),
         ),
         counterpartyPatterns = listOf(
-            Regex("""(?m)^From\s*:\s*(.+)$""", RegexOption.IGNORE_CASE),
-            Regex("""(?m)^(?:الى|إلى)\s*:?\s*(.+)$"""),
+            Regex("""(?m)^From\s*+:\s*+(?!\**\d)(.+)$""", RegexOption.IGNORE_CASE),
+            Regex("""(?m)^(?:الى|إلى)\s*+:?+\s*+(?!\**\d)(.+)$"""),
         ),
         cardPatterns = listOf(
             // "بطاقة: فيزا الائتمانية XX9994" and "to Account: XX8101" - the digits

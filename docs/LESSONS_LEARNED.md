@@ -240,3 +240,49 @@ for one reason can be exactly wrong for another.
 one verdict.
 **Source:** session 2026-08-31, `PurgeGuardTest`
 
+### 2026-08-31 — A guard that reads as present and does nothing
+**Mistake:** Added `(?![*\d])` to a pattern shaped `^الى\s*:?\s*(?![*\d])(.+)$` to stop
+an account number being read as a party. It did not work: with a plain `?` the
+engine hands the colon back to satisfy the lookahead, matches from the colon, and
+captures ":3016". The guard was in the source, was reviewed, and had no effect.
+**Why:** A negative lookahead only constrains the position the engine happens to
+be at. Any optional or greedy quantifier before it gives the engine somewhere else
+to stand.
+**Rule:** A lookahead guard placed after `\s*`, `?` or any other optional token
+needs possessive quantifiers - `\s*+`, `?+` - or the guard is decorative. Prove it
+with a test that feeds the exact string it is meant to refuse, never by reading it.
+**How to apply:** Every regex guard in `SaudiBanks` and `AmountExtractor`.
+**Source:** session 2026-08-31, council code-logic review, `NamedCounterpartyTest`
+
+### 2026-08-31 — Fixed one profile of four and reported the family fixed
+**Mistake:** Gave SNB's counterparty patterns the account guard and called the
+2,014-row repair done. `reparseStoredBodies` tries EVERY bank profile and keeps
+whichever reads the most, so D360's unguarded patterns claimed other banks' bodies
+and wrote the account number straight back into the field the repair had cleared.
+710 of the 2,014 came back, and the commit message said otherwise.
+**Why:** The fix was scoped to the profile whose template produced the example.
+The mechanism that consumes these patterns is profile-agnostic, and that was not
+carried into the fix.
+**Rule:** When several implementations of one interface are all tried and the best
+answer wins, a guard belongs on all of them or on the chooser. Fixing one and
+measuring the result on the same data that motivated it will show success.
+**How to apply:** Any change to one `BankProfile`'s patterns.
+**Source:** session 2026-08-31, maintenance pass 13
+
+### 2026-08-31 — A four-letter keyword is a substring of somebody
+**Mistake:** Added `"REEFI"` for a linens shop and `"FLYIN"` for flyin.com.
+`MerchantMatch` takes any keyword of four characters or more as a substring, so
+they also matched "Al Saj Al Reefi Restau" (29 rows of a restaurant → shopping) and
+"Flying Tiger Copenhagen" (a stationery chain → travel). The refile pass committed
+both to the database before anyone looked. The file's own comment claimed the new
+keywords had been "checked against the whole merchant list"; these two were not.
+**Why:** The check was done for the travel stems and the claim was written once,
+over the whole block. Later additions inherited a sentence nobody re-earned.
+**Rule:** Run every new keyword against the full distinct-merchant list before
+adding it, one at a time, and read what else it takes. الريفي is an ordinary Arabic
+word - no stem of it can be safe. Where a short keyword is unavoidable, order it
+after the specific names it would otherwise swallow and rely on the exact-glued
+pass to protect them.
+**How to apply:** Every addition to `CategoryGuess.RULES`.
+**Source:** session 2026-08-31, council code-logic review
+
