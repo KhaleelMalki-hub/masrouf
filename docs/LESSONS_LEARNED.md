@@ -105,3 +105,19 @@ transfer service) the name is never sufficient on its own — find a second sign
 the message, and verify the split over the whole corpus with correct Arabic folding.
 **How to apply:** Any merchant-keyed classification rule.
 **Source:** session 2026-08-31, `OwnMoneyTest`
+
+### 2026-08-31 — Wrote an inference into a comment as though it were a fact
+**Mistake:** Recorded in `CardIssuers` that barq's 7285, 2166 and 9941 were "three
+fragments of one balance rather than three cards". They are three separate cards.
+The comment was an inference from their overlapping date ranges, written in the same
+voice as the entries around it that came from the owner directly.
+**Why:** The file's other entries were owner-stated facts, so an inference placed
+among them inherited their authority. Nothing in the wording said which was which.
+**Rule:** In a comment, mark the provenance of anything not verified: "confirmed by
+the owner", "read off the template", "inferred from X, unverified". A future reader
+cannot tell a fact from a guess once both are written as prose, and a guess in a
+comment outlives the session that made it.
+**How to apply:** Any explanatory comment on a constant whose values come from
+outside the code — user statements, external systems, observed data.
+**Source:** session 2026-08-31, corrected in the same session by the owner
+

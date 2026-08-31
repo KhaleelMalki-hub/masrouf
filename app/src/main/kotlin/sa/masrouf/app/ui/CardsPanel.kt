@@ -213,9 +213,10 @@ object CardIssuers {
         "1887" to "snb",       // mada debit
         "8202" to "d360",      // mada debit
         "9994" to "enbd",      // credit
-        // The barq wallet. Three fragments of one balance rather than three cards:
-        // barq writes a different one of them into each kind of message, so each
-        // arrives looking like a card of its own.
+        // Three separate barq cards, confirmed by the owner - not one wallet seen
+        // three ways, which is what their overlapping date ranges first suggested.
+        // They are funded from his own mada cards, and those top-ups are already
+        // OWN_TRANSFER on both legs.
         "7285" to "barq",
         "2166" to "barq",
         "9941" to "barq",
