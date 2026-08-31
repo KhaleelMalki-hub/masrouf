@@ -121,6 +121,26 @@ object IntentClassifier {
         Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, listOf("مفوتر 016")),
         Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, listOf("مفوتر 207")),
 
+        // The funding leg of the same settlement, seen from the card that pays.
+        //
+        // The owner settles one credit card from another, in both directions. The
+        // card being paid says سداد and is caught above; the card being charged
+        // says "شراء إنترنت ... لدى: SADAD payment" and looked like an ordinary
+        // online purchase, so one movement was counted once as a purchase of
+        // 15,000 riyals and once - correctly - as nothing.
+        //
+        // The message never names where the money went: no biller code, no
+        // beneficiary. What it does say is that the card charged is a credit card,
+        // and the owner has confirmed he never pays a utility that way. A credit
+        // card paying SADAD is settling another card.
+        //
+        // Deliberately not keyed on the card number, which changes when the card is
+        // reissued, nor on one bank's wording, which changes when the bank feels
+        // like it. Twenty-seven genuine utility bills paid by card between 2017 and
+        // 2019 are left alone because their template never calls the card
+        // ائتمانية - it says الصرف المتبقي instead.
+        Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, listOf("SADAD", "ائتمان")),
+
         Rule(TransactionType.BILL_PAYMENT, Direction.DEBIT, listOf("سداد")),
 
         // ---- AlAhli's older template family -------------------------------

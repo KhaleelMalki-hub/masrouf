@@ -74,3 +74,34 @@ puts it on `PATH` or sets `JAVA_HOME`.
 in the same command, since the shell does not persist between calls.
 **How to apply:** Any `./gradlew` command in this repo.
 **Source:** session 2026-08-31
+
+### 2026-08-31 — One movement, two messages, only one of them fixed
+**Mistake:** Filed the credit-card settlement family as done after correcting the
+card that was *paid*. The card that *paid it* sends its own message —
+`شراء إنترنت | بطاقة: فيزا الائتمانية XX9994 | لدى: SADAD payment` — which names no
+destination and reads as an ordinary online purchase. 109,000 riyals stayed in the
+spending total on the other side of a fix that was reported as complete.
+**Why:** The fix was scoped to the wording that named the defect (`سداد`), not to the
+*event*. A transfer between two of the owner's own accounts always generates two
+messages from two banks, and correcting either one alone leaves the movement
+half-counted.
+**Rule:** When a fix concerns money moving between two places the user owns, find
+both legs before calling it done. Ask "which other account sent or received this, and
+what did *its* bank say?" — then go looking for that message in the corpus.
+**How to apply:** Any change to how transfers, settlements, wallet top-ups, or
+own-account movements are classified.
+**Source:** session 2026-08-31, maintenance pass 5
+
+### 2026-08-31 — A merchant name is not a destination
+**Mistake:** Nearly wrote a rule making every `SADAD payment` an own transfer. It
+would have erased 27 genuine utility bills from 2017–2019 that carry the same
+merchant on the same rail.
+**Why:** SADAD is a payment *rail*, not a payee. The merchant field says how the
+money travelled, not where it went, so the same string covers an electricity bill and
+a credit-card settlement.
+**Rule:** Before keying a rule on a merchant name, check what else in the history
+carries that same name. For a payment rail (SADAD, STC Pay, Apple Pay, a bank's own
+transfer service) the name is never sufficient on its own — find a second signal in
+the message, and verify the split over the whole corpus with correct Arabic folding.
+**How to apply:** Any merchant-keyed classification rule.
+**Source:** session 2026-08-31, `OwnMoneyTest`

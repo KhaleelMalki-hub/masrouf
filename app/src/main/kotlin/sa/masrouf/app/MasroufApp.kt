@@ -60,6 +60,15 @@ class MasroufApp : Application() {
             transactions.retypeOwnMoney()
             preferences.maintenanceVersion = 4
         }
+        if (done < 5) {
+            // The classifier learned the funding leg of a card settlement: the card
+            // being charged, which says only "شراء إنترنت ... لدى: SADAD payment"
+            // and names no destination. Same pass, which is idempotent - it moves
+            // only rows the classifier now takes out of spending, so a second run
+            // over rows already corrected finds nothing to do.
+            transactions.retypeOwnMoney()
+            preferences.maintenanceVersion = 5
+        }
         transactions.fileUncategorised()
         catchUpOnSms()
     }

@@ -273,6 +273,35 @@ Date:23-9-7 11:03"""
 فاتورة 5117765907171922
 في 24/06/24 13:29"""
 
+    /**
+     * The funding leg: the credit card being charged to settle another credit card.
+     * Reads as an ordinary online purchase, and names no destination at all.
+     */
+    const val ENBD_CARD_SETTLES_OTHER_CARD = """شراء إنترنت
+بطاقة: فيزا الائتمانية XX9994 
+مبلغ: SAR 15,000.00
+لدى: SADAD payment 
+رصيد: 64,901.00 ريال 
+في: 2026-08-22 17:05:27"""
+
+    /**
+     * A genuine utility bill paid by card, on the older template. Same rail, same
+     * merchant, and it must keep counting as spending - which is why the rule for
+     * the message above cannot simply be "SADAD".
+     */
+    const val SNB_SADAD_UTILITY_BY_CARD = """سحب مبلغ 234.28 SAR 
+بطاقة 2887* 
+من SADAD PAYMENT 
+في 06/26 21:51 
+الصرف المتبقي 23339.92 SAR"""
+
+    /** An ordinary purchase on the same credit card. Spending, and must stay so. */
+    const val ENBD_ORDINARY_PURCHASE = """شراء بطاقة نقاط بيع (أثير)
+بطاقة: فيزا الائتمانية XX9994 
+مبلغ: SAR 99.00 
+لدى: Aldrees 1437 
+في SAUDI ARABIA"""
+
     /** A SADAD payment to a real utility, for contrast with the biller above. */
     const val SNB_SADAD_ELECTRICITY = """سداد فاتورة
 مبلغ 152.46 SAR
@@ -487,6 +516,7 @@ card number: **1887, mada
         RAJHI_CARD_REFUND, RAJHI_CARD_SETTLEMENT, RAJHI_CARD_SETTLEMENT_EN,
         SNB_SADAD_TO_OWN_CARD, SNB_SADAD_ELECTRICITY,
         BARQ_TRANSFER_TO_SELF, D360_TRANSFER_TO_SELF, SNB_TRANSFER_TO_RELATIVE,
+        ENBD_CARD_SETTLES_OTHER_CARD, SNB_SADAD_UTILITY_BY_CARD, ENBD_ORDINARY_PURCHASE,
         SNB_ONLINE_PURCHASE, SNB_TRANSFER_IN, SNB_TRANSFER_OUT, SNB_ATM_DEPOSIT,
         D360_TRANSFER_IN, D360_TRANSFER_OUT, D360_OWN_ACCOUNTS_TRANSFER,
         BARQ_TRANSFER_OUT, BARQ_TOPUP_EN, BARQ_ONLINE_PURCHASE,

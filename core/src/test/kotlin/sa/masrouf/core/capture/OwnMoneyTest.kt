@@ -80,6 +80,38 @@ class OwnMoneyTest {
         assertEquals(TransactionType.BILL_PAYMENT, typeOf(body))
     }
 
+    // ---- The other half of a settlement: the card that pays ----------------
+
+    /**
+     * One movement, two messages. The card being paid says سداد; the card being
+     * charged says "شراء إنترنت ... لدى: SADAD payment" and named no destination,
+     * so it was counted as a 15,000-riyal online purchase. Seven of these, 109,000
+     * riyals, all of them the funding leg of a settlement already recognised on the
+     * other side.
+     */
+    @Test
+    fun `a credit card charged to settle another card is not spending`() {
+        assertEquals(TransactionType.OWN_TRANSFER, typeOf(RealMessages.ENBD_CARD_SETTLES_OTHER_CARD))
+    }
+
+    /**
+     * The guard on that rule. The same rail and the same merchant, on the template
+     * an older card used - twenty-seven real utility bills between 2017 and 2019.
+     * A rule keyed on "SADAD" alone would erase every one of them.
+     */
+    @Test
+    fun `a utility bill paid by card through the same rail is still spending`() {
+        val type = typeOf(RealMessages.SNB_SADAD_UTILITY_BY_CARD)
+
+        assertTrue(type.countsAsSpending, "a real utility bill stopped counting")
+    }
+
+    /** An ordinary shop, on the very card the rule above is about. */
+    @Test
+    fun `an ordinary purchase on that credit card is still spending`() {
+        assertEquals(TransactionType.PURCHASE, typeOf(RealMessages.ENBD_ORDINARY_PURCHASE))
+    }
+
     // ---- Transfers the user sends to themselves ----------------------------
 
     @Test
@@ -137,6 +169,7 @@ class OwnMoneyTest {
             RealMessages.SNB_SADAD_TO_OWN_CARD,
             RealMessages.BARQ_TRANSFER_TO_SELF,
             RealMessages.D360_TRANSFER_TO_SELF,
+            RealMessages.ENBD_CARD_SETTLES_OTHER_CARD,
         )
 
         for (body in ownMoney) {
