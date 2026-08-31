@@ -166,6 +166,13 @@ interface TransactionDao {
      * Confirmed only. A pending row is a parser's reading that nobody has agreed
      * to, and this screen exists to be read as fact.
      *
+     * The category ids are BOUND, not spelled. They were literals here, again in
+     * the rows query below, and a third time in the test double - four copies of a
+     * decision that CLAUDE.md rule 5 says belongs in one place, two of them strings
+     * no Kotlin refactor can reach. They now come from
+     * [sa.masrouf.core.model.INCOME_CATEGORY_IDS], which is what
+     * [sa.masrouf.core.model.countsAsIncome] reads.
+     *
      * The `+3 hours` is Riyadh, matching every other month boundary in this file;
      * a month bucketed in UTC puts a salary that arrived at 02:25 on the 1st into
      * the previous month.
@@ -173,16 +180,16 @@ interface TransactionDao {
     @Query(
         """
         SELECT strftime('%Y-%m', occurred_at_millis/1000, 'unixepoch', '+3 hours') AS month,
-               SUM(CASE WHEN category_id = 'income' THEN amount_halalas ELSE 0 END) AS salaryHalalas,
-               SUM(CASE WHEN category_id = 'bonus'  THEN amount_halalas ELSE 0 END) AS bonusHalalas
+               SUM(CASE WHEN category_id = :salaryId THEN amount_halalas ELSE 0 END) AS salaryHalalas,
+               SUM(CASE WHEN category_id = :bonusId  THEN amount_halalas ELSE 0 END) AS bonusHalalas
         FROM transactions
         WHERE direction = 'CREDIT' AND status = 'CONFIRMED'
-          AND category_id IN ('income', 'bonus')
+          AND category_id IN (:salaryId, :bonusId)
         GROUP BY month
         ORDER BY month DESC
         """
     )
-    fun observeIncomeByMonth(): Flow<List<IncomeMonthRow>>
+    fun observeIncomeByMonth(salaryId: String, bonusId: String): Flow<List<IncomeMonthRow>>
 
     /**
      * The individual deposits behind [observeIncomeByMonth].
@@ -201,11 +208,11 @@ interface TransactionDao {
         """
         SELECT * FROM transactions
         WHERE direction = 'CREDIT' AND status = 'CONFIRMED'
-          AND category_id IN ('income', 'bonus')
+          AND category_id IN (:incomeIds)
         ORDER BY occurred_at_millis DESC
         """
     )
-    fun observeIncomeRows(): Flow<List<TransactionEntity>>
+    fun observeIncomeRows(incomeIds: List<String>): Flow<List<TransactionEntity>>
 
     /**
      * Files every transaction from one merchant at once.

@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat
 import android.content.pm.PackageManager
 import android.Manifest
 import sa.masrouf.app.data.MasroufDatabase
+import sa.masrouf.app.data.CURRENT_MAINTENANCE_VERSION
 import sa.masrouf.app.data.Preferences
 import sa.masrouf.app.data.TransactionRepository
 import sa.masrouf.app.ui.CreditCards
@@ -39,132 +40,87 @@ class MasroufApp : Application() {
     }
 
     /**
-     * One-off passes over stored data, each run exactly once per install.
+     * One-off repairs over stored data, each run at most once per install.
      *
      * Every launch used to re-read 22,000 bodies through the gate and re-parse
      * 14,000 of them inside one transaction, which held the database for ten
-     * seconds while the screen showed an empty month as if it were true. A stamp
-     * in preferences says which passes have run; a new pass bumps the version.
+     * seconds while the screen showed an empty month as if it were true. A stamp in
+     * preferences says how far the history has been brought forward.
      *
-     * The filing pass has no version: it only touches rows with no category and
-     * is cheap when there are none.
+     * ## Why a set and not a ladder
+     *
+     * Each version below names the repairs that version introduced. An install
+     * several versions behind used to run them in sequence, and because most
+     * repairs reuse an existing pass, that meant the same full-table scan four
+     * times over: eight scans where four would do, growing by one with every fix.
+     *
+     * They are idempotent, so what matters is that each runs ONCE and that they run
+     * in dependency order. The union is taken, then executed in [Repair]'s declared
+     * order, which is that order: purge what should not exist, repair what is
+     * wrong, retype what is misfiled, and only then file - because filing reads the
+     * merchant and the type that the three before it correct.
+     *
+     * A fresh install stamps the current version without running anything: every
+     * repair here corrects what an OLDER pipeline stored, and the current pipeline
+     * does not produce it. That invariant is what makes skipping safe, and
+     * [MaintenanceOrderTest] holds it.
      */
     suspend fun runMaintenance() {
         val done = preferences.maintenanceVersion
-        if (done < 1) {
-            transactions.purgeRejectedBodies()
-            transactions.reparseStoredBodies()
-            transactions.backfillBalances()
-            preferences.maintenanceVersion = 1
+        val repairs = Repair.entries.filter { done < it.introducedIn }.toSortedSet()
+
+        for (repair in repairs) {
+            when (repair) {
+                Repair.PURGE_REJECTED -> transactions.purgeRejectedBodies()
+                Repair.REPAIR_AMOUNTS -> transactions.repairAmounts()
+                Repair.REPAIR_PARTIES -> transactions.repairNumericParties()
+                Repair.BACKFILL_BALANCES -> transactions.backfillBalances()
+                Repair.REPARSE_BODIES -> transactions.reparseStoredBodies()
+                Repair.RETYPE_SALARY -> transactions.retypeSalaryDeposits()
+                Repair.RETYPE_OWN_MONEY -> transactions.retypeOwnMoney()
+                Repair.REFILE_ALL -> transactions.refileAll()
+            }
         }
-        if (done < 2) {
-            // The gate learned card-limit notices after pass 1 had run.
-            transactions.purgeRejectedBodies()
-            preferences.maintenanceVersion = 2
-        }
-        if (done < 3) {
-            // "ايداع رواتب" was read as a transfer for five years.
-            transactions.retypeSalaryDeposits()
-            preferences.maintenanceVersion = 3
-        }
-        if (done < 4) {
-            // The gate learned the credit-card statement notice, and the classifier
-            // learned the three ways the user's own money was leaving the total:
-            // card settlements, SADAD billers that are their own cards, and
-            // transfers to themselves. The purge runs first so the notices are gone
-            // before anything tries to re-type them.
-            transactions.purgeRejectedBodies()
-            transactions.retypeOwnMoney()
-            preferences.maintenanceVersion = 4
-        }
-        if (done < 5) {
-            // The classifier learned the funding leg of a card settlement: the card
-            // being charged, which says only "شراء إنترنت ... لدى: SADAD payment"
-            // and names no destination. Same pass, which is idempotent - it moves
-            // only rows the classifier now takes out of spending, so a second run
-            // over rows already corrected finds nothing to do.
-            transactions.retypeOwnMoney()
-            preferences.maintenanceVersion = 5
-        }
-        if (done < 6) {
-            // A machine withdrawal that names the card was read as a card purchase
-            // for as long as the app has existed - the card rule was tested before
-            // the ATM ones. Same pass again: it accepts a re-reading only when the
-            // row stops counting as spending, which is exactly this change.
-            transactions.retypeOwnMoney()
-            preferences.maintenanceVersion = 6
-        }
-        if (done < 7) {
-            // Tiqmo joined the list of the owner's own wallets, which changes a
-            // stored row's type rather than only its category - so the filing pass
-            // below cannot reach it and this one has to.
-            transactions.retypeOwnMoney()
-            preferences.maintenanceVersion = 7
-        }
-        if (done < 8) {
-            // Travel became a category of its own, and 51,289 riyals of flights
-            // were already filed as transport - a gap-filling pass cannot move a
-            // row that has a category. refileAll can, and it keeps the categories
-            // the user chose by hand.
-            transactions.refileAll()
-            preferences.maintenanceVersion = 8
-        }
-        if (done < 9) {
-            // 2,014 records had an account number where a party belonged. Repair
-            // first, so the names exist, then file against them - the employer's
-            // transfers become مكافآت only once the employer is named.
-            transactions.repairNumericParties()
-            transactions.refileAll()
-            preferences.maintenanceVersion = 9
-        }
-        if (done < 10) {
-            // The extractor could not see a four-figure amount without a comma, so
-            // 439 records stored a balance where an amount belonged, and one stored
-            // ninety-two trillion riyals. The gate also learned the English
-            // one-time-password wording, so the purge runs first: those bodies hold
-            // a credential and must go before anything else reads them.
-            transactions.purgeRejectedBodies()
-            transactions.repairAmounts()
-            preferences.maintenanceVersion = 10
-        }
-        if (done < 11) {
-            // The merchants the owner named this session - a perfume shop, a
-            // cabinet maker, a furniture chain under five spellings - and the
-            // airlines and hotels that were still unfiled. refileAll rather than
-            // the gap-filling pass, because several already carried a category the
-            // app had guessed; the ones the user chose himself are kept.
-            transactions.refileAll()
-            preferences.maintenanceVersion = 11
-        }
-        if (done < 12) {
-            // A review of the real corpus found four bodies the gate still allowed,
-            // each holding a live code: "رمز مؤقت:2345" issued to authorise a
-            // 25,000-riyal transfer, and three English "activation code … for One
-            // Time Bill Payment". All four were stored as CONFIRMED transactions,
-            // so the month held movements that never happened and the codes sat on
-            // disk beside them. The gate has learned all four wordings; this purge
-            // is what removes what it let through before.
-            transactions.purgeRejectedBodies()
-            preferences.maintenanceVersion = 12
-        }
-        if (done < 13) {
-            // Pass 9 left 710 rows still carrying an account number as their party.
-            // Only SNB's patterns had the guard; reparseStoredBodies tries every
-            // profile and keeps whichever reads the most, so D360's unguarded lines
-            // wrote the number straight back into the field pass 9 had just
-            // cleared. All four profiles are guarded now, so the repair can run
-            // again and stick.
-            //
-            // Then refile: two keywords added this session were short enough to
-            // match inside longer names - "REEFI" took a restaurant's 29 rows to
-            // shopping and "FLYIN" took a stationery chain to travel - and both
-            // were committed to the database by pass 11.
-            transactions.repairNumericParties()
-            transactions.refileAll()
-            preferences.maintenanceVersion = 13
-        }
+        preferences.maintenanceVersion = CURRENT_MAINTENANCE_VERSION
+
         transactions.fileUncategorised()
         catchUpOnSms()
+    }
+
+    /**
+     * The repairs, in the order they must run.
+     *
+     * Declaration order IS dependency order and the enum's natural ordering is what
+     * the pass set is sorted by, so a repair added in the wrong place changes
+     * behaviour silently. [MaintenanceOrderTest] asserts the shape of it.
+     *
+     * @param introducedIn the maintenance version that first needed this repair. An
+     *   install at or past it has already had it.
+     */
+    enum class Repair(val introducedIn: Int) {
+        /** Bodies the gate now refuses. First: a credential must not be read again. */
+        PURGE_REJECTED(12),
+
+        /** Amounts the extractor now reads differently. Before anything reads them. */
+        REPAIR_AMOUNTS(10),
+
+        /** Account numbers standing in for a party. Re-parses, so before filing. */
+        REPAIR_PARTIES(13),
+
+        /** Balances never read out of bodies that carry one. */
+        BACKFILL_BALANCES(1),
+
+        /** Merchants and cards an older parser could not extract. */
+        REPARSE_BODIES(1),
+
+        /** Salary deposits an older classifier read as transfers. */
+        RETYPE_SALARY(3),
+
+        /** The user's own money, wherever it is still counted as spending. */
+        RETYPE_OWN_MONEY(7),
+
+        /** Last: filing reads the merchant and the type everything above corrects. */
+        REFILE_ALL(13),
     }
 
     /**

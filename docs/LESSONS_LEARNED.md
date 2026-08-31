@@ -339,3 +339,20 @@ before the command, not after.
 reset`, anything with `--rerun` against live data.
 **Source:** session 2026-08-31, recovered from `backup_before_androidtest.db`
 
+### 2026-08-31 — A test double that re-implements the thing under test
+**Mistake:** `FakeDao` re-implemented the income aggregate in Kotlin - same
+filters, same month key, same two conditional sums - so `IncomeSeriesTest` proved
+the copy. A reviewer replaced the bonus column of the real `@Query` with a literal
+zero and the entire suite stayed green: every figure on the income screen came
+from a string nothing read back.
+**Why:** A fake that returns canned rows is a stub; a fake that recomputes the
+answer is a second implementation, and a test against it asserts that two pieces of
+my own reasoning agree. Room's KSP accepts any valid SQL, so nothing else looks.
+**Rule:** A test double may return data. It may not re-derive an answer the
+production code derives. Where the logic lives in SQL, one test must reach real
+SQLite - an instrumented Room test against an in-memory database - and it must be
+proved by mutating the query and watching it go red.
+**How to apply:** Every `@Query` carrying logic: aggregates, CASE expressions,
+date arithmetic, anything beyond a plain select.
+**Source:** session 2026-08-31, `IncomeQueryTest`, mutation reproduced and reverted
+

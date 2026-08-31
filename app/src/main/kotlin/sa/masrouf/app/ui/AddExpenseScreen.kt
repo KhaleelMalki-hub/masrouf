@@ -338,6 +338,12 @@ fun AddExpenseScreen(
         topBar = {
             Column {
               AddExpenseTopBar(
+                // Import history, re-file everything and edit salary all act on the
+                // spending history, and all three were reachable from the income
+                // screen - including the destructive one, which is confirmation-
+                // gated but should not have been offered there at all. The
+                // destination decides, in the one place that knows it.
+                showHistoryActions = destination == Destination.SPENDING,
                 scrollBehavior = topBarScroll,
                 onSwitchLanguage = onSwitchLanguage,
                 themeMode = themeMode,
@@ -929,18 +935,23 @@ private fun AddExpenseTopBar(
     onImportHistory: () -> Unit,
     onFileHistory: () -> Unit,
     onRefileAll: () -> Unit,
-    onEditSalary: () -> Unit) {
+    onEditSalary: () -> Unit,
+    showHistoryActions: Boolean = true) {
     TopAppBar(
         title = { Text(stringResource(R.string.dashboard_title)) },
         scrollBehavior = scrollBehavior,
         actions = {
-            MoreMenu(
-                importRunning = importRunning,
-                onImportHistory = onImportHistory,
-                onFileHistory = onFileHistory,
-                onRefileAll = onRefileAll,
-                onEditSalary = onEditSalary,
-            )
+            // The menu acts on the spending history. Language and theme are the
+            // app's, so they stay everywhere.
+            if (showHistoryActions) {
+                MoreMenu(
+                    importRunning = importRunning,
+                    onImportHistory = onImportHistory,
+                    onFileHistory = onFileHistory,
+                    onRefileAll = onRefileAll,
+                    onEditSalary = onEditSalary,
+                )
+            }
             ThemeMenu(mode = themeMode, onSelect = onThemeModeChange)
             // An icon, like the other two actions. A two-letter text button in a row
             // of icons read as a status rather than a control; the tooltip-free

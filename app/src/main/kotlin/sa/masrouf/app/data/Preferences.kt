@@ -53,3 +53,12 @@ class Preferences(context: Context) {
         const val MAINTENANCE_KEY = "maintenance_version"
     }
 }
+
+/**
+ * How far the stored history has been brought forward.
+ *
+ * Bumped whenever a repair is added to [MasroufApp.Repair]; the repair records the
+ * same number as the version that introduced it, and the two together decide what
+ * an install behind this one still needs.
+ */
+const val CURRENT_MAINTENANCE_VERSION = 13

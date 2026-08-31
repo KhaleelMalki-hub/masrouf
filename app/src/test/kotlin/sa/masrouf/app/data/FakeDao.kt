@@ -190,9 +190,9 @@ class FakeDao : TransactionDao {
      * same way, in Riyadh, so a salary arriving at 02:25 on the 1st lands in the
      * month the user would say it did.
      */
-    override fun observeIncomeByMonth(): Flow<List<IncomeMonthRow>> = state.map { rows ->
+    override fun observeIncomeByMonth(salaryId: String, bonusId: String): Flow<List<IncomeMonthRow>> = state.map { rows ->
         rows.filter { it.status == Status.CONFIRMED.name && it.direction == "CREDIT" }
-            .filter { it.categoryId == "income" || it.categoryId == "bonus" }
+            .filter { it.categoryId == salaryId || it.categoryId == bonusId }
             .groupBy {
                 java.time.Instant.ofEpochMilli(it.occurredAtMillis)
                     .atZone(sa.masrouf.core.time.RiyadhTime.ZONE)
@@ -201,16 +201,16 @@ class FakeDao : TransactionDao {
             .map { (month, group) ->
                 IncomeMonthRow(
                     month = month,
-                    salaryHalalas = group.filter { it.categoryId == "income" }.sumOf { it.amountHalalas },
-                    bonusHalalas = group.filter { it.categoryId == "bonus" }.sumOf { it.amountHalalas },
+                    salaryHalalas = group.filter { it.categoryId == salaryId }.sumOf { it.amountHalalas },
+                    bonusHalalas = group.filter { it.categoryId == bonusId }.sumOf { it.amountHalalas },
                 )
             }
             .sortedByDescending { it.month }
     }
 
-    override fun observeIncomeRows(): Flow<List<TransactionEntity>> = state.map { rows ->
+    override fun observeIncomeRows(incomeIds: List<String>): Flow<List<TransactionEntity>> = state.map { rows ->
         rows.filter { it.status == Status.CONFIRMED.name && it.direction == "CREDIT" }
-            .filter { it.categoryId == "income" || it.categoryId == "bonus" }
+            .filter { it.categoryId in incomeIds }
             .sortedByDescending { it.occurredAtMillis }
     }
 

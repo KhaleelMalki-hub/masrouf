@@ -345,6 +345,8 @@ private fun MonthRow(
 /** One deposit: the day it landed, what it was, and how much. */
 @Composable
 private fun DepositRow(deposit: Transaction, currencyLabel: String) {
+    // The one place that still needs to tell the two apart, and it asks the
+    // category by name rather than restating what income is.
     val isBonus = deposit.categoryId == SaudiCategories.BONUS.id
     Row(
         modifier = Modifier

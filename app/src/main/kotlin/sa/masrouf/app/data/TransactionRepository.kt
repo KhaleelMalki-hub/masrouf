@@ -18,6 +18,7 @@ import sa.masrouf.core.dedup.Fingerprint
 import sa.masrouf.core.model.Category
 import sa.masrouf.core.model.CategoryGuess
 import sa.masrouf.core.model.Direction
+import sa.masrouf.core.model.INCOME_CATEGORY_IDS
 import sa.masrouf.core.model.countsAsSpending
 import sa.masrouf.core.model.RecurringDetector
 import sa.masrouf.core.model.SaudiCategories
@@ -69,7 +70,9 @@ class TransactionRepository(
     private val captureLock = Mutex()
 
     fun observeRecent(limit: Int = RECENT_LIMIT): Flow<List<Transaction>> =
-        dao.observeRecent(limit).map { rows -> rows.map(TransactionEntity::toModel) }
+        dao.observeRecent(limit)
+            .map { rows -> rows.map(TransactionEntity::toModel) }
+            .flowOn(Dispatchers.Default)
 
     /**
      * The first Riyadh month that has anything in it, or null when nothing is
@@ -99,7 +102,9 @@ class TransactionRepository(
         return dao.observeBetween(
             fromMillis = RiyadhTime.startOfDay(first).toEpochMilli(),
             untilMillis = RiyadhTime.startOfDay(first.plusMonths(1)).toEpochMilli(),
-        ).map { rows -> rows.map(TransactionEntity::toModel) }
+        )
+            .map { rows -> rows.map(TransactionEntity::toModel) }
+            .flowOn(Dispatchers.Default)
     }
 
     /**
@@ -382,7 +387,12 @@ class TransactionRepository(
      * the app existed would draw a decade of nothing that never happened.
      */
     fun observeIncomeByMonth(): Flow<List<IncomeMonth>> =
-        dao.observeIncomeByMonth().map { rows -> rows.mapNotNull { it.toModel() } }
+        dao.observeIncomeByMonth(
+            salaryId = SaudiCategories.INCOME.id,
+            bonusId = SaudiCategories.BONUS.id,
+        )
+            .map { rows -> rows.mapNotNull { it.toModel() } }
+            .flowOn(Dispatchers.Default)
 
     /**
      * Every salary and bonus deposit, newest first.
@@ -391,7 +401,14 @@ class TransactionRepository(
      * app does not know would otherwise put a real deposit under the wrong heading.
      */
     fun observeIncomeRows(): Flow<List<Transaction>> =
-        dao.observeIncomeRows().map { rows -> rows.mapNotNull { runCatching { it.toModel() }.getOrNull() } }
+        dao.observeIncomeRows(INCOME_CATEGORY_IDS)
+            // Throws rather than skipping, unlike the flows that only inform a
+            // decision. These rows are money the user reads: a dropped one is
+            // absent from the deposits a month opens to show while still inside the
+            // SUM in its header, so the header says 45,000 and the list adds to
+            // 30,000 with no error anywhere.
+            .map { rows -> rows.map(TransactionEntity::toModel) }
+            .flowOn(Dispatchers.Default)
 
     /** The merchants the user pays on a rhythm, largest first. See [RecurringDetector]. */
     fun observeRecurring(now: () -> Instant): Flow<List<RecurringDetector.Recurring>> =
@@ -402,6 +419,12 @@ class TransactionRepository(
             // The map runs where the flow is collected, which is the main thread
             // under stateIn. Twelve thousand rows through the detector there froze
             // the screen at launch: no total, no strip, touches ignored.
+            //
+            // Every mapping flow in this file carries this now, not only the one
+            // that was measured. They all map every row of a growing table on each
+            // emission, and `observePending` in particular is unbounded and
+            // re-emits on every write during a 22,000-message backfill - the same
+            // mechanism, one incident away from being noticed.
             .flowOn(Dispatchers.Default)
 
     /**
@@ -529,10 +552,14 @@ class TransactionRepository(
      * recorded a bank.
      */
     fun observeCardBanks(): Flow<Map<String, String>> =
-        dao.observeCardBanks().map { rows -> rows.associate { it.last4 to it.bankId } }
+        dao.observeCardBanks()
+            .map { rows -> rows.associate { it.last4 to it.bankId } }
+            .flowOn(Dispatchers.Default)
 
     fun observePending(): Flow<List<Transaction>> =
-        dao.observePending().map { rows -> rows.map(TransactionEntity::toModel) }
+        dao.observePending()
+            .map { rows -> rows.map(TransactionEntity::toModel) }
+            .flowOn(Dispatchers.Default)
 
     /**
      * Files every transaction from one merchant, and remembers the decision.
