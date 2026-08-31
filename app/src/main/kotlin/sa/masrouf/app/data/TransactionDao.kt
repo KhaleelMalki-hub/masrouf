@@ -367,7 +367,8 @@ interface TransactionDao {
         """
         UPDATE transactions
         SET merchant_raw = NULL, merchant_key = NULL
-        WHERE merchant_key IS NOT NULL
+        WHERE raw_text IS NOT NULL
+          AND merchant_key IS NOT NULL
           AND merchant_key GLOB '*[0-9]*'
           AND merchant_key NOT GLOB '*[A-Za-z]*'
           AND merchant_key NOT GLOB '*[أ-ي]*'
@@ -400,11 +401,19 @@ interface TransactionDao {
      * Targeted rather than a general re-classification: a general pass would
      * re-decide every row's type from its body, and a type the user has vouched
      * for is not something to re-decide in a maintenance pass.
+     *
+     * The type moves either way - a salary deposit is a salary whatever it was
+     * filed under - but a category the user chose survives, and so does the
+     * provenance that says they chose it. Rewriting `category_source` to AUTOMATIC
+     * destroys the one thing rule 9 says cannot be recovered: whether a person
+     * agreed with a guess or made a decision.
      */
     @Query(
         """
         UPDATE transactions
-        SET type = 'SALARY', category_id = 'income', category_source = 'AUTOMATIC'
+        SET type = 'SALARY',
+            category_id = CASE WHEN category_source = 'MANUAL' THEN category_id ELSE 'income' END,
+            category_source = CASE WHEN category_source = 'MANUAL' THEN 'MANUAL' ELSE 'AUTOMATIC' END
         WHERE direction = 'CREDIT' AND type <> 'SALARY' AND raw_text LIKE '%ايداع رواتب%'
         """
     )

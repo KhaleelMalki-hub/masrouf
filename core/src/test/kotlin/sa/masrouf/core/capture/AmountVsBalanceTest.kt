@@ -92,6 +92,40 @@ class AmountVsBalanceTest {
         assertEquals(null, read(body))
     }
 
+    /**
+     * A currency token between the label and the number used to defeat the guard.
+     *
+     * The lookback ended at "SAR", not at "المتاح", so the balance was not
+     * disqualified - and BARE_DECIMAL then admitted the number that the
+     * currency pass had correctly rejected. A 931.64 coffee run reads as 4,210.
+     */
+    @Test
+    fun `a currency token between a label and its number does not defeat the guard`() {
+        val body = "الرصيد المتاح SAR 4210.00\nشراء 931.64\nلدى COFFEE"
+
+        assertEquals(Money.ofMajor("931.64"), read(body))
+    }
+
+    /** The same, for the fee line, which sits right under a transfer's amount. */
+    @Test
+    fun `a fee written with its currency does not become the amount`() {
+        val body = "حوالة صادرة محلية\nرسوم SAR 0.00\nشراء 55.25"
+
+        assertEquals(Money.ofMajor("55.25"), read(body))
+    }
+
+    /**
+     * "بطاقة" was in the list and could never match: the list held it unfolded
+     * while the text is folded, and folding maps ة to ه. A guard that cannot fire
+     * is worse than an absent one, because it is read as protection.
+     */
+    @Test
+    fun `a card fragment is disqualified despite the folded spelling`() {
+        assertEquals(null, read("بطاقة 12.34"))
+        assertEquals(null, read("حساب 12.34"))
+        assertEquals(null, read("مرجع 12.34"))
+    }
+
     /** A fee is a second labelled figure, and must not displace the transfer. */
     @Test
     fun `a fee line does not become the amount`() {

@@ -150,7 +150,14 @@ object RecurringDetector {
         val clusters = mutableListOf<List<Transaction>>()
         while (remaining.isNotEmpty()) {
             val seed = remaining.first().amount.halalas
-            val cluster = remaining.filter { abs(it.amount.halalas - seed) <= seed * CLUSTER_TOLERANCE }
+            // The seed is the smallest remaining. A non-positive one makes the
+            // tolerance non-positive too, so nothing qualifies - not even the seed -
+            // `removeAll` removes nothing, and the loop spins forever on
+            // Dispatchers.Default with no error anywhere. Amounts are non-negative
+            // by construction today; this costs one token and removes the class.
+            val cluster = remaining
+                .filter { abs(it.amount.halalas - seed) <= seed * CLUSTER_TOLERANCE }
+                .ifEmpty { listOf(remaining.first()) }
             clusters += cluster.sortedBy { it.occurredAt }
             remaining.removeAll(cluster)
         }

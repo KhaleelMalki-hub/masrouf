@@ -209,11 +209,43 @@ object AmountExtractor {
      */
     fun extractOrNull(rawText: String): Candidate? = candidates(rawText).firstOrNull()
 
+    /**
+     * The labels, folded once.
+     *
+     * They were compared unfolded against folded text, so "بطاقة" could never match
+     * anything - folding maps ة to ه, and the list held the spelling nobody would
+     * be comparing against. A guard that cannot fire is worse than an absent one:
+     * it is read as protection.
+     */
+    private val DISQUALIFYING_FOLDED = DISQUALIFYING_PREFIXES.map(ArabicText::foldForMatching)
+
+    /**
+     * Whether the text just before a candidate marks it as something other than the
+     * amount charged.
+     *
+     * Two things are stripped before the comparison, and both are why the guard
+     * used to leak. `foldForMatching` ends in `trim()`, so a trailing space can
+     * never survive to be matched - the two `endsWith("$it ")` forms this replaced
+     * were unreachable. And a currency token between the label and the number
+     * ("الرصيد المتاح SAR 4210.00") put SAR at the end of the lookback, so the
+     * label was no longer there to be found and a balance was read as a purchase.
+     */
     private fun isDisqualified(text: String, startIndex: Int): Boolean {
         val from = (startIndex - PREFIX_LOOKBACK).coerceAtLeast(0)
         val prefix = ArabicText.foldForMatching(text.substring(from, startIndex))
-        return DISQUALIFYING_PREFIXES.any { prefix.endsWith(it) || prefix.endsWith("$it :") || prefix.endsWith("$it ") }
+            .let(::withoutTrailingCurrency)
+        return DISQUALIFYING_FOLDED.any { prefix.endsWith(it) }
     }
+
+    /** Drops a currency token sitting between a label and its number. */
+    private fun withoutTrailingCurrency(prefix: String): String =
+        CURRENCY_FOLDED.firstOrNull { prefix.endsWith(it) }
+            ?.let { prefix.dropLast(it.length).trimEnd() }
+            ?: prefix
+
+    private val CURRENCY_FOLDED = CURRENCY_ALTERNATIVES
+        .map(ArabicText::foldForMatching)
+        .sortedByDescending(String::length)
 
     private fun IntRange.overlaps(other: IntRange): Boolean =
         first <= other.last && other.first <= last

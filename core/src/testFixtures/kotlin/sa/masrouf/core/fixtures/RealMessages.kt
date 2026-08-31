@@ -10,6 +10,10 @@ package sa.masrouf.core.fixtures
  *  - every personal name was replaced with a placeholder
  *  - every one-time password was replaced with `000000`
  *  - every account balance was replaced with an invented figure
+ *  - every bill, invoice and SADAD reference was replaced with zeroes. They are
+ *    account identifiers by another name: a SADAD number is what someone else
+ *    would need to pay - or query - the owner's bill. Their LENGTH is kept,
+ *    because a parser that reads a field's shape is tested by it.
  *
  * What is preserved exactly, because the parsers are tested against it: message
  * structure, label wording and spelling, the presence or absence of spaces around
@@ -269,7 +273,7 @@ Date: 30/11/2023 08:44:37"""
 البطاقة: 2383
 إجمالي المبلغ المستحق:SAR 16608.05
 المبلغ الأدنى المستحق:SAR 830.4
-كما يمكنك سداد مستحقات البطاقة عن طريق رقم سداد: 105871380
+كما يمكنك سداد مستحقات البطاقة عن طريق رقم سداد: 000000000
 تاريخ الاستحقاق: 25-08-2026"""
 
     /** The older AlAhli wording for the same notice. */
@@ -294,7 +298,7 @@ Date:23-9-7 11:03"""
 مبلغ 15653.70 SAR
 من 104*010
 مفوتر 255
-فاتورة 5117765907171922
+فاتورة 0000000000000000
 في 24/06/24 13:29"""
 
     /**
@@ -355,7 +359,7 @@ Date:23-9-7 11:03"""
 مبلغ 152.46 SAR
 من 104*010
 مفوتر 001
-فاتورة 05183896808
+فاتورة 00000000000
 في 26/03/24 13:29"""
 
     /** An outgoing transfer to the owner's own account at another bank. */

@@ -217,7 +217,8 @@ class FakeDao : TransactionDao {
     override suspend fun clearNumericParties(): Int {
         val doomed = state.value.filter {
             val key = it.merchantKey
-            key != null && key.any(Char::isDigit) && key.none(Char::isLetter) &&
+            it.rawText != null && key != null &&
+                key.any(Char::isDigit) && key.none(Char::isLetter) &&
                 it.categorySource != "MANUAL"
         }
         state.value = state.value.map {

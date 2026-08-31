@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.map
-import sa.masrouf.core.capture.AmountExtractor
 import sa.masrouf.core.capture.BankMessageParser
 import sa.masrouf.core.capture.MessageGate
 import sa.masrouf.core.capture.ParseResult
@@ -311,12 +310,21 @@ class TransactionRepository(
      * @return how many amounts changed.
      */
     suspend fun repairAmounts(): Int {
+        val parsers = SaudiBanks.ALL.map(::BankMessageParser)
         var fixed = 0
         dao.allWithBody().chunked(REPARSE_BATCH).forEach { batch ->
             inTransaction {
                 batch.forEach { row ->
                     val body = row.rawText ?: return@forEach
-                    val read = AmountExtractor.extractOrNull(body)?.money ?: return@forEach
+                    val message = RawMessage(body = body, receivedAt = Instant.EPOCH)
+                    // Through the whole parser, never the extractor alone. The
+                    // parser refuses an amount in a foreign currency and refuses a
+                    // zero, and this pass writes money: reading "مبلغ 4.34 USD" with
+                    // the extractor gives 4.34, which would be stored as riyals, and
+                    // a zero would overwrite a real figure with nothing.
+                    val read = parsers.firstNotNullOfOrNull {
+                        (it.parse(message) as? ParseResult.Parsed)?.draft?.amount
+                    } ?: return@forEach
                     if (read.halalas == row.amountHalalas) return@forEach
                     if (dao.setAmount(row.id, read.halalas) == 1) fixed++
                 }
