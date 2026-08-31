@@ -40,6 +40,14 @@ class OwnerNamedMerchantsTest {
             "TAILOR SH" to SaudiCategories.SHOPPING,
             "Bcare" to SaudiCategories.HEALTH,
             "KHALEEL MALKI" to SaudiCategories.TRANSFERS,
+            // الخزائن المبتكرة, fitted cabinets.
+            "Maan Hama" to SaudiCategories.SHOPPING,
+            // A perfume shop.
+            "LAURE" to SaudiCategories.SHOPPING,
+            // الرقيب للأثاث, under every spelling its terminals have sent.
+            "HAMAD M ALRUGAIB AND S" to SaudiCategories.SHOPPING,
+            "HAMAD ALRUGAIB and SO" to SaudiCategories.SHOPPING,
+            "www.alrugaibfurni" to SaudiCategories.SHOPPING,
         )
 
         for ((merchant, expected) in named) {
@@ -78,6 +86,34 @@ class OwnerNamedMerchantsTest {
         for (merchant in transport) {
             assertEquals(SaudiCategories.TRANSPORT, CategoryGuess.forMerchant(merchant), merchant)
         }
+    }
+
+    /**
+     * A name cut at the FRONT cannot be reached by a keyword.
+     *
+     * The domestic-labour recruiter arrives from one terminal as "NTERNATIO", and
+     * MerchantMatch's truncation rule only forgives a missing tail. The tempting
+     * fix - a keyword of "NTERNATIO" - is a substring of every "INTERNATIONAL ..."
+     * in this history, and adding it took a creative agency, a regions firm and
+     * Alshaya to fees. This test records the trade rather than the fix: the
+     * spellings that keep their first letter are filed, the one that lost it is
+     * left for the user to file once in the app.
+     */
+    @Test
+    fun `a front-truncated name is left alone rather than caught by a broad keyword`() {
+        assertEquals(SaudiCategories.FEES, CategoryGuess.forMerchant("INTERNATIONAL RECRUI"))
+
+        // What the two ambiguous spellings resolve to today, asserted as it is
+        // rather than as it should be. "INTERNATI" is a prefix of both the bakery
+        // and the recruiter, and the bakery's rule is reached first; "NTERNATIO"
+        // reaches neither. The owner has said both rows are the recruiter, and the
+        // way to record that is his own filing, not a keyword.
+        assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("Internati"))
+        assertEquals(null, CategoryGuess.forMerchant("NTERNATIO"))
+
+        // The companies a broad keyword would have taken with it.
+        assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("INTERNATIONAL OVEN CO."))
+        assertEquals(null, CategoryGuess.forMerchant("International Regions"))
     }
 
     /**

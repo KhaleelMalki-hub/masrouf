@@ -294,6 +294,32 @@ object CategoryGuess {
         "BOOKING COM" to SaudiCategories.TRAVEL,
         "RESORT" to SaudiCategories.TRAVEL,
 
+        // ---- Travel, continued ----------------------------------------------
+        // Foreign airlines and the hotels of one 2022 trip, all unfiled.
+        "QATAR AIRWAYS" to SaudiCategories.TRAVEL,
+        "WESTIN" to SaudiCategories.TRAVEL,
+        "ST REGIS" to SaudiCategories.TRAVEL,
+        "SUNWAY" to SaudiCategories.TRAVEL,
+
+        // ---- Chains the owner shops at, found unfiled by value ---------------
+        //
+        // Every name here was read off his own history and is a company anyone in
+        // the country would recognise, which is what separates them from the local
+        // shops further down that only he can name.
+        //
+        // الرقيب للأثاث, under four spellings plus its website - furniture.
+        "ALRUGAIB" to SaudiCategories.SHOPPING,
+        "LOUIS VUI" to SaudiCategories.SHOPPING,
+        "ALBUKHARY GOLD" to SaudiCategories.SHOPPING,
+        // Perfumes, named by the owner.
+        "LAURE" to SaudiCategories.SHOPPING,
+        // الخزائن المبتكرة - fitted cabinets and home furniture, named by the owner.
+        // Three visits in two months, 3,000 then 5,900 then 8,900, the last of them
+        // at the end of a day spent in a mall.
+        "MAAN HAMA" to SaudiCategories.SHOPPING,
+        // Motor insurance - a yearly bill, not a purchase.
+        "MALATH INSURANCE" to SaudiCategories.BILLS,
+
         // ---- Named by the owner ---------------------------------------------
         "TORY BURCH" to SaudiCategories.SHOPPING,
         // Sportswear.
@@ -400,6 +426,14 @@ object CategoryGuess {
         // "INTERNATIONAL" alone is five other companies in this history - a
         // creative agency, a medical centre, a bakery, a regions firm, Alshaya.
         "INTERNATIONAL RECRUI" to SaudiCategories.FEES,
+        // The same company sends "NTERNATIO" from one terminal: the network cut the
+        // FIRST letter, not the last, and MerchantMatch's truncation rule only
+        // forgives a missing tail. Deliberately NOT given a keyword of its own -
+        // any keyword short enough to match it is a substring of every
+        // "INTERNATIONAL ..." in this history, and adding one took the creative
+        // agency, the regions firm and Alshaya to fees along with it. One row; the
+        // user files it once in the app and every future one follows, which is the
+        // mechanism that exists for exactly this.
 
         // A men's thobe shop, named by the user. Five visits over six years
         // averaging 1,059 riyals - the shape of clothes bought rarely and well,

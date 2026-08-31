@@ -110,6 +110,15 @@ class MasroufApp : Application() {
             transactions.repairAmounts()
             preferences.maintenanceVersion = 10
         }
+        if (done < 11) {
+            // The merchants the owner named this session - a perfume shop, a
+            // cabinet maker, a furniture chain under five spellings - and the
+            // airlines and hotels that were still unfiled. refileAll rather than
+            // the gap-filling pass, because several already carried a category the
+            // app had guessed; the ones the user chose himself are kept.
+            transactions.refileAll()
+            preferences.maintenanceVersion = 11
+        }
         transactions.fileUncategorised()
         catchUpOnSms()
     }

@@ -186,3 +186,22 @@ written into the code, not after.
 **How to apply:** Parser, extractor, classifier and migration changes.
 **Source:** session 2026-08-31
 
+### 2026-08-31 — A keyword short enough to match a truncation matches everything else too
+**Mistake:** A domestic-labour recruiter arrives from one terminal as "NTERNATIO" -
+the card network cut the FIRST letter, and `MerchantMatch`'s truncation rule only
+forgives a missing tail. Added "NTERNATIO" as a keyword to reach it. Because
+keywords of four characters or more match as substrings, it then also matched every
+"INTERNATIONAL ..." in the history and took a creative agency, a regions firm and
+Alshaya to fees. An existing test caught it; the comment two lines above the rule
+had warned about the same thing.
+**Why:** Reaching a truncated name means shortening the keyword, and a shorter
+keyword is a substring of more names. The two goals are in direct opposition and
+the trade was not looked at before the keyword was written.
+**Rule:** Before adding a merchant keyword, run it against the whole merchant list
+and read what else it takes. If reaching one spelling costs a keyword that captures
+unrelated companies, do not add it - the app already has per-merchant filing by the
+user, which is exact and permanent. Record the ambiguity in a test so the next
+person does not retry the same keyword.
+**How to apply:** Every addition to `CategoryGuess.RULES`.
+**Source:** session 2026-08-31, `OwnerNamedMerchantsTest`
+
