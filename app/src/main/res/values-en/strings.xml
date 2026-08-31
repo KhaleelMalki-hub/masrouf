@@ -128,6 +128,9 @@
     <string name="month_invested">Invested this month</string>
     <string name="month_earned">Income this month</string>
     <string name="month_bonus">Bonuses this month</string>
+    <string name="income_empty">No income recorded yet</string>
+    <string name="nav_spending">Spending</string>
+    <string name="nav_income">Income</string>
     <string name="cards_title">Your cards</string>
     <string name="card_balance">Balance</string>
     <string name="card_credit_left">Credit left</string>
@@ -165,4 +168,8 @@
     <string name="salary_detected">Last salary in your messages: %1$s. Used unless you enter another.</string>
     <string name="more_actions">More</string>
     <string name="file_history_none">Nothing needs filing</string>
+    <plurals name="income_months">
+        <item quantity="one">%1$s month</item>
+        <item quantity="other">%1$s months</item>
+    </plurals>
 </resources>

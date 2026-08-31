@@ -183,6 +183,31 @@ class FakeDao : TransactionDao {
         return 1
     }
 
+    /**
+     * The real query aggregates in SQL; this reproduces the two filters that decide
+     * what counts - confirmed, and a credit filed as income or a bonus - because
+     * those are what the screen's correctness rests on. The month key is built the
+     * same way, in Riyadh, so a salary arriving at 02:25 on the 1st lands in the
+     * month the user would say it did.
+     */
+    override fun observeIncomeByMonth(): Flow<List<IncomeMonthRow>> = state.map { rows ->
+        rows.filter { it.status == Status.CONFIRMED.name && it.direction == "CREDIT" }
+            .filter { it.categoryId == "income" || it.categoryId == "bonus" }
+            .groupBy {
+                java.time.Instant.ofEpochMilli(it.occurredAtMillis)
+                    .atZone(sa.masrouf.core.time.RiyadhTime.ZONE)
+                    .let { at -> "%04d-%02d".format(at.year, at.monthValue) }
+            }
+            .map { (month, group) ->
+                IncomeMonthRow(
+                    month = month,
+                    salaryHalalas = group.filter { it.categoryId == "income" }.sumOf { it.amountHalalas },
+                    bonusHalalas = group.filter { it.categoryId == "bonus" }.sumOf { it.amountHalalas },
+                )
+            }
+            .sortedByDescending { it.month }
+    }
+
     override suspend fun clearNumericParties(): Int {
         val doomed = state.value.filter {
             val key = it.merchantKey

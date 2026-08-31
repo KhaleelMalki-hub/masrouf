@@ -366,6 +366,16 @@ class TransactionRepository(
      */
     fun observeLatestSalary(): Flow<Money?> = dao.observeLatestSalary().map { it?.let(Money::ofHalalas) }
 
+    /**
+     * Every month that brought in salary or a bonus, newest first.
+     *
+     * Aggregated by the database. A month with neither is absent rather than zero:
+     * the series is what arrived, and inventing empty months for the years before
+     * the app existed would draw a decade of nothing that never happened.
+     */
+    fun observeIncomeByMonth(): Flow<List<IncomeMonth>> =
+        dao.observeIncomeByMonth().map { rows -> rows.mapNotNull { it.toModel() } }
+
     /** The merchants the user pays on a rhythm, largest first. See [RecurringDetector]. */
     fun observeRecurring(now: () -> Instant): Flow<List<RecurringDetector.Recurring>> =
         dao.observeConfirmedDebits()

@@ -1,5 +1,9 @@
 package sa.masrouf.app.ui
 
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.material.icons.outlined.Payments
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBar
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.rememberScrollState
@@ -173,6 +177,10 @@ fun AddExpenseScreen(
     val earliestMonth by viewModel.earliestMonth.collectAsStateWithLifecycle()
     val monthRows by viewModel.monthTransactions.collectAsStateWithLifecycle()
     val cardBanks by viewModel.cardBanks.collectAsStateWithLifecycle()
+    val incomeMonths by viewModel.incomeByMonth.collectAsStateWithLifecycle()
+    // Survives rotation and process death: coming back to a screen the user was not
+    // on is a small betrayal, and it costs one line not to.
+    var destination by rememberSaveable { mutableStateOf(Destination.SPENDING) }
     val monthsWithData by viewModel.monthsWithData.collectAsStateWithLifecycle()
     val query by viewModel.query.collectAsStateWithLifecycle()
     val categoryFilter by viewModel.categoryFilter.collectAsStateWithLifecycle()
@@ -331,18 +339,48 @@ fun AddExpenseScreen(
               }
             }
         },
+        bottomBar = {
+            // Two destinations, which is M3's floor for a navigation bar and the
+            // reason there was none until now: a bar over one screen is a control
+            // with nothing to control. Income earned it by being a different
+            // question over a different span - what arrives, over years, rather
+            // than where one month went.
+            NavigationBar {
+                for (target in Destination.entries) {
+                    NavigationBarItem(
+                        selected = destination == target,
+                        onClick = { destination = target },
+                        icon = { Icon(target.icon, contentDescription = null) },
+                        label = { Text(stringResource(target.label)) },
+                    )
+                }
+            }
+        },
         floatingActionButton = {
-            // Extended while the top of the page is in view, a plain FAB once the
-            // user is down in the history - M3's own behaviour for a scrolling
-            // list, and it stops the wider English label covering rows.
-            ExtendedFloatingActionButton(
-                onClick = { entryOpen = true },
-                expanded = fabExpanded,
-                icon = { Icon(Icons.Outlined.Add, contentDescription = null) },
-                text = { Text(stringResource(R.string.add_expense)) },
-            )
+            // Only where it does something. A record is added to the spending
+            // history; the income screen is a reading of what the banks reported
+            // and has nothing to type into.
+            if (destination == Destination.SPENDING) {
+                // Extended while the top of the page is in view, a plain FAB once
+                // the user is down in the history - M3's own behaviour for a
+                // scrolling list, and it stops the wider English label covering rows.
+                ExtendedFloatingActionButton(
+                    onClick = { entryOpen = true },
+                    expanded = fabExpanded,
+                    icon = { Icon(Icons.Outlined.Add, contentDescription = null) },
+                    text = { Text(stringResource(R.string.add_expense)) },
+                )
+            }
         },
     ) { padding ->
+        if (destination == Destination.INCOME) {
+            IncomeScreen(
+                months = incomeMonths,
+                currencyLabel = currency,
+                modifier = Modifier.padding(padding),
+            )
+            return@Scaffold
+        }
         LazyColumn(
             state = listState,
             modifier = Modifier

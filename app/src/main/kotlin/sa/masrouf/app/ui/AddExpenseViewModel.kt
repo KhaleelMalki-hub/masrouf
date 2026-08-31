@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import sa.masrouf.app.capture.HistoryImport
 import sa.masrouf.app.data.CardBalance
+import sa.masrouf.app.data.IncomeMonth
 import sa.masrouf.app.data.TransactionRepository
 import sa.masrouf.app.data.categoryShares
 import sa.masrouf.app.data.investedTotal
@@ -272,6 +273,17 @@ class AddExpenseViewModel(
         confirmedThisMonth
             .map { rows -> rows.earnedTotal().takeIf { !it.isZero } }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /**
+     * Salary and bonuses by month, newest first, for the income screen.
+     *
+     * Not scoped to the selected month: this is the series the owner asked for -
+     * "how my salary and bonuses ran over the years" - and a month at a time is the
+     * question the other screen already answers.
+     */
+    val incomeByMonth: StateFlow<List<IncomeMonth>> =
+        repository.observeIncomeByMonth()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     /** What the month brought in as employer bonuses, or null when none arrived. */
     val monthBonus: StateFlow<Money?> =

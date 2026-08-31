@@ -157,6 +157,34 @@ interface TransactionDao {
     fun observeMonthsWithData(): Flow<List<String>>
 
     /**
+     * What arrived each month, split into salary and the employer's bonuses.
+     *
+     * Aggregated in SQL for the same reason as [observeMonthsWithData]: the answer
+     * is one row per month over twelve years, and loading 22,000 rows to fold them
+     * in Kotlin put the whole history through the main thread once per collection.
+     *
+     * Confirmed only. A pending row is a parser's reading that nobody has agreed
+     * to, and this screen exists to be read as fact.
+     *
+     * The `+3 hours` is Riyadh, matching every other month boundary in this file;
+     * a month bucketed in UTC puts a salary that arrived at 02:25 on the 1st into
+     * the previous month.
+     */
+    @Query(
+        """
+        SELECT strftime('%Y-%m', occurred_at_millis/1000, 'unixepoch', '+3 hours') AS month,
+               SUM(CASE WHEN category_id = 'income' THEN amount_halalas ELSE 0 END) AS salaryHalalas,
+               SUM(CASE WHEN category_id = 'bonus'  THEN amount_halalas ELSE 0 END) AS bonusHalalas
+        FROM transactions
+        WHERE direction = 'CREDIT' AND status = 'CONFIRMED'
+          AND category_id IN ('income', 'bonus')
+        GROUP BY month
+        ORDER BY month DESC
+        """
+    )
+    fun observeIncomeByMonth(): Flow<List<IncomeMonthRow>>
+
+    /**
      * Files every transaction from one merchant at once.
      *
      * @return how many were refiled.
