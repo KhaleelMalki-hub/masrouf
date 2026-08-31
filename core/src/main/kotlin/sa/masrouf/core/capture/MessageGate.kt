@@ -56,6 +56,21 @@ object MessageGate {
      * false accept silently doubles a purchase and leaks a credential to disk.
      */
     private val OTP_MARKERS = listOf(
+        // "رمز مؤقت:2345 / لـ :تحويل - الراجحي اعمال / المبلغ:25000 SAR" - a code
+        // issued to AUTHORISE a transfer, carrying that transfer's full amount. It
+        // was stored as a confirmed 25,000-riyal transfer out, so the month held a
+        // movement that never happened and the code sat on disk beside it.
+        //
+        // "مؤقت" alone would be too broad; the pair is the wording the banks use.
+        "رمز مؤقت",
+        "رمزمؤقت",
+        // "Requested an activation code 2470 for One Time Bill Payment / Amount:
+        // 500 SAR" - the same thing in English, from a different template. Three of
+        // these were stored as confirmed bill payments. The gate already knew the
+        // Arabic "رمز التفعيل" and the English "ONE TIME PASSWORD", which is what
+        // made this look covered: neither phrase appears in this body.
+        "ACTIVATION CODE",
+        "ONE TIME BILL PAYMENT",
         // "9399 is your password for the Alahli Credit Card transaction of SR
         // 334.95." - a one-time password in English, carrying the full amount of
         // the purchase it authorises. Twenty-five of them were stored as

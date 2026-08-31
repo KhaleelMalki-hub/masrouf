@@ -205,3 +205,38 @@ person does not retry the same keyword.
 **How to apply:** Every addition to `CategoryGuess.RULES`.
 **Source:** session 2026-08-31, `OwnerNamedMerchantsTest`
 
+### 2026-08-31 — A fixture that makes a gap look covered
+**Mistake:** Believed the gate caught activation codes, because a fixture named
+`SNB_ACTIVATION_CODE` exists and passes. It holds one bank's Arabic wording
+("لا تشارك رمز التفعيل"). A different bank's English template - "Requested an
+activation code 2470 for One Time Bill Payment / Amount: 500 SAR" - shares neither
+phrase, and three of those sat stored as confirmed bill payments. A fourth wording,
+"رمز مؤقت", authorised a 25,000-riyal transfer and was stored as that transfer.
+**Why:** A green test for a phrase reads as coverage of the concept. The fixture's
+NAME described the concept; its CONTENT was one instance of it.
+**Rule:** A gate marker is coverage of one spelling, never of an idea. For any
+safety-critical marker list, sweep the real corpus for the CONCEPT - every word a
+bank might use for a code, in both languages, case-sensitively - and check each hit
+against the live gate. Name fixtures after the wording they carry, not the category
+they belong to, so the next reader cannot mistake one for the other.
+**How to apply:** Every change to `MessageGate`, and any review that asserts "no
+credential reaches storage".
+**Source:** session 2026-08-31, council security review, maintenance pass 12
+
+### 2026-08-31 — A blanket guard where the reasons differ
+**Mistake:** `purgeRejectedBodies` deleted any row the gate now rejects, for any of
+its three reasons, ignoring whether the user had filed it - while every other
+maintenance pass in the same file guarded `category_source = MANUAL`. The obvious
+fix, adding the same guard, would have been wrong: it would have let a
+one-time-password body survive on disk because the user had once categorised the
+row.
+**Why:** The guard question is not "does this pass touch user decisions" but "what
+is this rejection FOR". A credential is a safety fact and outranks a filing; a
+marketing marker is a judgement about meaning and does not.
+**Rule:** When adding a protective guard to a bulk operation, split by the REASON
+the row was selected before deciding what the guard protects. A guard that is right
+for one reason can be exactly wrong for another.
+**How to apply:** Any bulk delete or rewrite driven by a classifier with more than
+one verdict.
+**Source:** session 2026-08-31, `PurgeGuardTest`
+

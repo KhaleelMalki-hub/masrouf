@@ -119,6 +119,17 @@ class MasroufApp : Application() {
             transactions.refileAll()
             preferences.maintenanceVersion = 11
         }
+        if (done < 12) {
+            // A review of the real corpus found four bodies the gate still allowed,
+            // each holding a live code: "رمز مؤقت:2345" issued to authorise a
+            // 25,000-riyal transfer, and three English "activation code … for One
+            // Time Bill Payment". All four were stored as CONFIRMED transactions,
+            // so the month held movements that never happened and the codes sat on
+            // disk beside them. The gate has learned all four wordings; this purge
+            // is what removes what it let through before.
+            transactions.purgeRejectedBodies()
+            preferences.maintenanceVersion = 12
+        }
         transactions.fileUncategorised()
         catchUpOnSms()
     }

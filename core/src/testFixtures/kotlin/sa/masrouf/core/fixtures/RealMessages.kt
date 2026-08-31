@@ -238,6 +238,30 @@ Date:23-11-30 12:22"""
 17:04 22/8/26"""
 
     /**
+     * A code issued to authorise a transfer, carrying that transfer's full amount.
+     *
+     * Captured from the owner's own inbox, where it had been stored as a confirmed
+     * 25,000-riyal transfer out - a movement that never happened, with the code
+     * itself kept on disk beside it. The code is redacted; the wording is exact.
+     */
+    const val RAJHI_TEMPORARY_CODE = """رمز مؤقت:000000
+لـ :تحويل - الراجحي اعمال
+المبلغ:25000 SAR"""
+
+    /**
+     * The same thing in English, from AlAhli's bill-payment template.
+     *
+     * The gate already knew the Arabic "رمز التفعيل" and the English "ONE TIME
+     * PASSWORD", which is exactly what made this look covered - neither phrase is
+     * in this body. Three of them were stored as confirmed bill payments.
+     */
+    const val SNB_BILL_ACTIVATION_CODE = """Requested an activation code 000000 for One Time Bill 
+Payment
+Biller: 054
+Amount: 500 SAR
+Date: 30/11/2023 08:44:37"""
+
+    /**
      * The monthly statement notice. Announces what is owed; nothing has moved. The
      * figure in it was stored as a payment nine times over.
      */
@@ -554,5 +578,6 @@ card number: **1887, mada
     val MUST_BE_REJECTED = listOf(
         RAJHI_OTP, SNB_OTP, SNB_ACTIVATION_CODE, D360_OTP, BARQ_OTP, BARQ_DECLINED,
         RAJHI_CARD_STATEMENT_NOTICE, SNB_CARD_STATEMENT_NOTICE,
+        RAJHI_TEMPORARY_CODE, SNB_BILL_ACTIVATION_CODE,
     )
 }

@@ -419,12 +419,38 @@ class TransactionRepository(
     suspend fun purgeRejectedBodies(): Int {
         val doomed = dao.allWithBody()
             .filter { row ->
-                MessageGate.evaluate(RawMessage(body = row.rawText!!, receivedAt = Instant.EPOCH)) is MessageGate.Decision.Reject
+                val decision = MessageGate.evaluate(
+                    RawMessage(body = row.rawText!!, receivedAt = Instant.EPOCH)
+                )
+                decision is MessageGate.Decision.Reject && shouldPurge(decision.reason, row)
             }
             .map { it.id }
         if (doomed.isEmpty()) return 0
         return dao.deleteAll(doomed)
     }
+
+    /**
+     * Whether a rejected row goes, given why it was rejected and who filed it.
+     *
+     * The reason matters, and this is the one pass in the file that used to ignore
+     * it. A body holding a one-time code is deleted whatever the user has done with
+     * the row: the point is that a credential must not sit on disk, and a category
+     * the user chose does not make it safe to keep.
+     *
+     * The other two reasons are judgements about meaning rather than about safety.
+     * Marketing markers are broad Arabic stems - `اربح`, `فرصك`, `خصم يصل` - of
+     * exactly the kind a bank might append as a promotional footer to a real
+     * purchase, and a new marker is added most sessions. A row the user filed by
+     * hand is a row they looked at and meant, and deleting it destroys the one
+     * field that cannot be typed back. Erring toward keeping it costs a wrong row
+     * the user can delete; erring the other way costs a record that is simply gone.
+     *
+     * Every other pass in this file already guards MANUAL. This one now does too,
+     * except where safety outranks the guard.
+     */
+    private fun shouldPurge(reason: MessageGate.Rejection, row: TransactionEntity): Boolean =
+        reason == MessageGate.Rejection.ONE_TIME_PASSWORD ||
+            row.categorySource != CategorySource.MANUAL.name
 
     /**
      * Re-reads every stored body whose merchant or card was never extracted.
