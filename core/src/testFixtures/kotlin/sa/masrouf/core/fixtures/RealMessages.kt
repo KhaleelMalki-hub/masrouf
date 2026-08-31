@@ -238,6 +238,76 @@ Date:23-11-30 12:22"""
 17:04 22/8/26"""
 
     /**
+     * The monthly statement notice. Announces what is owed; nothing has moved. The
+     * figure in it was stored as a payment nine times over.
+     */
+    const val RAJHI_CARD_STATEMENT_NOTICE = """بطاقة ائتمانية: كشف حساب شهر July
+البطاقة: 2383
+إجمالي المبلغ المستحق:SAR 16608.05
+المبلغ الأدنى المستحق:SAR 830.4
+كما يمكنك سداد مستحقات البطاقة عن طريق رقم سداد: 105871380
+تاريخ الاستحقاق: 25-08-2026"""
+
+    /** The older AlAhli wording for the same notice. */
+    const val SNB_CARD_STATEMENT_NOTICE = """عزيزي العميل
+تم اصدار كشف حساب بطاقتك الائتمانية.
+الحد الأدنى المستحق للبطاقة الائتمانية المنتهية ب XX9994 هو: 250.00 ريال سعودي
+المبلغ الإجمالي: 5,000.00 ريال سعودي
+تاريخ الاستحقاق: 01-08-2026"""
+
+    /** The English settlement template. A card is named; no biller is. */
+    const val RAJHI_CARD_SETTLEMENT_EN = """Bill Payment
+Card:1335 ;Visa
+Amount:SAR 442.75
+Balance:SAR 33557.25
+Date:23-9-7 11:03"""
+
+    /**
+     * A SADAD payment whose biller is the user's own AlRajhi credit card. Every
+     * word says bill; only the number 255 says the money stayed with the owner.
+     */
+    const val SNB_SADAD_TO_OWN_CARD = """سداد فاتورة
+مبلغ 15653.70 SAR
+من 104*010
+مفوتر 255
+فاتورة 5117765907171922
+في 24/06/24 13:29"""
+
+    /** A SADAD payment to a real utility, for contrast with the biller above. */
+    const val SNB_SADAD_ELECTRICITY = """سداد فاتورة
+مبلغ 152.46 SAR
+من 104*010
+مفوتر 001
+فاتورة 05183896808
+في 26/03/24 13:29"""
+
+    /** An outgoing transfer to the owner's own account at another bank. */
+    const val BARQ_TRANSFER_TO_SELF = """حوالة صادرة محلية
+مبلغ2850.00SAR
+رسوم0.00SAR
+الى KHALEEL MALKI
+بنكD360 BANK
+لحساب2207
+2026-08-27 08:03"""
+
+    /** The same, with the surname masked mid-word by a different bank. */
+    const val D360_TRANSFER_TO_SELF = """حوالة مالية صادرة مقبولة
+خصمت من حساب: ****2207
+القيمة: SAR 4,600.00
+إلى: خليل سامي خل****
+رقم الحساب: ****8101"""
+
+    /**
+     * An outgoing transfer to a relative who shares the surname. Real spending, and
+     * the reason the owner is matched on two names rather than one.
+     */
+    const val SNB_TRANSFER_TO_RELATIVE = """حوالة صادرة داخلية
+مبلغ:20 SAR
+إلى:عبدالكريم مالكى
+إلى:100*013
+في:10/06/24 16:47"""
+
+    /**
      * One-time password. Carries the full amount and merchant of the purchase it
      * authorises, and arrives seconds before the real confirmation for that same
      * purchase. Must never be parsed and must never be stored.
@@ -414,7 +484,9 @@ card number: **1887, mada
     /** Every message that represents a real, completed movement of money. */
     val COMPLETED_TRANSACTIONS = listOf(
         RAJHI_ONLINE_PURCHASE, RAJHI_POS_SHORT, RAJHI_POS_LONG, RAJHI_TRANSFER_IN,
-        RAJHI_CARD_REFUND, RAJHI_CARD_SETTLEMENT,
+        RAJHI_CARD_REFUND, RAJHI_CARD_SETTLEMENT, RAJHI_CARD_SETTLEMENT_EN,
+        SNB_SADAD_TO_OWN_CARD, SNB_SADAD_ELECTRICITY,
+        BARQ_TRANSFER_TO_SELF, D360_TRANSFER_TO_SELF, SNB_TRANSFER_TO_RELATIVE,
         SNB_ONLINE_PURCHASE, SNB_TRANSFER_IN, SNB_TRANSFER_OUT, SNB_ATM_DEPOSIT,
         D360_TRANSFER_IN, D360_TRANSFER_OUT, D360_OWN_ACCOUNTS_TRANSFER,
         BARQ_TRANSFER_OUT, BARQ_TOPUP_EN, BARQ_ONLINE_PURCHASE,
@@ -423,5 +495,6 @@ card number: **1887, mada
     /** Every message that must never become a transaction. */
     val MUST_BE_REJECTED = listOf(
         RAJHI_OTP, SNB_OTP, SNB_ACTIVATION_CODE, D360_OTP, BARQ_OTP, BARQ_DECLINED,
+        RAJHI_CARD_STATEMENT_NOTICE, SNB_CARD_STATEMENT_NOTICE,
     )
 }

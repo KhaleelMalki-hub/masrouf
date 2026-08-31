@@ -79,10 +79,15 @@ class CapturePipelineTest {
         party = "Amazon SA", cardLast4 = "2383",
     )
 
+    /**
+     * Settling the card, not paying a bill. This asserted BILL_PAYMENT for as long
+     * as the fixture existed, which is how 43 settlements were counted as spending
+     * on top of the purchases that had built the balance. See [OwnMoneyTest].
+     */
     @Test
     fun `alrajhi credit card settlement`() = assertCaptured(
         RealMessages.SENDER_RAJHI, RealMessages.RAJHI_CARD_SETTLEMENT,
-        amount = "10000", type = TransactionType.BILL_PAYMENT, direction = Direction.DEBIT,
+        amount = "10000", type = TransactionType.OWN_TRANSFER, direction = Direction.DEBIT,
         cardLast4 = "2383",
     )
 

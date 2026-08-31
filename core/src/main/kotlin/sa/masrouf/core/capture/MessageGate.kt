@@ -122,6 +122,15 @@ object MessageGate {
         "استبيان",
         "شاركنا",
         "خصم يصل",
+
+        // The monthly credit-card statement. It announces what is owed, and the
+        // parsers read that figure as an amount and stored it as a payment - nine
+        // notices became 166,926 riyals of spending that never happened. The
+        // settlement, when the user actually pays, arrives as its own message.
+        //
+        // One marker, not four: every one of these notices in a twelve-year corpus
+        // says كشف حساب, and no completed transaction in that corpus says it.
+        "كشف حساب",
     )
 
     /** Phrases that mark a transaction as not completed. */

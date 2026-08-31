@@ -81,6 +81,8 @@ class ConcurrentCaptureTest {
         override fun observeLatestSalary(): Flow<Long?> = MutableStateFlow(null)
         override suspend fun fillParty(id: String, merchantRaw: String?, merchantKey: String?, last4: String?) = 0
         override suspend fun allWithBody() = emptyList<TransactionEntity>()
+        override suspend fun withBodyOfType(spendingTypes: List<String>) = emptyList<TransactionEntity>()
+        override suspend fun retype(id: String, type: String, categoryId: String?) = 0
         override suspend fun deleteAll(ids: List<String>) = 0
         override suspend fun setBalance(id: String, halalas: Long?, kind: String) = 0
         override fun observeCardBanks(): Flow<List<CardBank>> = MutableStateFlow(emptyList())

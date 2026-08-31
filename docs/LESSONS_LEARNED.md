@@ -1,0 +1,76 @@
+# Lessons Learned
+
+Append-only ledger of mistakes made in this repo and the rule that follows each.
+**Read this at the start of work and apply every rule it contains.** Append a new entry
+whenever a mistake is detected (a user correction, a CI failure on code just written, a
+false closure claim, a wrong tool path, a credential-boundary push, a duplicate, a hung
+wait). Append only — never edit historical entries; corrections add a new entry that
+references the old one.
+
+## Format
+
+### YYYY-MM-DD — <one-line title>
+**Mistake:** … **Why:** … **Rule:** … **How to apply:** … **Source:** …
+
+## Lessons
+
+<!-- oldest first; append new entries at the bottom -->
+
+### 2026-08-31 — A test pinned the defect it was named after
+**Mistake:** `CapturePipelineTest.alrajhi credit card settlement` asserted
+`BILL_PAYMENT` for a message the fixture's own doc comment called "Credit card
+settlement payment". The assertion held the bug in place for as long as the fixture
+existed, and 43 settlements were counted as spending on top of the purchases that had
+already built the card balance.
+**Why:** The fixture was written by reading what the app *did*, not by deciding what
+the message *means*. A green test then made the behaviour look intended.
+**Rule:** When a fixture's name or doc comment describes the real-world event, the
+assertion must agree with that description, not with current behaviour. If they
+disagree, the assertion is the thing to change. Read a fixture's prose before trusting
+the test that consumes it.
+**How to apply:** Any time a test is the reason to believe behaviour is correct — and
+whenever adding a fixture whose name states what the message is.
+**Source:** session 2026-08-31, `OwnMoneyTest`
+
+### 2026-08-31 — SQL LIKE cannot count Arabic families
+**Mistake:** Estimated that 83 rows would move out of `BILL_PAYMENT`; 97 moved. The
+14 unaccounted rows were card settlements the bank spells `إئتمانية` (two hamzas)
+where the query looked for `ائتمانية`, plus a `سداد فاتورة | بطاقة:2383;فيزا`
+template that no hand-written LIKE had enumerated.
+**Why:** `LIKE` compares raw code points. The app never does: every match runs on
+`ArabicText.foldForMatching`, which collapses أ/إ/آ→ا, ى→ي, ة→ه and strips
+diacritics and punctuation. A LIKE-based survey is therefore a different question
+from the one the app asks, and it always undercounts.
+**Rule:** Never size or scope an Arabic-matching change with `LIKE` on raw text.
+Estimate with the folding the app uses, and confirm the real figure by diffing the
+database before and after — the classifier is the only authority on what it matches.
+**How to apply:** Any corpus survey, migration sizing, or "how many rows are
+affected" question touching Arabic message bodies.
+**Source:** session 2026-08-31, before/after diff of the device database
+
+### 2026-08-31 — Teaching the classifier does not fix the history
+**Mistake:** Assumed a rule added to `IntentClassifier` would correct stored rows on
+the next launch, because the app re-reads the SMS inbox at every launch.
+**Why:** `TransactionDao.insert` uses `OnConflictStrategy.IGNORE` against a unique
+fingerprint. Re-reading a message that is already stored is a no-op by design — the
+dedup that stops double-counting also stops re-classification. Thirty-two rows still
+said `BILL_PAYMENT` months after the rule that would have caught them was added.
+**Rule:** A classifier or gate change fixes only messages that have not arrived yet.
+Anything already stored needs a maintenance pass in `MasroufApp.runMaintenance`,
+gated on `Preferences.maintenanceVersion`. The pass must call the classifier rather
+than carry its own copy of the wordings, or the two lists will drift.
+**How to apply:** Every change to `IntentClassifier`, `MessageGate`, or any rule that
+decides what a stored row means. Ask "what happens to the rows already in the
+database?" before calling the change done.
+**Source:** session 2026-08-31, maintenance pass 4 (`retypeOwnMoney`)
+
+### 2026-08-31 — gradlew has no JDK on this machine's default PATH
+**Mistake:** `./gradlew :core:test` failed with "Unable to locate a Java Runtime",
+which reads like a broken project rather than a broken shell.
+**Why:** No system JDK is installed; the JDK is Homebrew's `openjdk@21` and nothing
+puts it on `PATH` or sets `JAVA_HOME`.
+**Rule:** Prefix every Gradle invocation with
+`export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home`
+in the same command, since the shell does not persist between calls.
+**How to apply:** Any `./gradlew` command in this repo.
+**Source:** session 2026-08-31

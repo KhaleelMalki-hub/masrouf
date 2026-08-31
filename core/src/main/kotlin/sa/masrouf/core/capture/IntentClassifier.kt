@@ -98,6 +98,29 @@ object IntentClassifier {
         // wording of the same event is handled above.
         Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, listOf("بطاق", "ائتمان", "سداد")),
 
+        // The same event, after AlRajhi changed the wording in April 2026: the card
+        // is now named by its network rather than called ائتمانية, so the rule above
+        // stopped firing and 43 settlements worth 180,954 riyals were counted as
+        // bills. The bank renames the template; the money still never left.
+        Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, listOf("بطاق", "فيزا", "سداد")),
+
+        // "Bill Payment | Card:1335 ;Visa | Amount:SAR 442.75" - the English
+        // settlement template. It must precede the BILL+PAYMENT rule further down,
+        // which is the genuine SADAD bill and has no card field.
+        Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, listOf("BILL", "PAYMENT", "CARD", "VISA")),
+
+        // SADAD biller codes that are the user's own credit cards and wallets, not
+        // a utility. The message is a bill payment by every word in it - only the
+        // three-digit biller says where the money went. Confirmed by the user:
+        // 255 is AlRajhi's cards, 016 AlAhli's cards and finance, 207 STC Pay.
+        //
+        // Folding turns every separator the banks use - ":", a space, or an
+        // embedded direction mark - into the single space matched here, so one
+        // spelling covers all three templates.
+        Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, listOf("مفوتر 255")),
+        Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, listOf("مفوتر 016")),
+        Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, listOf("مفوتر 207")),
+
         Rule(TransactionType.BILL_PAYMENT, Direction.DEBIT, listOf("سداد")),
 
         // ---- AlAhli's older template family -------------------------------
@@ -186,6 +209,15 @@ object IntentClassifier {
     )
 
     /**
+     * The owner's own name, reusing the rules' matcher so that Latin whole-word and
+     * Arabic stem matching behave here exactly as they do above. One list, one set
+     * of semantics; a second hand-rolled matcher would drift from the first.
+     */
+    private val OWNER_RULES = AccountOwner.NAME_TOKENS.map {
+        Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, it)
+    }
+
+    /**
      * @return the intent, or null when the wording matches no known rule. Null is a
      *   normal outcome for service notices and marketing, and callers must not
      *   invent [TransactionType.UNKNOWN] transactions from it.
@@ -193,6 +225,21 @@ object IntentClassifier {
     fun classify(text: String): Intent? {
         val folded = ArabicText.foldForMatching(text)
         val rule = RULES.firstOrNull { it.matches(folded) } ?: return null
+        // An outgoing transfer addressed to the owner is money moving between their
+        // own accounts. Applied after the rules rather than as more of them: the
+        // banks write at least six different outgoing-transfer templates, and
+        // pairing every one with every spelling of the name would be a cross
+        // product that has to be extended twice whenever either side gains a form.
+        //
+        // Only ever demotes TRANSFER_OUT, and only to a type with the same
+        // direction, so no other verdict can be changed by a name.
+        if (rule.type == TransactionType.TRANSFER_OUT && namesOwner(folded)) {
+            return Intent(TransactionType.OWN_TRANSFER, Direction.DEBIT)
+        }
         return Intent(rule.type, rule.direction)
     }
+
+    /** Whether folded text names the account holder. See [AccountOwner]. */
+    private fun namesOwner(foldedText: String): Boolean =
+        OWNER_RULES.any { it.matches(foldedText) }
 }

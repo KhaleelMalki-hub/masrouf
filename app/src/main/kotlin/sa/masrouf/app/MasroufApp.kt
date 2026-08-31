@@ -50,6 +50,16 @@ class MasroufApp : Application() {
             transactions.retypeSalaryDeposits()
             preferences.maintenanceVersion = 3
         }
+        if (done < 4) {
+            // The gate learned the credit-card statement notice, and the classifier
+            // learned the three ways the user's own money was leaving the total:
+            // card settlements, SADAD billers that are their own cards, and
+            // transfers to themselves. The purge runs first so the notices are gone
+            // before anything tries to re-type them.
+            transactions.purgeRejectedBodies()
+            transactions.retypeOwnMoney()
+            preferences.maintenanceVersion = 4
+        }
         transactions.fileUncategorised()
         catchUpOnSms()
     }

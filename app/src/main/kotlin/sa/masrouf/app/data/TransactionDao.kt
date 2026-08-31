@@ -322,6 +322,34 @@ interface TransactionDao {
     )
     suspend fun retypeSalaryDeposits(): Int
 
+    /**
+     * Stored rows that currently count towards the spending total, with their body.
+     *
+     * The caller passes the list of spending types rather than this query naming
+     * them, so [sa.masrouf.core.model.TransactionType.countsAsSpending] stays the
+     * one place that decides what spending is. An SQL literal here would be a
+     * second copy of that answer, and the two would part company the first time a
+     * type changed sides.
+     */
+    @Query("SELECT * FROM transactions WHERE raw_text IS NOT NULL AND type IN (:spendingTypes)")
+    suspend fun withBodyOfType(spendingTypes: List<String>): List<TransactionEntity>
+
+    /**
+     * Moves one row to a new type, and to the category that type implies.
+     *
+     * A category the user filed by hand is left alone: they looked at the row and
+     * meant it, and the type being wrong is the app's mistake, not theirs.
+     */
+    @Query(
+        """
+        UPDATE transactions
+        SET type = :type,
+            category_id = CASE WHEN category_source = 'MANUAL' THEN category_id ELSE :categoryId END
+        WHERE id = :id
+        """
+    )
+    suspend fun retype(id: String, type: String, categoryId: String?): Int
+
     /** The most recent salary the bank announced, in halalas. Read, not inferred. */
     @Query(
         """

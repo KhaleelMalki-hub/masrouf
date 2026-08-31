@@ -7,6 +7,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.map
 import sa.masrouf.core.capture.BankMessageParser
+import sa.masrouf.core.capture.IntentClassifier
 import sa.masrouf.core.capture.MessageGate
 import sa.masrouf.core.capture.ParseResult
 import sa.masrouf.core.capture.RawMessage
@@ -239,6 +240,52 @@ class TransactionRepository(
 
     /** See [TransactionDao.retypeSalaryDeposits]. */
     suspend fun retypeSalaryDeposits(): Int = dao.retypeSalaryDeposits()
+
+    /**
+     * Takes the user's own money back out of the spending total.
+     *
+     * Settling a credit card, paying a SADAD biller that *is* one of your cards, and
+     * transferring to your own account at another bank all read as spending to an
+     * older classifier, and each one charges the same riyals twice - once when the
+     * purchase happened and again when the balance moved. August 2026 read as
+     * 168,864 riyals spent, of which 79,087 was money that never left.
+     *
+     * A stored row keeps the verdict of the classifier that was current when it
+     * arrived: capture deduplicates on a fingerprint and inserts with IGNORE, so
+     * re-reading the same message later cannot correct it. That is why teaching the
+     * classifier is not enough on its own and this pass exists.
+     *
+     * It asks [IntentClassifier] rather than carrying its own list of wordings. Two
+     * lists would be two answers to one question, and the day a bank invents a new
+     * template only one of them would learn it.
+     *
+     * ## Why it can only ever lower the total
+     *
+     * The classifier is re-run over every row that counts as spending, but its
+     * verdict is accepted only when it takes the row *out* of spending. So a
+     * re-reading can correct an overcount and can never invent a purchase - and a
+     * row the user has filed keeps the category they gave it.
+     *
+     * @return how many rows stopped counting as spending.
+     */
+    suspend fun retypeOwnMoney(): Int {
+        val spending = TransactionType.entries.filter { it.countsAsSpending }.map { it.name }
+        var moved = 0
+        // Batched for the same reason as reparseStoredBodies: one transaction over
+        // the whole history holds the database long enough for the dashboard to
+        // show an empty month as though it were true.
+        dao.withBodyOfType(spending).chunked(REPARSE_BATCH).forEach { batch ->
+            inTransaction {
+                batch.forEach { row ->
+                    val body = row.rawText ?: return@forEach
+                    val type = IntentClassifier.classify(body)?.type ?: return@forEach
+                    if (type.countsAsSpending) return@forEach
+                    if (dao.retype(row.id, type.name, CategoryGuess.forType(type)?.id) == 1) moved++
+                }
+            }
+        }
+        return moved
+    }
 
     /**
      * The salary the bank last announced, or null when it never has.

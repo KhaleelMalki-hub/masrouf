@@ -179,6 +179,22 @@ class FakeDao : TransactionDao {
 
     override suspend fun allWithBody(): List<TransactionEntity> = state.value.filter { it.rawText != null }
 
+    override suspend fun withBodyOfType(spendingTypes: List<String>): List<TransactionEntity> =
+        state.value.filter { it.rawText != null && it.type in spendingTypes }
+
+    override suspend fun retype(id: String, type: String, categoryId: String?): Int {
+        val target = state.value.firstOrNull { it.id == id } ?: return 0
+        state.value = state.value.map {
+            if (it.id != target.id) it
+            // The real query leaves a hand-filed category alone. Reproduced here
+            // because a pass that overwrites the user's own filing would otherwise
+            // look correct in every test.
+            else if (it.categorySource == "MANUAL") it.copy(type = type)
+            else it.copy(type = type, categoryId = categoryId)
+        }
+        return 1
+    }
+
     override suspend fun deleteAll(ids: List<String>): Int {
         val before = state.value.size
         state.value = state.value.filterNot { it.id in ids }
