@@ -63,7 +63,11 @@ the party's real name in place of an account number on 1,300 rows.
   `LAURE` = perfumes; `Time-race`/`tap*Time` = car parts, Haval (transport);
   `ONTIME PL` = watches; `Tiqmo` = his own wallet (a top-up, not spending);
   `NTERNATIO`/`Internati` = a domestic-labour recruiter (fees — he filed it by
-  hand, because no keyword can reach it safely).
+  hand, because no keyword can reach it safely);
+  `Samira Ayed AlKulaithami` = استوديو المغربي, a portrait photographer — the shop
+  is registered in its owner's name, so nothing in the message says studio (filed
+  by hand as services/personal care, which is what a service performed for you is;
+  shopping is a thing you take away).
 - SADAD biller codes: 255 = AlRajhi cards, 016 = AlAhli cards, 207 = STC Pay.
   All three are his own, so a payment to them is not spending.
 - Cards: 2383 (AlRajhi, credit), 8134 (AlRajhi, credit, now settled), 9994
