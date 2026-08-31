@@ -143,6 +143,8 @@
     <string name="refile_forget">دع التطبيق يقرّر</string>
     <string name="category_investment">استثمار</string>
     <string name="month_invested">استثمار هذا الشهر</string>
+    <string name="month_earned">دخل هذا الشهر</string>
+    <string name="month_bonus">مكافآت هذا الشهر</string>
     <string name="cards_title">بطاقاتك</string>
     <string name="card_balance">الرصيد</string>
     <string name="card_credit_left">المتبقي من الحد</string>

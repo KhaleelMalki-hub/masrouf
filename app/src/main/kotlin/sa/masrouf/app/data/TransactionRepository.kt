@@ -720,8 +720,33 @@ fun List<Transaction>.spendingTotal(): Money =
  * cannot be questioned.
  */
 fun List<Transaction>.investedTotal(): Money =
+    totalOfCategory(SaudiCategories.INVESTMENT, Direction.DEBIT)
+
+/**
+ * What the month brought in as salary, and what it brought in as bonuses.
+ *
+ * Same argument as [investedTotal], for money arriving instead of leaving. Income
+ * has never been part of the spending total and never should be, but it was also
+ * shown nowhere: 2.2 million riyals of salary and 321,092 of the employer's
+ * bonuses existed only as individual rows in the history, and the owner asked
+ * where they had gone. A number that is absent cannot be questioned.
+ */
+fun List<Transaction>.earnedTotal(): Money =
+    totalOfCategory(SaudiCategories.INCOME, Direction.CREDIT)
+
+fun List<Transaction>.bonusTotal(): Money =
+    totalOfCategory(SaudiCategories.BONUS, Direction.CREDIT)
+
+/**
+ * One place that adds up a category the spending total leaves out.
+ *
+ * Three sums with one shape. Written once because the interesting part is the pair
+ * of filters, and three copies of it would be three chances for one of them to
+ * start counting a pending row or the wrong direction.
+ */
+private fun List<Transaction>.totalOfCategory(category: Category, direction: Direction): Money =
     filter { it.status == Status.CONFIRMED }
-        .filter { it.direction == Direction.DEBIT && it.categoryId == SaudiCategories.INVESTMENT.id }
+        .filter { it.direction == direction && it.categoryId == category.id }
         .fold(Money.ZERO) { running, transaction -> running + transaction.amount }
 
 /**

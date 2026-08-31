@@ -152,6 +152,8 @@ fun AddExpenseScreen(
     val recent by viewModel.recent.collectAsStateWithLifecycle()
     val monthTotal by viewModel.monthTotal.collectAsStateWithLifecycle()
     val invested by viewModel.monthInvested.collectAsStateWithLifecycle()
+    val earned by viewModel.monthEarned.collectAsStateWithLifecycle()
+    val bonus by viewModel.monthBonus.collectAsStateWithLifecycle()
     val cardBalances by viewModel.cardBalances.collectAsStateWithLifecycle()
     val recurring by viewModel.recurring.collectAsStateWithLifecycle()
     val detectedSalary by viewModel.detectedSalary.collectAsStateWithLifecycle()
@@ -375,6 +377,8 @@ fun AddExpenseScreen(
                     onPickMonth = { pickingMonth = true },
                     previousTotal = previousTotal,
                     invested = invested,
+                    earned = earned,
+                    bonus = bonus,
                     activeFilter = categoryFilter,
                     onToggleCategory = viewModel::toggleCategoryFilter,
                 )
@@ -943,6 +947,8 @@ private fun MonthPanel(
     onPickMonth: () -> Unit,
     previousTotal: Money?,
     invested: Money?,
+    earned: Money?,
+    bonus: Money?,
     activeFilter: HistoryFilter?,
     onToggleCategory: (Category?) -> Unit,
 ) {
@@ -1037,22 +1043,31 @@ private fun MonthPanel(
                 selected = activeFilter,
                 onSelect = onToggleCategory,
             )
-            if (invested != null) {
-                // Below the legend and below a rule, because the bands above have to
-                // add up to the number at the top and this deliberately does not.
-                // It gets a row rather than a sentence so it reads as the category
-                // it is - colour, amount, and tappable to filter like the others -
-                // while the divider says plainly that it sits outside the total.
+            // Below the legend and below a rule, because the bands above have to add
+            // up to the number at the top and these deliberately do not. Each gets a
+            // row rather than a sentence so it reads as the category it is - colour,
+            // amount, and tappable to filter like the others - while the divider
+            // says plainly that it sits outside the total.
+            val outside = listOfNotNull(
+                invested?.let { Triple(SaudiCategories.INVESTMENT, R.string.month_invested, it) },
+                earned?.let { Triple(SaudiCategories.INCOME, R.string.month_earned, it) },
+                bonus?.let { Triple(SaudiCategories.BONUS, R.string.month_bonus, it) },
+            )
+            if (outside.isNotEmpty()) {
                 HorizontalDivider(
                     modifier = Modifier.padding(vertical = 8.dp),
                     color = MaterialTheme.colorScheme.outlineVariant,
                 )
-                InvestedRow(
-                    amount = invested,
-                    currencyLabel = currencyLabel,
-                    selected = activeFilter == HistoryFilter.OfCategory(SaudiCategories.INVESTMENT),
-                    onClick = { onToggleCategory(SaudiCategories.INVESTMENT) },
-                )
+                for ((category, label, amount) in outside) {
+                    OutsideTotalRow(
+                        category = category,
+                        label = label,
+                        amount = amount,
+                        currencyLabel = currencyLabel,
+                        selected = activeFilter == HistoryFilter.OfCategory(category),
+                        onClick = { onToggleCategory(category) },
+                    )
+                }
             }
             if (activeFilter == null) {
                 // The legend has been the filter since it was built, and it was not
@@ -1677,7 +1692,21 @@ private fun CardMark(mark: BankMark?, last4: String?) {
  * cannot be a band in a strip whose bands add up to the number above them.
  */
 @Composable
-private fun InvestedRow(
+/**
+ * A category that sits outside the month's total.
+ *
+ * Investments leaving, salary and bonuses arriving: none of them is spending, and
+ * none of them belongs in the bands above. But a figure excluded from the total and
+ * shown nowhere else simply vanishes - 2.2 million riyals of salary existed only as
+ * scattered rows until its owner asked where it had gone.
+ *
+ * One composable rather than three: what matters is that they all read as
+ * categories - colour, name, amount, tappable to filter - and sit below the rule
+ * that says they are not part of the number at the top.
+ */
+private fun OutsideTotalRow(
+    category: Category,
+    @StringRes label: Int,
     amount: Money,
     currencyLabel: String,
     selected: Boolean,
@@ -1704,10 +1733,10 @@ private fun InvestedRow(
                 modifier = Modifier
                     .size(width = 4.dp, height = 16.dp)
                     .clip(RoundedCornerShape(2.dp))
-                    .background(bandColour(SaudiCategories.INVESTMENT)),
+                    .background(bandColour(category)),
             )
             Text(
-                text = stringResource(R.string.month_invested),
+                text = stringResource(label),
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(start = 12.dp),
             )
