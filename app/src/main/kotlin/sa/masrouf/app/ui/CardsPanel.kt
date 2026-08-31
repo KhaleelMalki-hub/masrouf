@@ -28,6 +28,7 @@ import sa.masrouf.app.R
 import sa.masrouf.app.data.CardBalance
 import sa.masrouf.core.capture.BalanceReader
 import sa.masrouf.core.money.Money
+import java.time.Duration
 import java.time.Instant
 
 /**
@@ -148,14 +149,37 @@ private fun CardTile(card: CardBalance, currencyLabel: String) {
                 color = MaterialTheme.colorScheme.outline,
             )
         }
+        // A figure the bank last mentioned months ago is not wrong, and it is not
+        // current either. Card 8134's tile showed 10,000 left of a 41,000 limit -
+        // true on 2 April 2026, and still on screen in September, by which time the
+        // owner had paid the card off. The date was already here, in the faintest
+        // style on the tile, and it read as a footnote rather than as a caveat.
+        //
+        // So a stale reading says so in words and takes the ordinary label colour
+        // instead of the outline, which is the one thing that makes a caveat get
+        // read. The threshold is a card's own rhythm: a card in use reports within
+        // a statement cycle, and two of those without a word is the point where the
+        // figure stops describing now.
+        val ageDays = Duration.between(Instant.ofEpochMilli(card.atMillis), Instant.now()).toDays()
+        val stale = ageDays > STALE_AFTER_DAYS
         Text(
-            text = stringResource(R.string.card_as_of, Instant.ofEpochMilli(card.atMillis).dayLabel()),
+            text = stringResource(
+                if (stale) R.string.card_as_of_stale else R.string.card_as_of,
+                Instant.ofEpochMilli(card.atMillis).dayLabel(),
+            ),
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.outline,
+            color = if (stale) {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            } else {
+                MaterialTheme.colorScheme.outline
+            },
         )
     }
     }
 }
+
+/** Two statement cycles. Past this, a balance describes the past. */
+private const val STALE_AFTER_DAYS = 62L
 
 /**
  * The cards the user says are open, by their last four digits.

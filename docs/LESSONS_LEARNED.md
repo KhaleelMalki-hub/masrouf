@@ -286,3 +286,20 @@ pass to protect them.
 **How to apply:** Every addition to `CategoryGuess.RULES`.
 **Source:** session 2026-08-31, council code-logic review
 
+### 2026-08-31 — A true figure with no age reads as a current one
+**Mistake:** The card tile showed "المتبقي من الحد 10,000 من 41,000" for card 8134
+in September. The figure was correct — on 2 April 2026, the last day that card sent
+a message. The owner had paid the card off since, saw the tile, and asked why the
+app thought he owed 31,000. The date was on the tile, in the faintest style
+available, and read as a footnote rather than as a caveat.
+**Why:** The app renders what it last heard, and every other number beside it is
+from today. Correctness was checked; currency was not, because the value is not
+wrong at any point — it just stops describing now.
+**Rule:** Any figure read from an external source and cached needs its age in the
+same glance as its value, and past a threshold the wording must change, not only
+the timestamp. "حتى 02/04" is a fact; "آخر خبر منها 02/04" is a caveat, and only
+the second gets read.
+**How to apply:** Any surface showing a last-known reading — balances, limits,
+rates, anything the app does not compute itself.
+**Source:** session 2026-08-31, owner's report on card 8134
+
