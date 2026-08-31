@@ -41,3 +41,6 @@ object Motion {
  * above the button.
  */
 val FAB_CLEARANCE = 96.dp
+
+/** M3's navigation bar height, needed here because the bar hides on scroll. */
+val NAV_BAR_HEIGHT = 80.dp
