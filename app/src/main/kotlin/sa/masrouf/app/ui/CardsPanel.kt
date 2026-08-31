@@ -74,10 +74,21 @@ fun CardsPanel(
 
 @Composable
 private fun CardTile(card: CardBalance, currencyLabel: String) {
-    val mark = bankMark(card.bankId)
+    // bank_id is stamped from the sender, and only messages captured since that
+    // feature existed carry one. Most of a twelve-year history predates it, so the
+    // tile for a card whose last stamped message is old showed no issuer at all.
+    // The owner's own statement fills the gap; it cannot go stale the way a guess
+    // from an old template would.
+    val mark = bankMark(card.bankId ?: CardIssuers.BANK_ID[card.last4])
     val isArabic = LocalConfiguration.current.locales[0].language == "ar"
     val tint = mark?.colour ?: MaterialTheme.colorScheme.outline
-    val isCredit = card.kind == BalanceReader.Kind.CREDIT_LIMIT.name
+    val limit = CreditCards.LIMIT_HALALAS[card.last4]
+    // A card's nature belongs to the card, not to whichever message happened to
+    // arrive last. AlRajhi writes "رصيد" for a credit card exactly as it does for a
+    // current account, so the reader files the figure as an account balance and the
+    // tile said الرصيد 31,837.17 for a card carrying a 38,500 limit - money the
+    // owner does not have. See [CreditCards].
+    val isCredit = card.kind == BalanceReader.Kind.CREDIT_LIMIT.name || limit != null
 
     Card(
         modifier = Modifier.width(168.dp),
@@ -112,6 +123,17 @@ private fun CardTile(card: CardBalance, currencyLabel: String) {
                 text = Money.ofHalalas(halalas).forDisplay(currencyLabel),
                 style = MoneyStyle.merge(MaterialTheme.typography.titleMedium),
             )
+            // What is left means little without what it is left of. Shown only for
+            // a limit the owner has stated, never a high-water mark guessed from
+            // the messages: a card whose balance never reached its ceiling would
+            // make the app understate the limit and overstate what has been used.
+            if (limit != null) {
+                Text(
+                    text = stringResource(R.string.card_of_limit, Money.ofHalalas(limit).grouped()),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         } else {
             // The bank never puts a figure in its messages. Saying so beats a
             // blank, which reads as the app having failed to read one.
@@ -147,5 +169,63 @@ private fun CardTile(card: CardBalance, currencyLabel: String) {
 object ActiveCards {
     val LAST4: Set<String> = setOf(
         "5763", "7536", "8134", "2383", "8202", "3761", "7285", "2166", "9941",
+    )
+}
+
+/**
+ * The owner's credit cards, and what each one's limit is.
+ *
+ * Which cards are credit cards cannot be read off a single message. AlRajhi's
+ * templates for card 2383 say `رصيد:31837.17 SR` and never the word ائتمانية, so
+ * [BalanceReader] - which decides from the keyword, correctly, because that is all
+ * one message gives it - files the figure as an account balance. The tile then
+ * showed it under "الرصيد", telling the owner he held 31,837 riyals when the number
+ * was what a 38,500-riyal card would still let through.
+ *
+ * Being a credit card is a property of the card, so it is recorded per card, the
+ * same way [ActiveCards] records which are open: stated by the owner, not inferred.
+ * The limits are his own figures. Each is corroborated by the highest balance the
+ * card's messages ever reported - 37,754 against 38,500, 41,010 against 41,000,
+ * 97,000 against 97,000 - which is the check to repeat when one is added.
+ *
+ * A high-water mark is deliberately not used as a substitute for an owner-stated
+ * limit: a card that has never been near its ceiling would report a limit far below
+ * the real one, and the app would then overstate what had been spent on it.
+ */
+/**
+ * Who issued each card, for the cards whose issuer is known.
+ *
+ * Only a fallback: a stamped `bank_id` always wins, because it came from the
+ * sender of an actual message. This list covers the cards whose messages all
+ * predate the stamp.
+ *
+ * Each entry is either the owner's own statement or read off the card's template
+ * and confirmed by him. Two cards are deliberately absent: 7536 and 3761 appear
+ * only as the funding card inside a barq wallet top-up, which names the card but
+ * never the bank that issued it. A wrong bank on a tile is worse than none - it is
+ * a confident label the owner would have no reason to doubt.
+ */
+object CardIssuers {
+    val BANK_ID: Map<String, String> = mapOf(
+        "2383" to "alrajhi",   // credit
+        "5763" to "alrajhi",   // mada debit
+        "8134" to "alrajhi",   // credit
+        "1887" to "snb",       // mada debit
+        "8202" to "d360",      // mada debit
+        "9994" to "enbd",      // credit
+        // The barq wallet. Three fragments of one balance rather than three cards:
+        // barq writes a different one of them into each kind of message, so each
+        // arrives looking like a card of its own.
+        "7285" to "barq",
+        "2166" to "barq",
+        "9941" to "barq",
+    )
+}
+
+object CreditCards {
+    val LIMIT_HALALAS: Map<String, Long> = mapOf(
+        "2383" to 38_500_00L,
+        "8134" to 41_000_00L,
+        "9994" to 97_000_00L,
     )
 }
