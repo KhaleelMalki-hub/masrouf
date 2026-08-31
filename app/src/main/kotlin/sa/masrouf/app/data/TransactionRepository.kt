@@ -1,6 +1,7 @@
 package sa.masrouf.app.data
 
 import kotlinx.coroutines.Dispatchers
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
@@ -58,6 +59,21 @@ class TransactionRepository(
      * showing nothing the whole time; as one transaction it is seconds.
      */
     private val inTransaction: suspend (suspend () -> Unit) -> Unit = { block -> block() },
+    /**
+     * Where a flow's mapping runs.
+     *
+     * Every observing flow here maps every row of a growing table, and the map runs
+     * where the flow is COLLECTED - the main thread, under `stateIn`. Twelve
+     * thousand rows through the recurring detector there froze the launch: no
+     * total, no strip, touches ignored.
+     *
+     * Injected rather than hardcoded so a test can pass its own scheduler. With
+     * `Dispatchers.Default` fixed in place, `advanceUntilIdle()` returns before a
+     * real background thread has produced anything, and a test that reads `.value`
+     * straight after sees the previous month's answer - which is how this parameter
+     * was found.
+     */
+    private val computation: CoroutineContext = Dispatchers.Default,
 ) {
 
     /**
@@ -72,7 +88,7 @@ class TransactionRepository(
     fun observeRecent(limit: Int = RECENT_LIMIT): Flow<List<Transaction>> =
         dao.observeRecent(limit)
             .map { rows -> rows.map(TransactionEntity::toModel) }
-            .flowOn(Dispatchers.Default)
+            .flowOn(computation)
 
     /**
      * The first Riyadh month that has anything in it, or null when nothing is
@@ -104,7 +120,7 @@ class TransactionRepository(
             untilMillis = RiyadhTime.startOfDay(first.plusMonths(1)).toEpochMilli(),
         )
             .map { rows -> rows.map(TransactionEntity::toModel) }
-            .flowOn(Dispatchers.Default)
+            .flowOn(computation)
     }
 
     /**
@@ -246,53 +262,6 @@ class TransactionRepository(
     suspend fun retypeSalaryDeposits(): Int = dao.retypeSalaryDeposits()
 
     /**
-     * Takes the user's own money back out of the spending total.
-     *
-     * Settling a credit card, paying a SADAD biller that *is* one of your cards, and
-     * transferring to your own account at another bank all read as spending to an
-     * older classifier, and each one charges the same riyals twice - once when the
-     * purchase happened and again when the balance moved. August 2026 read as
-     * 168,864 riyals spent, of which 79,087 was money that never left.
-     *
-     * A stored row keeps the verdict of the classifier that was current when it
-     * arrived: capture deduplicates on a fingerprint and inserts with IGNORE, so
-     * re-reading the same message later cannot correct it. That is why teaching the
-     * classifier is not enough on its own and this pass exists.
-     *
-     * It re-parses rather than carrying its own list of wordings. Two lists would be
-     * two answers to one question, and the day a bank invents a new template only
-     * one of them would learn it.
-     *
-     * The whole parser, not [IntentClassifier] alone: a purchase whose merchant is
-     * one of the user's own wallets is reclassified in [BankMessageParser], after
-     * the classifier has had its say, so a pass that asked the classifier by itself
-     * would silently do nothing for exactly that family.
-     *
-     * ## Why it can only ever lower the total
-     *
-     * The classifier is re-run over every row that counts as spending, but its
-     * verdict is accepted only when it takes the row *out* of spending. So a
-     * re-reading can correct an overcount and can never invent a purchase - and a
-     * row the user has filed keeps the category they gave it.
-     *
-     * @return how many rows stopped counting as spending.
-     */
-    /**
-     * Replaces account numbers standing in for a party with the name beside them.
-     *
-     * The pattern that read the party matched the account line, so 2,014 records
-     * carried "104*010" or "3016" where a person or a company belonged. Nothing can
-     * be filed against a number, so every one of them stayed unfiled however long
-     * the merchant list grew.
-     *
-     * Two existing steps, in order, rather than a third that rewrites the party
-     * itself: clear what is certainly wrong, then let [reparseStoredBodies] - which
-     * only ever fills a gap - read the name out of the body it already has. A
-     * merchant the user filed by hand is never cleared.
-     *
-     * @return how many rows lost an account number as their party.
-     */
-    /**
      * Re-reads the amount of every captured row whose body says something else.
      *
      * The riskiest pass in this file, and the one with the most behind it. The
@@ -338,12 +307,59 @@ class TransactionRepository(
         return fixed
     }
 
+    /**
+     * Replaces account numbers standing in for a party with the name beside them.
+     *
+     * The pattern that read the party matched the account line, so 2,014 records
+     * carried "104*010" or "3016" where a person or a company belonged. Nothing can
+     * be filed against a number, so every one of them stayed unfiled however long
+     * the merchant list grew.
+     *
+     * Two existing steps, in order, rather than a third that rewrites the party
+     * itself: clear what is certainly wrong, then let [reparseStoredBodies] - which
+     * only ever fills a gap - read the name out of the body it already has. A
+     * merchant the user filed by hand is never cleared.
+     *
+     * @return how many rows lost an account number as their party.
+     */
     suspend fun repairNumericParties(): Int {
         val cleared = dao.clearNumericParties()
         if (cleared > 0) reparseStoredBodies()
         return cleared
     }
 
+    /**
+     * Takes the user's own money back out of the spending total.
+     *
+     * Settling a credit card, paying a SADAD biller that *is* one of your cards, and
+     * transferring to your own account at another bank all read as spending to an
+     * older classifier, and each one charges the same riyals twice - once when the
+     * purchase happened and again when the balance moved. August 2026 read as
+     * 168,864 riyals spent, of which 79,087 was money that never left.
+     *
+     * A stored row keeps the verdict of the classifier that was current when it
+     * arrived: capture deduplicates on a fingerprint and inserts with IGNORE, so
+     * re-reading the same message later cannot correct it. That is why teaching the
+     * classifier is not enough on its own and this pass exists.
+     *
+     * It re-parses rather than carrying its own list of wordings. Two lists would be
+     * two answers to one question, and the day a bank invents a new template only
+     * one of them would learn it.
+     *
+     * The whole parser, not [IntentClassifier] alone: a purchase whose merchant is
+     * one of the user's own wallets is reclassified in [BankMessageParser], after
+     * the classifier has had its say, so a pass that asked the classifier by itself
+     * would silently do nothing for exactly that family.
+     *
+     * ## Why it can only ever lower the total
+     *
+     * The classifier is re-run over every row that counts as spending, but its
+     * verdict is accepted only when it takes the row *out* of spending. So a
+     * re-reading can correct an overcount and can never invent a purchase - and a
+     * row the user has filed keeps the category they gave it.
+     *
+     * @return how many rows stopped counting as spending.
+     */
     suspend fun retypeOwnMoney(): Int {
         val spending = TransactionType.entries.filter { it.countsAsSpending }.map { it.name }
         val parsers = SaudiBanks.ALL.map(::BankMessageParser)
@@ -392,7 +408,7 @@ class TransactionRepository(
             bonusId = SaudiCategories.BONUS.id,
         )
             .map { rows -> rows.mapNotNull { it.toModel() } }
-            .flowOn(Dispatchers.Default)
+            .flowOn(computation)
 
     /**
      * Every salary and bonus deposit, newest first.
@@ -408,7 +424,7 @@ class TransactionRepository(
             // SUM in its header, so the header says 45,000 and the list adds to
             // 30,000 with no error anywhere.
             .map { rows -> rows.map(TransactionEntity::toModel) }
-            .flowOn(Dispatchers.Default)
+            .flowOn(computation)
 
     /** The merchants the user pays on a rhythm, largest first. See [RecurringDetector]. */
     fun observeRecurring(now: () -> Instant): Flow<List<RecurringDetector.Recurring>> =
@@ -425,7 +441,7 @@ class TransactionRepository(
             // emission, and `observePending` in particular is unbounded and
             // re-emits on every write during a 22,000-message backfill - the same
             // mechanism, one incident away from being noticed.
-            .flowOn(Dispatchers.Default)
+            .flowOn(computation)
 
     /**
      * The last balance each card's messages reported, newest card first.
@@ -554,12 +570,12 @@ class TransactionRepository(
     fun observeCardBanks(): Flow<Map<String, String>> =
         dao.observeCardBanks()
             .map { rows -> rows.associate { it.last4 to it.bankId } }
-            .flowOn(Dispatchers.Default)
+            .flowOn(computation)
 
     fun observePending(): Flow<List<Transaction>> =
         dao.observePending()
             .map { rows -> rows.map(TransactionEntity::toModel) }
-            .flowOn(Dispatchers.Default)
+            .flowOn(computation)
 
     /**
      * Files every transaction from one merchant, and remembers the decision.

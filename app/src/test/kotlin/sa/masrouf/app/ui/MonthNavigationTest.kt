@@ -39,7 +39,9 @@ class MonthNavigationTest {
 
     private val dispatcher = StandardTestDispatcher()
     private val dao = FakeDao()
-    private val repository = TransactionRepository(dao)
+    // The repository maps its flows off the main thread. Handing it the test's own
+    // dispatcher is what lets `advanceUntilIdle()` mean what it says here.
+    private val repository = TransactionRepository(dao, computation = dispatcher)
 
     /** A fixed "now" in the middle of August 2026, Riyadh. */
     private val clock = Clock.fixed(Instant.parse("2026-08-15T09:00:00Z"), ZoneOffset.UTC)

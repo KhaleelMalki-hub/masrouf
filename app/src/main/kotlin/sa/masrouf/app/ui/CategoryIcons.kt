@@ -18,7 +18,6 @@ import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material.icons.outlined.TheaterComedy
 import androidx.compose.material.icons.outlined.TrendingUp
-import androidx.compose.material.icons.outlined.Wallet
 import androidx.compose.material.icons.outlined.WorkOutline
 import androidx.compose.material.icons.outlined.LocalLaundryService
 import androidx.compose.material.icons.outlined.HelpOutline

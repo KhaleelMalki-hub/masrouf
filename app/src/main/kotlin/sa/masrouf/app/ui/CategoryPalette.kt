@@ -20,7 +20,7 @@ import sa.masrouf.core.model.SaudiCategories
  * and more saturated and the dark set is lighter and softer. Sharing one set is
  * how a chart ends up legible in one theme and mush in the other.
  */
-private val LightBands = mapOf(
+internal val LightBands = mapOf(
     SaudiCategories.FOOD.id to Color(0xFFB3261E),
     SaudiCategories.GROCERIES.id to Color(0xFF2E6B4F),
     SaudiCategories.TRANSPORT.id to Color(0xFF2B5CA8),
@@ -50,7 +50,7 @@ private val LightBands = mapOf(
     SaudiCategories.OTHER.id to Color(0xFF6E6E76),
 )
 
-private val DarkBands = mapOf(
+internal val DarkBands = mapOf(
     SaudiCategories.FOOD.id to Color(0xFFFF897D),
     SaudiCategories.GROCERIES.id to Color(0xFF7DDBA8),
     SaudiCategories.TRANSPORT.id to Color(0xFFAEC6FF),
@@ -102,3 +102,11 @@ fun bandColour(category: Category?): Color {
 @Composable
 @ReadOnlyComposable
 fun uncategorisedColour(): Color = MaterialTheme.colorScheme.outlineVariant
+
+/**
+ * The two band maps, for the guard that asserts every category has a colour of its
+ * own in each theme. Exposed rather than duplicated: a test holding its own copy
+ * of the palette proves that two of my lists agree, which is not the question.
+ */
+internal val BandsByTheme: Map<String, Map<String, androidx.compose.ui.graphics.Color>> =
+    mapOf("light" to LightBands, "dark" to DarkBands)

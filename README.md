@@ -41,7 +41,7 @@ app/    وحدة أندرويد (Compose · Room · Glance · Google Drive)
 بلا Android SDK وبلا محاكي.
 
 ```bash
-gradle :core:test    # 47 اختباراً، كلها على رسائل بنكية حقيقية
+gradle :core:test  # 287 اختباراً، كلها على رسائل بنكية حقيقية
 ```
 
 وحدة `app` تُدرَج في البناء **فقط** عند وجود Android SDK (انظر `settings.gradle.kts`)،

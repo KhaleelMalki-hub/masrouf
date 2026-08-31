@@ -1,18 +1,15 @@
 package sa.masrouf.app.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -20,7 +17,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -207,33 +203,6 @@ object ActiveCards {
 }
 
 /**
- * The owner's credit cards, and what each one's limit is.
- *
- * Which cards are credit cards cannot be read off a single message. AlRajhi's
- * templates for card 2383 say `رصيد:31837.17 SR` and never the word ائتمانية, so
- * [BalanceReader] - which decides from the keyword, correctly, because that is all
- * one message gives it - files the figure as an account balance. The tile then
- * showed it under "الرصيد", telling the owner he held 31,837 riyals when the number
- * was only what the card would still let through.
- *
- * Being a credit card is a property of the card, so it is recorded per card, the
- * same way [ActiveCards] records which are open: stated by the owner, not inferred.
- * The limits are his own figures. Each is corroborated by the highest balance the
- * card's messages ever reported: a remaining allowance can approach its ceiling
- * but never pass it, so a limit below one is a typo. That check belongs with the
- * figures, which is why the test asserts the PARSER and the owner keeps the
- * numbers.
- *
- * A high-water mark is deliberately not used as a substitute for an owner-stated
- * limit: a card that has never been near its ceiling would report a limit far below
- * the real one, and the app would then overstate what had been spent on it.
- *
- * The figures themselves are not here. A named person's credit limit is a fact
- * about him, this repository is public, and CLAUDE.md's Privacy section permits a
- * card's last four and nothing more. They are supplied at startup from
- * `local.properties`, which is gitignored; absent, no card shows a ceiling.
- */
-/**
  * Who issued each card, for the cards whose issuer is known.
  *
  * Only a fallback: a stamped `bank_id` always wins, because it came from the
@@ -264,6 +233,33 @@ object CardIssuers {
     )
 }
 
+/**
+ * The owner's credit cards, and what each one's limit is.
+ *
+ * Which cards are credit cards cannot be read off a single message. AlRajhi's
+ * templates for card 2383 say `رصيد:31837.17 SR` and never the word ائتمانية, so
+ * [BalanceReader] - which decides from the keyword, correctly, because that is all
+ * one message gives it - files the figure as an account balance. The tile then
+ * showed it under "الرصيد", telling the owner he held 31,837 riyals when the number
+ * was only what the card would still let through.
+ *
+ * Being a credit card is a property of the card, so it is recorded per card, the
+ * same way [ActiveCards] records which are open: stated by the owner, not inferred.
+ * The limits are his own figures. Each is corroborated by the highest balance the
+ * card's messages ever reported: a remaining allowance can approach its ceiling
+ * but never pass it, so a limit below one is a typo. That check belongs with the
+ * figures, which is why the test asserts the PARSER and the owner keeps the
+ * numbers.
+ *
+ * A high-water mark is deliberately not used as a substitute for an owner-stated
+ * limit: a card that has never been near its ceiling would report a limit far below
+ * the real one, and the app would then overstate what had been spent on it.
+ *
+ * The figures themselves are not here. A named person's credit limit is a fact
+ * about him, this repository is public, and CLAUDE.md's Privacy section permits a
+ * card's last four and nothing more. They are supplied at startup from
+ * `local.properties`, which is gitignored; absent, no card shows a ceiling.
+ */
 object CreditCards {
 
     /**

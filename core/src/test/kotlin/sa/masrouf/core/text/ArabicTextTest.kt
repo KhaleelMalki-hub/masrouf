@@ -28,7 +28,7 @@ class ArabicTextTest {
 
     @Test
     fun `bidi controls and zero-width characters are removed`() {
-        val withMarks = "‏شراء‎ ​SAR‪ 35‬﻿"
+        val withMarks = "${Char(0x200F)}شراء${Char(0x200E)} ${Char(0x200B)}SAR${Char(0x202A)} 35${Char(0x202C)}${Char(0xFEFF)}"
         assertEquals("شراء SAR 35", ArabicText.normalize(withMarks))
     }
 
@@ -49,7 +49,7 @@ class ArabicTextTest {
 
     @Test
     fun `the full pipeline handles a realistic glued arabic amount`() {
-        val raw = "‏مبلغ‏٢٠٠٠٫٠٠SAR"
+        val raw = "${Char(0x200F)}مبلغ${Char(0x200F)}٢٠٠٠٫٠٠SAR"
         assertEquals("مبلغ2000.00SAR", ArabicText.normalize(raw))
     }
 

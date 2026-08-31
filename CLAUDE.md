@@ -9,8 +9,8 @@ starting work.
 ## Commands
 
 ```bash
-./gradlew :core:test              # 232 tests, runs anywhere with a JDK
-./gradlew :app:testDebugUnitTest  # 114 tests, needs the Android SDK
+./gradlew :core:test              # 287 tests, runs anywhere with a JDK
+./gradlew :app:testDebugUnitTest  # 163 tests, needs the Android SDK
 ./gradlew :app:assembleDebug      # needs local.properties with sdk.dir
 # DANGER: uninstalls the app when it finishes, which DELETES its database.
 # Gradle does this unconditionally and there is no flag to stop it. On the
@@ -99,7 +99,7 @@ app/    Android - Compose, Room, Arabic default with English in values-en
    against bodies that actually arrived: 58 English "Your secure code is NNNN"
    messages reached storage as confirmed purchases, each doubling the purchase it
    authorised and each keeping a credential on disk, because the markers were
-   Arabic-only. `purgeCredentialBodies()` asks the gate on every launch, so a
+   Arabic-only. `purgeRejectedBodies()` asks the gate again after a marker is added, so a
    marker added later also removes what an earlier gate let through. Use `CapturePipeline`; never
    call a `MessageParser` directly. A one-time-password message carries the same
    amount and merchant as the purchase it authorises and arrives seconds earlier,
@@ -183,7 +183,7 @@ This repository is **public**. Everything below follows from that.
   be. Neither is an account number, an IBAN, a bill reference or a SADAD number.
 - A comment quoting a real figure is the same leak as a constant holding it.
 - No server, no account, no external API. Data never leaves the device.
-- Fixtures under `core/src/test/.../fixtures` are **redacted**: names replaced,
+- Fixtures under `core/src/testFixtures/.../fixtures` are **redacted**: names replaced,
   OTP codes replaced with `000000`, balances invented. Message structure, amounts
   and card last-four are kept, because those are what is tested.
 - Never store a full account number, IBAN, or card number. Last four only.

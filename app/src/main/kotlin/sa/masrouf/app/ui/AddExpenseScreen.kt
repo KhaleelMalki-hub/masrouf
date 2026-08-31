@@ -8,7 +8,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBar
 import androidx.annotation.DrawableRes
@@ -63,7 +62,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -78,7 +76,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material3.ListItem
@@ -127,7 +124,6 @@ import sa.masrouf.core.model.Direction
 import sa.masrouf.core.model.MerchantNames
 import sa.masrouf.core.model.countsAsSpending
 import sa.masrouf.core.model.SaudiCategories
-import sa.masrouf.core.model.Source
 import sa.masrouf.core.model.Transaction
 import sa.masrouf.core.model.TransactionType
 import java.time.LocalDate
@@ -1786,14 +1782,6 @@ private fun CardMark(mark: BankMark?, last4: String?) {
 }
 
 /**
- * The month's investments, shown as a category row outside the total.
- *
- * Deliberately the same shape as a legend row - swatch, name, amount, tappable -
- * because it is a category in every sense except one: it is not spending, so it
- * cannot be a band in a strip whose bands add up to the number above them.
- */
-@Composable
-/**
  * A category that sits outside the month's total.
  *
  * An investment leaving is not spending and does not belong in the bands above.
@@ -1805,6 +1793,7 @@ private fun CardMark(mark: BankMark?, last4: String?) {
  * kept the shape: the next figure the total has to exclude gets a row, not a
  * fourth copy of one.
  */
+@Composable
 private fun OutsideTotalRow(
     category: Category,
     @StringRes label: Int,

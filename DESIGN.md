@@ -88,9 +88,17 @@ Two custom pieces earn their place:
 
 ## Layout
 
-Single scrolling screen in reading order: month, what needs you, history, then the
-one-off maintenance actions. Recording an expense is a button, not a form on the
-page.
+Two destinations, and a navigation bar only because there are two. **Spending** is
+a single scrolling screen in reading order: cards, month, what needs you, history.
+**Income** is salary and bonuses over the years — a different question over a
+different span, which is the whole reason it is not a panel on the other.
+
+The bar hides on the way down and returns on the way up, mirroring the top bar. It
+is not floating: that is Google's own pattern rather than anything in M3, this
+screen already has a FAB in the same corner, and two floating things over a column
+of figures is how a number gets covered — which has happened here once.
+
+Recording an expense is a button, not a form on the page.
 
 Spacing on a 4dp grid, varied for grouping. No nested cards. No side-stripe accent
 borders.
