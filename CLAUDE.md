@@ -84,7 +84,9 @@ app/    Android - Compose, Room, Arabic default with English in values-en
               TransactionRepository - the only route to storage, and where
               cross-source reconciliation runs under a lock
   ui/         AmountInput · DayLabel · MoneyFormat (all tested)
-              AddExpenseViewModel · AddExpenseScreen
+              AddExpenseViewModel · AddExpenseScreen (the host: scaffold, bars,
+              navigation) split into EntrySheet · MonthPanel · HistoryList ·
+              IncomeScreen, each one question and none knowing the others
               Theme (Sadu palette, bundled Plex Arabic) · MonthStrip ·
               ReceiptSlip · CategoryChips · CategoryPalette
 ```
