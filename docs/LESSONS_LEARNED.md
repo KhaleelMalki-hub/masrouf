@@ -320,3 +320,22 @@ parser. A comment quoting the value is the same leak as the value.
 names, limits, account identifiers, thresholds tuned to one person.
 **Source:** session 2026-08-31, council security review
 
+### 2026-08-31 — Ran a task documented as destructive against the owner's phone
+**Mistake:** Ran `:app:connectedDebugAndroidTest` on the owner's personal device to
+exercise a query against real SQLite. Gradle uninstalls the app when that task
+finishes — unconditionally, with no flag to stop it — so the app and its database
+vanished from his phone mid-session. He noticed before I did.
+**Why:** `CLAUDE.md` says of that exact command "needs a device; it wipes the
+emulator's app data". I read it at the start of the session and carried away
+"emulator", so the warning attached to a machine that was not the one connected.
+The backup I took beforehand shows the risk was recognised and then walked past:
+taking a precaution is not the same as heeding a warning.
+**Rule:** Before running any command a document calls destructive, name the target
+out loud. If the target is the owner's own device and the command is not strictly
+necessary there, do not run it — an emulator exists for this. Where it is
+necessary: back up the database AND `shared_prefs` first, and rehearse the restore
+before the command, not after.
+**How to apply:** `connectedDebugAndroidTest`, `adb uninstall`, `pm clear`, `db
+reset`, anything with `--rerun` against live data.
+**Source:** session 2026-08-31, recovered from `backup_before_androidtest.db`
+

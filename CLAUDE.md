@@ -12,7 +12,25 @@ starting work.
 ./gradlew :core:test              # 232 tests, runs anywhere with a JDK
 ./gradlew :app:testDebugUnitTest  # 114 tests, needs the Android SDK
 ./gradlew :app:assembleDebug      # needs local.properties with sdk.dir
-./gradlew :app:connectedDebugAndroidTest   # 2 migration tests, needs a running device
+# DANGER: uninstalls the app when it finishes, which DELETES its database.
+# Gradle does this unconditionally and there is no flag to stop it. On the
+# emulator that costs nothing. On the owner's phone it costs twelve years of
+# captured messages, and it has happened once.
+#
+# Before running it against a physical device, take a backup and know how to put
+# it back:
+#   for f in masrouf.db masrouf.db-wal masrouf.db-shm; do
+#     adb exec-out run-as sa.masrouf.app cat "databases/$f" > "backup.${f#masrouf.}"
+#   done
+#   # ... run the tests, then:
+#   adb install -r app/build/outputs/apk/debug/app-debug.apk
+#   adb shell am force-stop sa.masrouf.app
+#   for f in db db-wal db-shm; do
+#     adb push "backup.$f" "/data/local/tmp/masrouf.$f"
+#     adb shell "run-as sa.masrouf.app cp /data/local/tmp/masrouf.$f databases/masrouf.$f"
+#   done
+#   # and restore shared_prefs/masrouf.settings.xml, or every maintenance pass reruns.
+./gradlew :app:connectedDebugAndroidTest   # instrumented tests, needs a running device
 ```
 
 The SDK lives at `/opt/homebrew/share/android-commandlinetools` and the JDK is
