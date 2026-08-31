@@ -58,8 +58,8 @@ class ArabicTextTest {
     @Test
     fun `folding unifies alef and yeh spelling variants`() {
         assertEquals(
-            ArabicText.foldForMatching("مالكى"),
-            ArabicText.foldForMatching("مالكي"),
+            ArabicText.foldForMatching("مكتبى"),
+            ArabicText.foldForMatching("مكتبي"),
         )
         assertEquals(
             ArabicText.foldForMatching("إيداع"),

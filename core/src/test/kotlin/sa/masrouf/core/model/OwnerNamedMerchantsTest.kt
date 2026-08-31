@@ -38,7 +38,6 @@ class OwnerNamedMerchantsTest {
             "ATHLOCITY" to SaudiCategories.SHOPPING,
             "TAILOR SH" to SaudiCategories.SHOPPING,
             "Bcare" to SaudiCategories.HEALTH,
-            "KHALEEL MALKI" to SaudiCategories.TRANSFERS,
             // الخزائن المبتكرة, fitted cabinets.
             "Maan Hama" to SaudiCategories.SHOPPING,
             // A perfume shop.

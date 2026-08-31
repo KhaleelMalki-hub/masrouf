@@ -2,7 +2,9 @@ package sa.masrouf.app.data
 
 import kotlin.test.assertEquals
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import sa.masrouf.core.capture.AccountOwner
 import sa.masrouf.core.fixtures.RealMessages
 import sa.masrouf.core.model.SaudiCategories
 import sa.masrouf.core.model.TransactionType
@@ -21,6 +23,17 @@ class OwnMoneyRetypeTest {
 
     private val dao = FakeDao()
     private val repository = TransactionRepository(dao)
+
+    /**
+     * The owner's names are supplied at runtime, so a test that relies on the
+     * self-transfer demotion must say which names it means. Without this the class
+     * passes or fails on whether some other test happened to run first, which is
+     * the kind of green nobody can trust.
+     */
+    @BeforeEach
+    fun configureOwner() {
+        AccountOwner.configure("OWNER|NAME ; مالك|الحساب ; اسم|مالك")
+    }
 
     private var nextId = 0
 

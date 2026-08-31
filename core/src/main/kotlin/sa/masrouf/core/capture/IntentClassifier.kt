@@ -240,9 +240,27 @@ object IntentClassifier {
      * The owner's own name, reusing the rules' matcher so that Latin whole-word and
      * Arabic stem matching behave here exactly as they do above. One list, one set
      * of semantics; a second hand-rolled matcher would drift from the first.
+     *
+     * Rebuilt only when [AccountOwner] changes, which is once at startup. Folding a
+     * token costs a normalisation pass and this runs on every message; the cache is
+     * the same lesson `MerchantMatch.Rules` records, where folding 260 keywords per
+     * call took the dashboard's first reading with it.
      */
-    private val OWNER_RULES = AccountOwner.NAME_TOKENS.map {
-        Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, it)
+    @Volatile
+    private var ownerSource: List<List<String>> = emptyList()
+
+    @Volatile
+    private var ownerRules: List<Rule> = emptyList()
+
+    private fun ownerRules(): List<Rule> {
+        val current = AccountOwner.nameTokens
+        if (current !== ownerSource) {
+            // Built before either field is published, so a concurrent reader sees
+            // the old pair or the new pair, never a half-built one.
+            ownerRules = current.map { Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, it) }
+            ownerSource = current
+        }
+        return ownerRules
     }
 
     /**
@@ -269,5 +287,5 @@ object IntentClassifier {
 
     /** Whether folded text names the account holder. See [AccountOwner]. */
     private fun namesOwner(foldedText: String): Boolean =
-        OWNER_RULES.any { it.matches(foldedText) }
+        ownerRules().any { it.matches(foldedText) }
 }

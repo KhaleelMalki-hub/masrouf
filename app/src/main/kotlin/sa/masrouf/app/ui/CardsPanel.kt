@@ -83,11 +83,11 @@ private fun CardTile(card: CardBalance, currencyLabel: String) {
     val mark = bankMark(card.bankId ?: CardIssuers.BANK_ID[card.last4])
     val isArabic = LocalConfiguration.current.locales[0].language == "ar"
     val tint = mark?.colour ?: MaterialTheme.colorScheme.outline
-    val limit = CreditCards.LIMIT_HALALAS[card.last4]
+    val limit = CreditCards.limitHalalas[card.last4]
     // A card's nature belongs to the card, not to whichever message happened to
     // arrive last. AlRajhi writes "رصيد" for a credit card exactly as it does for a
     // current account, so the reader files the figure as an account balance and the
-    // tile said الرصيد 31,837.17 for a card carrying a 38,500 limit - money the
+    // tile called a credit card's remaining allowance الرصيد - money the
     // owner does not have. See [CreditCards].
     val isCredit = card.kind == BalanceReader.Kind.CREDIT_LIMIT.name || limit != null
 
@@ -150,7 +150,7 @@ private fun CardTile(card: CardBalance, currencyLabel: String) {
             )
         }
         // A figure the bank last mentioned months ago is not wrong, and it is not
-        // current either. Card 8134's tile showed 10,000 left of a 41,000 limit -
+        // current either. One tile showed a figure that was a fifth of its limit -
         // true on 2 April 2026, and still on screen in September, by which time the
         // owner had paid the card off. The date was already here, in the faintest
         // style on the tile, and it read as a footnote rather than as a caveat.
@@ -209,17 +209,24 @@ object ActiveCards {
  * [BalanceReader] - which decides from the keyword, correctly, because that is all
  * one message gives it - files the figure as an account balance. The tile then
  * showed it under "الرصيد", telling the owner he held 31,837 riyals when the number
- * was what a 38,500-riyal card would still let through.
+ * was only what the card would still let through.
  *
  * Being a credit card is a property of the card, so it is recorded per card, the
  * same way [ActiveCards] records which are open: stated by the owner, not inferred.
  * The limits are his own figures. Each is corroborated by the highest balance the
- * card's messages ever reported - 37,754 against 38,500, 41,010 against 41,000,
- * 97,000 against 97,000 - which is the check to repeat when one is added.
+ * card's messages ever reported: a remaining allowance can approach its ceiling
+ * but never pass it, so a limit below one is a typo. That check belongs with the
+ * figures, which is why the test asserts the PARSER and the owner keeps the
+ * numbers.
  *
  * A high-water mark is deliberately not used as a substitute for an owner-stated
  * limit: a card that has never been near its ceiling would report a limit far below
  * the real one, and the app would then overstate what had been spent on it.
+ *
+ * The figures themselves are not here. A named person's credit limit is a fact
+ * about him, this repository is public, and CLAUDE.md's Privacy section permits a
+ * card's last four and nothing more. They are supplied at startup from
+ * `local.properties`, which is gitignored; absent, no card shows a ceiling.
  */
 /**
  * Who issued each card, for the cards whose issuer is known.
@@ -253,9 +260,27 @@ object CardIssuers {
 }
 
 object CreditCards {
-    val LIMIT_HALALAS: Map<String, Long> = mapOf(
-        "2383" to 38_500_00L,
-        "8134" to 41_000_00L,
-        "9994" to 97_000_00L,
-    )
+
+    /**
+     * Empty until configured. A card with no limit shows its remaining figure
+     * without a ceiling - less information, and nothing invented.
+     */
+    @Volatile
+    var limitHalalas: Map<String, Long> = emptyMap()
+        private set
+
+    /**
+     * @param spec entries separated by `;`, each `last4:halalas`, as in
+     *   `"1234:1230000 ; 5678:4560000"`. An entry that is not a four-digit card
+     *   and a positive integer is dropped rather than guessed at: a mistyped limit
+     *   would understate the ceiling and overstate what had been spent.
+     */
+    fun configure(spec: String) {
+        limitHalalas = spec.split(';').mapNotNull { entry ->
+            val (last4, halalas) = entry.split(':').map(String::trim).takeIf { it.size == 2 }
+                ?: return@mapNotNull null
+            val value = halalas.toLongOrNull()?.takeIf { it > 0 } ?: return@mapNotNull null
+            last4.takeIf { it.length == 4 && it.all(Char::isDigit) }?.let { it to value }
+        }.toMap()
+    }
 }

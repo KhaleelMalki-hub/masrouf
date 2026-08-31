@@ -139,7 +139,7 @@ object SaudiBanks {
             // The same negative lookahead SNB's patterns carry, and for the same
             // reason. reparseStoredBodies tries every profile and keeps whichever
             // reads the most, so an unguarded pattern here claims other banks'
-            // bodies too: "الى:3016 / من:KHALEEL MALKI" gave up the account number
+            // bodies too: "الى:3016 / من:SENDER NAME" gave up the account number
             // while the name sat one line below it. 710 rows survived the repair
             // pass because these two lines did not have the guard.
             Regex("""(?m)^(?:إلى|الى)\s*+:?+\s*+(?!\**\d)(.+)$"""),

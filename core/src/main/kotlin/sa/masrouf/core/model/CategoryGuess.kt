@@ -498,10 +498,13 @@ object CategoryGuess {
         "بطاقه مدي" to SaudiCategories.TRANSFERS,
         "بطاقه ايتمانيه" to SaudiCategories.TRANSFERS,
         "بطاقة ائتمانية" to SaudiCategories.TRANSFERS,
-        // The owner's own name as a merchant: a bank writing back to him, or a
-        // transfer he sent himself. See [sa.masrouf.core.capture.AccountOwner],
-        // which does the same job for the message body rather than the merchant.
-        "KHALEEL MALKI" to SaudiCategories.TRANSFERS,
+        // The owner's own name as a merchant used to be a rule here. It is a fact
+        // about a named person and this repository is public, so it went the way
+        // the owner's names in AccountOwner went - out of the source. The message
+        // BODY still names him, and IntentClassifier demotes an outgoing transfer
+        // to OWN_TRANSFER on that, which forType then files as a transfer; only a
+        // REFUND carrying his name as the merchant is left unfiled, and there is
+        // one of those in twelve years. The user files it once.
 
         // The employer. Transfers from the municipality are allowances and
         // end-of-service pay, not the monthly salary, which arrives separately as

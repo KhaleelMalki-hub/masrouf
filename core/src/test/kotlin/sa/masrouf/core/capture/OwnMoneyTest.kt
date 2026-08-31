@@ -1,5 +1,6 @@
 package sa.masrouf.core.capture
 
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import sa.masrouf.core.fixtures.RealMessages
 import sa.masrouf.core.model.TransactionType
@@ -19,6 +20,17 @@ import kotlin.test.assertTrue
  * how it is reached. Each test asserts the type it should now get.
  */
 class OwnMoneyTest {
+
+    /**
+     * The owner's names are supplied at runtime and are not in this repository, so
+     * the tests configure placeholders. What is under test is the RULE - two tokens
+     * required, either order, folded - and a placeholder exercises it exactly as a
+     * real name would.
+     */
+    @BeforeEach
+    fun configureOwner() {
+        AccountOwner.configure("OWNER|NAME ; مالك|الحساب ; اسم|مالك")
+    }
 
     private fun typeOf(body: String): TransactionType =
         IntentClassifier.classify(body)?.type
@@ -154,7 +166,7 @@ class OwnMoneyTest {
      */
     @Test
     fun `the owner's name on an incoming transfer changes nothing`() {
-        val body = "حوالة واردة محلية\nمبلغ 500 SAR\nمن KHALEEL MALKI\nحساب 104*010"
+        val body = "حوالة واردة محلية\nمبلغ 500 SAR\nمن OWNER NAME\nحساب 104*010"
 
         assertEquals(TransactionType.TRANSFER_IN, typeOf(body))
     }

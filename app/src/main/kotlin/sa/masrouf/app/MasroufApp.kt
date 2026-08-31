@@ -11,6 +11,8 @@ import android.Manifest
 import sa.masrouf.app.data.MasroufDatabase
 import sa.masrouf.app.data.Preferences
 import sa.masrouf.app.data.TransactionRepository
+import sa.masrouf.app.ui.CreditCards
+import sa.masrouf.core.capture.AccountOwner
 
 /**
  * Holds the one database and the one repository.
@@ -20,6 +22,21 @@ import sa.masrouf.app.data.TransactionRepository
  * changes.
  */
 class MasroufApp : Application() {
+
+    /**
+     * Hands the personal values to the code that needs them.
+     *
+     * They come from `local.properties` through BuildConfig, so they are on this
+     * device and not in the repository. Done in `onCreate` because every capture
+     * path - the notification listener, the SMS receiver, the launch-time catch-up
+     * - runs after it, and an owner matcher configured late would file the first
+     * message of a session as a transfer to a stranger.
+     */
+    override fun onCreate() {
+        super.onCreate()
+        AccountOwner.configure(BuildConfig.OWNER_NAMES)
+        CreditCards.configure(BuildConfig.CARD_LIMITS)
+    }
 
     /**
      * One-off passes over stored data, each run exactly once per install.

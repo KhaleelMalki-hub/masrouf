@@ -287,10 +287,10 @@ pass to protect them.
 **Source:** session 2026-08-31, council code-logic review
 
 ### 2026-08-31 — A true figure with no age reads as a current one
-**Mistake:** The card tile showed "المتبقي من الحد 10,000 من 41,000" for card 8134
-in September. The figure was correct — on 2 April 2026, the last day that card sent
-a message. The owner had paid the card off since, saw the tile, and asked why the
-app thought he owed 31,000. The date was on the tile, in the faintest style
+**Mistake:** A card tile showed a remaining-allowance figure far below the card's
+ceiling in September. The figure was correct — on 2 April 2026, the last day that
+card sent a message. The owner had paid the card off since, saw the tile, and asked
+why the app thought he still owed. The date was on the tile, in the faintest style
 available, and read as a footnote rather than as a caveat.
 **Why:** The app renders what it last heard, and every other number beside it is
 from today. Correctness was checked; currency was not, because the value is not
@@ -302,4 +302,21 @@ the second gets read.
 **How to apply:** Any surface showing a last-known reading — balances, limits,
 rates, anything the app does not compute itself.
 **Source:** session 2026-08-31, owner's report on card 8134
+
+### 2026-08-31 — Personal facts had no home but the source file
+**Mistake:** The owner's name went into `AccountOwner` and his cards' credit limits
+into `CardsPanel`, both production source, in a PUBLIC repository - and the same
+figures were quoted again in the comments beside them. The project's own Privacy
+section already forbade a real name in a fixture; nobody had asked what a
+production constant was.
+**Why:** The values are needed at runtime and there was no other place to put
+them, so they went where the code that reads them lives. "It has to work" quietly
+outranked a rule that had only ever been stated about test data.
+**Rule:** A fact about a real person belongs in `local.properties` (gitignored) and
+reaches the code through `BuildConfig`, with an empty default that makes the
+feature know less rather than fail. Tests configure placeholders and assert the
+parser. A comment quoting the value is the same leak as the value.
+**How to apply:** Any constant sourced from the user rather than from the domain -
+names, limits, account identifiers, thresholds tuned to one person.
+**Source:** session 2026-08-31, council security review
 

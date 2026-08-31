@@ -1,3 +1,34 @@
+import java.util.Properties
+
+/**
+ * Values that belong to the person, not to the program.
+ *
+ * The owner's name and his cards' credit limits are what let the app tell a
+ * transfer to himself from a transfer to a relative, and what a card will still
+ * let through from money he has. They are also facts about a named individual, and
+ * this repository is public - CLAUDE.md's Privacy section already forbids a full
+ * account number and a real name in a fixture, and a limit is the same kind of
+ * thing with no carve-out.
+ *
+ * So they live in `local.properties`, which is gitignored, and reach the code as
+ * BuildConfig fields. Absent - on a fresh clone, or anyone else's machine - they
+ * are empty, the owner matcher matches nobody, and a card shows no ceiling. The
+ * app works; it just knows less, which is the correct behaviour for a stranger's
+ * checkout.
+ */
+private fun localValue(key: String): String {
+    val file = rootProject.file("local.properties")
+    if (!file.exists()) return ""
+    // Read as UTF-8. java.util.Properties.load(InputStream) is defined to decode
+    // ISO-8859-1, which turns every Arabic name in this file into mojibake that
+    // then matches nothing - silently, because an owner matcher that matches
+    // nobody looks exactly like an owner who sent no transfers.
+    return Properties()
+        .apply { file.reader(Charsets.UTF_8).use(::load) }
+        .getProperty(key)
+        .orEmpty()
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -23,6 +54,9 @@ android {
         // The app ships Arabic and English only. Without this, every other
         // translation the AndroidX libraries carry is packaged too.
         resourceConfigurations += setOf("ar", "en")
+
+        buildConfigField("String", "OWNER_NAMES", "\"${localValue("owner.names")}\"")
+        buildConfigField("String", "CARD_LIMITS", "\"${localValue("card.limits")}\"")
     }
 
     buildTypes {
@@ -44,6 +78,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     sourceSets["main"].kotlin.srcDir("src/main/kotlin")

@@ -362,7 +362,7 @@ Date:23-9-7 11:03"""
     const val BARQ_TRANSFER_TO_SELF = """حوالة صادرة محلية
 مبلغ2850.00SAR
 رسوم0.00SAR
-الى KHALEEL MALKI
+الى OWNER NAME
 بنكD360 BANK
 لحساب2207
 2026-08-27 08:03"""
@@ -371,19 +371,21 @@ Date:23-9-7 11:03"""
     const val D360_TRANSFER_TO_SELF = """حوالة مالية صادرة مقبولة
 خصمت من حساب: ****2207
 القيمة: SAR 4,600.00
-إلى: خليل سامي خل****
+إلى: مالك الحساب اسم****
 رقم الحساب: ****8101"""
 
     /**
      * An outgoing transfer to a relative who shares the surname. Real spending, and
      * the reason the owner is matched on two names rather than one.
      *
-     * The given name is redacted like every other personal name here; the surname
-     * is not, because the surname *is* what this fixture exists to test.
+     * Both names are placeholders. What this fixture tests is that a recipient who
+     * shares the owner's SURNAME but not his given name stays a transfer out, so
+     * the tokens the test configures are placeholders too - the shape is the
+     * subject, never the name.
      */
     const val SNB_TRANSFER_TO_RELATIVE = """حوالة صادرة داخلية
 مبلغ:20 SAR
-إلى:RECIPIENT NAME مالكى
+إلى:RECIPIENT NAME اسم
 إلى:100*013
 في:10/06/24 16:47"""
 

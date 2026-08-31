@@ -149,6 +149,21 @@ app/    Android - Compose, Room, Arabic default with English in values-en
 
 ## Privacy
 
+This repository is **public**. Everything below follows from that.
+
+- **No fact about a real person in tracked source.** Not in a fixture, not in a
+  production constant, not in a comment. The owner's names and his cards' credit
+  limits are what let the app tell a transfer to himself from one to a relative,
+  and what a card will still let through from money he has — so they live in
+  `local.properties`, which is gitignored, and reach the code through
+  `BuildConfig` as `OWNER_NAMES` and `CARD_LIMITS`. Absent, `AccountOwner` matches
+  nobody and no card shows a ceiling: the app knows less, which is the correct
+  behaviour for a stranger's checkout. Tests configure placeholders and assert the
+  PARSER, never a real value.
+- Card last-four is the one identifier that may be committed, and four digits
+  identify no one on their own. A credit limit is not covered by that and must not
+  be. Neither is an account number, an IBAN, a bill reference or a SADAD number.
+- A comment quoting a real figure is the same leak as a constant holding it.
 - No server, no account, no external API. Data never leaves the device.
 - Fixtures under `core/src/test/.../fixtures` are **redacted**: names replaced,
   OTP codes replaced with `000000`, balances invented. Message structure, amounts
