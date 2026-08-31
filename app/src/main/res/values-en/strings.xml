@@ -128,6 +128,9 @@
     <string name="month_invested">Invested this month</string>
     <string name="income_empty">No income recorded yet</string>
     <string name="income_split">Salary %1$s · Bonuses %2$s</string>
+    <string name="income_show_deposits">Show deposits</string>
+    <string name="state_expanded">expanded</string>
+    <string name="state_collapsed">collapsed</string>
     <string name="nav_spending">Spending</string>
     <string name="nav_income">Income</string>
     <string name="cards_title">Your cards</string>

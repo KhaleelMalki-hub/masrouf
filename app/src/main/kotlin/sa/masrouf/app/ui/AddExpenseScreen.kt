@@ -1,5 +1,6 @@
 package sa.masrouf.app.ui
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material3.NavigationBarItem
@@ -363,11 +364,21 @@ fun AddExpenseScreen(
                 // Extended while the top of the page is in view, a plain FAB once
                 // the user is down in the history - M3's own behaviour for a
                 // scrolling list, and it stops the wider English label covering rows.
+                val addLabel = stringResource(R.string.add_expense)
                 ExtendedFloatingActionButton(
                     onClick = { entryOpen = true },
                     expanded = fabExpanded,
-                    icon = { Icon(Icons.Outlined.Add, contentDescription = null) },
-                    text = { Text(stringResource(R.string.add_expense)) },
+                    // The icon carries the name only while the text slot is gone.
+                    // Collapsed, the label is not in the tree at all, and the app's
+                    // primary action was an unnamed button to a screen reader for
+                    // every scrolled screen - which is most of them.
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Outlined.Add,
+                            contentDescription = if (fabExpanded) null else addLabel,
+                        )
+                    },
+                    text = { Text(addLabel) },
                 )
             }
         },
@@ -387,6 +398,12 @@ fun AddExpenseScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .padding(horizontal = 16.dp),
+            // The Scaffold's PaddingValues covers the bars and never the floating
+            // button, so the last rows sat under it - and this app's rows end in a
+            // money value, which was being clipped to "12.25" and ".00". Padding
+            // the content rather than appending a spacer means the space is part of
+            // the scroll range, so the final row can be brought clear.
+            contentPadding = PaddingValues(bottom = FAB_CLEARANCE),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             if (importState !is AddExpenseViewModel.ImportState.Idle) {
@@ -546,10 +563,7 @@ fun AddExpenseScreen(
                 }
             }
 
-            // Clearance for the floating button, which would otherwise sit on the
-            // last row of the history. Sized for the English label, which is the
-            // wider of the two: "Record an expense" against "سجّل مصروف".
-            item { Spacer(Modifier.height(96.dp)) }
+            // Clearance is contentPadding above, not an item here.
         }
     }
 

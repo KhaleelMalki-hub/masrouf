@@ -145,8 +145,11 @@
     <string name="month_invested">استثمار هذا الشهر</string>
     <string name="income_empty">لا يوجد دخل مسجّل بعد</string>
     <string name="income_split">راتب %1$s · مكافآت %2$s</string>
-    <string name="nav_spending">مصروفي</string>
-    <string name="nav_income">دخلي</string>
+    <string name="income_show_deposits">عرض الإيداعات</string>
+    <string name="state_expanded">مفتوح</string>
+    <string name="state_collapsed">مغلق</string>
+    <string name="nav_spending">المصروف</string>
+    <string name="nav_income">الدخل</string>
     <string name="cards_title">بطاقاتك</string>
     <string name="card_balance">الرصيد</string>
     <string name="card_credit_left">المتبقي من الحد</string>

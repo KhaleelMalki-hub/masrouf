@@ -1,5 +1,7 @@
 package sa.masrouf.app.ui
 
+import androidx.compose.ui.unit.dp
+
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.Easing
 
@@ -29,3 +31,13 @@ object Motion {
     const val SHORT = 200
     const val MEDIUM = 400
 }
+
+/**
+ * Room below a scrolling list for the floating button to sit over.
+ *
+ * A 56dp FAB plus M3's 16dp margin, plus a row's worth so the last value is not
+ * merely clear but readable. Applied as `contentPadding`, never as a trailing
+ * spacer: padding is part of the scroll range, so the final row can be brought
+ * above the button.
+ */
+val FAB_CLEARANCE = 96.dp

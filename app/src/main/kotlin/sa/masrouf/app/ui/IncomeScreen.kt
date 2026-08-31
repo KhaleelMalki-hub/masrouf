@@ -1,5 +1,8 @@
 package sa.masrouf.app.ui
 
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.semantics
 import sa.masrouf.core.model.Transaction
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.mutableStateOf
@@ -244,7 +247,13 @@ private fun MonthRow(
     tallest: Long,
     currencyLabel: String,
 ) {
-    var expanded by rememberSaveable(month.month.toString()) { mutableStateOf(false) }
+    var expanded by rememberSaveable(key = month.month.toString()) { mutableStateOf(false) }
+
+    val expandable = deposits.size > 1
+    val openLabel = stringResource(R.string.income_show_deposits)
+    val stateLabel = stringResource(
+        if (expanded) R.string.state_expanded else R.string.state_collapsed
+    )
 
     Column(modifier = Modifier.fillMaxWidth()) {
     Row(
@@ -254,15 +263,36 @@ private fun MonthRow(
             // Only where there is something to open. A month with one deposit is
             // already telling the whole truth, and a control that does nothing is
             // worse than none.
-            .then(if (deposits.size > 1) Modifier.clickable { expanded = !expanded } else Modifier)
+            .then(
+                if (expandable) {
+                    Modifier
+                        // A bare clickable leaves a screen reader on an actionable
+                        // node that announces nothing: the month, the bar and the
+                        // amount are siblings, and nothing says the row opens or
+                        // whether it is open. Merging gives it a name; the state
+                        // description gives it the half a name cannot carry.
+                        .semantics(mergeDescendants = true) {
+                            stateDescription = stateLabel
+                            onClick(label = openLabel) { false }
+                        }
+                        .clickable { expanded = !expanded }
+                } else {
+                    Modifier
+                }
+            )
             .padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        // Width tuned against Arabic wrapped "December 2025" onto two lines in
+        // English while "October 2025" stayed on one, so row heights went ragged
+        // inside a card. Rule 11: the locale that breaks first is the one that was
+        // not measured. Wide enough for the longest English month, and one line.
         Text(
             text = month.month.arabicSafeLabel(),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.width(88.dp),
+            maxLines = 1,
+            modifier = Modifier.width(108.dp),
         )
         // Two segments of one bar rather than two bars: the month's total is what
         // arrived, and the split is how it arrived. A bonus month reads as a longer
@@ -277,7 +307,7 @@ private fun MonthRow(
             text = month.total.grouped(),
             style = MoneyStyle.merge(MaterialTheme.typography.bodySmall),
         )
-        if (deposits.size > 1) {
+        if (expandable) {
             Icon(
                 imageVector = if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
                 contentDescription = null,
@@ -301,7 +331,7 @@ private fun MonthRow(
             ),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(start = 96.dp, bottom = 4.dp),
+            modifier = Modifier.padding(start = SPLIT_LINE_INDENT, bottom = 4.dp),
         )
     }
     if (expanded) {
@@ -424,3 +454,10 @@ enum class Destination(@get:StringRes val label: Int, val icon: ImageVector) {
     SPENDING(R.string.nav_spending, Icons.Outlined.Payments),
     INCOME(R.string.nav_income, Icons.Outlined.TrendingUp),
 }
+
+/**
+ * Where the split line starts: the month label's width plus the bar's own padding,
+ * so it begins exactly under the bar in either direction. Derived rather than
+ * typed, because the label's width moved once already and this did not follow it.
+ */
+private val SPLIT_LINE_INDENT = 108.dp + 8.dp

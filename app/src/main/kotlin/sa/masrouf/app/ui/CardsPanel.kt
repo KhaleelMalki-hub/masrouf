@@ -75,12 +75,17 @@ fun CardsPanel(
 
 @Composable
 private fun CardTile(card: CardBalance, currencyLabel: String) {
-    // bank_id is stamped from the sender, and only messages captured since that
-    // feature existed carry one. Most of a twelve-year history predates it, so the
-    // tile for a card whose last stamped message is old showed no issuer at all.
-    // The owner's own statement fills the gap; it cannot go stale the way a guess
-    // from an old template would.
-    val mark = bankMark(card.bankId ?: CardIssuers.BANK_ID[card.last4])
+    // The owner's statement first, the stamp second - the other way round until a
+    // review found card 1887 labelled برق. Its own bank's messages stamp it snb;
+    // a barq wallet top-up NAMES it as the funding card ("card number: **1887,
+    // mada") and stamps that row barq, and the newest stamp wins. A wallet's
+    // message names a card belonging to somebody else's bank, so the stamp is an
+    // inference and the owner's statement is not.
+    //
+    // The stamp still fills every card he has not named, which is most of a
+    // twelve-year history: bank_id exists only on messages captured since that
+    // feature shipped.
+    val mark = bankMark(CardIssuers.BANK_ID[card.last4] ?: card.bankId)
     val isArabic = LocalConfiguration.current.locales[0].language == "ar"
     val tint = mark?.colour ?: MaterialTheme.colorScheme.outline
     val limit = CreditCards.limitHalalas[card.last4]
