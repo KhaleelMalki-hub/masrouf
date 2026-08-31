@@ -299,6 +299,32 @@ interface TransactionDao {
     )
     suspend fun fillParty(id: String, merchantRaw: String?, merchantKey: String?, last4: String?): Int
 
+    /**
+     * Clears a party that is really an account number.
+     *
+     * 2,014 rows carried "104*010" or "3016" where a name belonged, because the
+     * pattern that read the party matched the account line. Cleared rather than
+     * corrected here, so that [TransactionRepository.reparseStoredBodies] - which
+     * only ever fills a gap - can read the name the message actually carries. A
+     * merchant the user filed by hand is left alone.
+     *
+     * GLOB, not LIKE: SQLite's LIKE is case-insensitive for ASCII and has no
+     * character classes, so this is the only way to say "digits and punctuation,
+     * no letters" in a query.
+     */
+    @Query(
+        """
+        UPDATE transactions
+        SET merchant_raw = NULL, merchant_key = NULL
+        WHERE merchant_key IS NOT NULL
+          AND merchant_key GLOB '*[0-9]*'
+          AND merchant_key NOT GLOB '*[A-Za-z]*'
+          AND merchant_key NOT GLOB '*[أ-ي]*'
+          AND (category_source IS NULL OR category_source <> 'MANUAL')
+        """
+    )
+    suspend fun clearNumericParties(): Int
+
     /** Rows whose stored body is a credential. They should never have existed. */
     @Query("SELECT * FROM transactions WHERE raw_text IS NOT NULL")
     suspend fun allWithBody(): List<TransactionEntity>

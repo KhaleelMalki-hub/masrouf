@@ -251,6 +251,60 @@ object CategoryGuess {
         // still beats a confident reading of the wrong one.
         "FOURTH FR" to SaudiCategories.TRANSPORT,
 
+        // Car parts, Haval in particular. Named by the user; nothing in "Time-race"
+        // says car, and the tap* prefix is the payment gateway rather than the shop.
+        // Four records, 6,093 riyals.
+        "TIME RACE" to SaudiCategories.TRANSPORT,
+        "TAP TIME" to SaudiCategories.TRANSPORT,
+
+        // Bathrobes, towels, pillows, a mattress. Named by the user. Filed as
+        // shopping rather than housing, which here means the monthly cost of a
+        // home, not the things put inside one - the same reading that already sends
+        // the kitchen fitters and the furniture shops to shopping.
+        "REEFI" to SaudiCategories.SHOPPING,
+
+        // A watch shop, named by the user. The card network truncates it to
+        // "ONTIME PL", which reads as a delivery service and is not one.
+        "ONTIME" to SaudiCategories.SHOPPING,
+
+        // ---- Travel ---------------------------------------------------------
+        //
+        // Flights and hotels. Two stems carry most of it: every airline in twelve
+        // years of history spells out AIRLINES somewhere, and every hotel says
+        // HOTEL. Checked against the whole merchant list before being written -
+        // between them they match twelve merchants and not one of them is anything
+        // else, which is the only reason a stem this short is safe here.
+        //
+        // Four of these were already filed as transport, where 51,289 riyals of
+        // flights sat beside the petrol. That is what [SaudiCategories.TRAVEL] was
+        // split out to end.
+        // An exact match beats a partial one whatever the order (see
+        // MerchantMatch.firstMatch), so the airlines already listed further down by
+        // their full name had to be moved to TRAVEL there rather than shadowed from
+        // up here. These stems catch the rest.
+        "AIRLIN" to SaudiCategories.TRAVEL,
+        "HOTEL" to SaudiCategories.TRAVEL,
+        // Named without either word.
+        "FLYNAS" to SaudiCategories.TRAVEL,
+        // The stem, not the whole name: the network sends "COM FLYAKEED" in full
+        // and "COM FLYAK" truncated, and neither the substring nor the truncation
+        // rule can reach "FLYAKEED" from the short one - it is cut off inside the
+        // keyword rather than at its end.
+        "FLYAK" to SaudiCategories.TRAVEL,
+        "BOOKING COM" to SaudiCategories.TRAVEL,
+        "RESORT" to SaudiCategories.TRAVEL,
+
+        // ---- Named by the owner ---------------------------------------------
+        "TORY BURCH" to SaudiCategories.SHOPPING,
+        // Sportswear.
+        "ATHLOCITY" to SaudiCategories.SHOPPING,
+        "TAILOR SH" to SaudiCategories.SHOPPING,
+        // Medical.
+        "BCARE" to SaudiCategories.HEALTH,
+
+        // Sitting unfiled next to the tyre shop above, and unambiguous.
+        "AUTOMOTIV" to SaudiCategories.TRANSPORT,
+
         // Found while looking for something else, which is where most of these come
         // from: three opticians and a tyre shop, sitting unfiled.
         "MAGRABI" to SaudiCategories.HEALTH,
@@ -405,6 +459,16 @@ object CategoryGuess {
         "بطاقه مدي" to SaudiCategories.TRANSFERS,
         "بطاقه ايتمانيه" to SaudiCategories.TRANSFERS,
         "بطاقة ائتمانية" to SaudiCategories.TRANSFERS,
+        // The owner's own name as a merchant: a bank writing back to him, or a
+        // transfer he sent himself. See [sa.masrouf.core.capture.AccountOwner],
+        // which does the same job for the message body rather than the merchant.
+        "KHALEEL MALKI" to SaudiCategories.TRANSFERS,
+
+        // The employer. Transfers from the municipality are allowances and
+        // end-of-service pay, not the monthly salary, which arrives separately as
+        // "ايداع رواتب". 39 of them, 329,740 riyals since 2020, all filed as
+        // transfers until the owner said what they were.
+        "امانة العاصمة المقدسة" to SaudiCategories.BONUS,
 
         // Schools, and the fees and wages that are neither a purchase nor a
         // transfer. Both categories were asked for by name.
@@ -522,7 +586,7 @@ object CategoryGuess {
         "AL SAEDY" to SaudiCategories.HEALTH,
         "ALJABR LA" to SaudiCategories.SERVICES,
         "ALDRDEES" to SaudiCategories.TRANSPORT,
-        "FLYAKEED" to SaudiCategories.TRANSPORT,
+        "FLYAKEED" to SaudiCategories.TRAVEL,
         "ALRAJHITAKAFUL" to SaudiCategories.BILLS,
         "TAP TAMEE" to SaudiCategories.BILLS,
 
@@ -591,9 +655,9 @@ object CategoryGuess {
         "TOTAL ENE" to SaudiCategories.TRANSPORT,
         "BENZOL" to SaudiCategories.TRANSPORT,
         "NATIONAL PARKING" to SaudiCategories.TRANSPORT,
-        "SAUDI AIRLINES" to SaudiCategories.TRANSPORT,
-        "SAUDIA AIRLINES" to SaudiCategories.TRANSPORT,
-        "FLYIN" to SaudiCategories.TRANSPORT,
+        "SAUDI AIRLINES" to SaudiCategories.TRAVEL,
+        "SAUDIA AIRLINES" to SaudiCategories.TRAVEL,
+        "FLYIN" to SaudiCategories.TRAVEL,
         "TAKER" to SaudiCategories.TRANSPORT,
         "ZARA" to SaudiCategories.SHOPPING,
         "NEXTDIRECTORY" to SaudiCategories.SHOPPING,

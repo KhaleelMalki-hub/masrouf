@@ -15,7 +15,7 @@ package sa.masrouf.core.capture
 object SaudiBanks {
 
     /** Wallet names that are the user's own, not a shop. See [BankProfile.ownWalletMerchants]. */
-    private val OWN_WALLETS = setOf("barq")
+    private val OWN_WALLETS = setOf("barq", "Tiqmo")
 
     /**
      * AlRajhi. The terse sender: labels are glued to values ("بـSR 8.28",
@@ -86,6 +86,17 @@ object SaudiBanks {
             Regex("""(?m)^لدى\s*:?\s*(.+)$"""),
         ),
         counterpartyPatterns = listOf(
+            // The party by name, first, because the account it used is in the same
+            // message and reads as a name to a pattern that is not looking. 2,014
+            // records carried an account for their party - "104*010", "3016",
+            // "106*011" - while the person or body that sent or received the money
+            // sat two lines away under مرسل or مستفيد. Nothing can be filed against
+            // a number, so every one of them stayed unfiled.
+            //
+            // The negative lookaheads keep these off the account lines, which some
+            // templates introduce with the very same words.
+            Regex("""(?m)^مرسل\s*:?\s*(?:من\s+)?(?![*\d])(.+)$"""),
+            Regex("""(?m)^مستفيد\s*:?\s*(?![*\d])(.+)$"""),
             // "من1007* NAME" (incoming) and "ل0106* NAME" (outgoing).
             Regex("""(?m)^(?:من|ل)\d{4}\*\s*(.+)$"""),
         ),

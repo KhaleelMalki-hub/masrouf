@@ -38,12 +38,39 @@ object RecurringDetector {
         YEARLY(365, 20, 0.35),
     }
 
+    /**
+     * How far apart the extremes sit, as a share of the median.
+     *
+     * Above [VARIES_ABOVE] the single figure is not worth showing on its own. The
+     * threshold is not the detector's own [Cadence.amountTolerance]: that decides
+     * whether a stream is a subscription at all, and this decides only how to say
+     * so. A bill can be a real monthly commitment and still be a poor thing to
+     * quote one number for.
+     */
+    fun Recurring.spread(): Double =
+        if (typicalAmount.halalas == 0L) 0.0
+        else (highAmount.halalas - lowAmount.halalas).toDouble() / typicalAmount.halalas
+
+    /** Above this share, show the range beside the typical figure. */
+    const val VARIES_ABOVE = 0.25
+
     data class Recurring(
         val merchantKey: String,
         val merchantRaw: String,
         val cadence: Cadence,
         /** What it usually costs: the median, so one odd month does not move it. */
         val typicalAmount: Money,
+        /**
+         * The lowest and highest actually seen in the window that was judged.
+         *
+         * Carried because [typicalAmount] alone reads as a promise. An electricity
+         * bill's median of 347 was shown beside the word "monthly" and the owner
+         * read it as a figure the app was claiming he would pay; what he pays is
+         * between 299 and 554. The median is the honest single number and the range
+         * is what stops it being mistaken for a fixed one.
+         */
+        val lowAmount: Money,
+        val highAmount: Money,
         val lastAt: Instant,
         val nextExpected: Instant,
         val occurrences: Int,
@@ -158,6 +185,8 @@ object RecurringDetector {
             merchantRaw = last.merchantRaw ?: key,
             cadence = cadence,
             typicalAmount = Money.ofHalalas(median),
+            lowAmount = Money.ofHalalas(amounts.first()),
+            highAmount = Money.ofHalalas(amounts.last()),
             lastAt = last.occurredAt,
             nextExpected = last.occurredAt.plus(Duration.ofDays(cadence.days.toLong())),
             occurrences = allRows.size,

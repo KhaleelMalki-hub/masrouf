@@ -7,7 +7,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.map
 import sa.masrouf.core.capture.BankMessageParser
-import sa.masrouf.core.capture.IntentClassifier
 import sa.masrouf.core.capture.MessageGate
 import sa.masrouf.core.capture.ParseResult
 import sa.masrouf.core.capture.RawMessage
@@ -255,9 +254,14 @@ class TransactionRepository(
      * re-reading the same message later cannot correct it. That is why teaching the
      * classifier is not enough on its own and this pass exists.
      *
-     * It asks [IntentClassifier] rather than carrying its own list of wordings. Two
-     * lists would be two answers to one question, and the day a bank invents a new
-     * template only one of them would learn it.
+     * It re-parses rather than carrying its own list of wordings. Two lists would be
+     * two answers to one question, and the day a bank invents a new template only
+     * one of them would learn it.
+     *
+     * The whole parser, not [IntentClassifier] alone: a purchase whose merchant is
+     * one of the user's own wallets is reclassified in [BankMessageParser], after
+     * the classifier has had its say, so a pass that asked the classifier by itself
+     * would silently do nothing for exactly that family.
      *
      * ## Why it can only ever lower the total
      *
@@ -268,8 +272,30 @@ class TransactionRepository(
      *
      * @return how many rows stopped counting as spending.
      */
+    /**
+     * Replaces account numbers standing in for a party with the name beside them.
+     *
+     * The pattern that read the party matched the account line, so 2,014 records
+     * carried "104*010" or "3016" where a person or a company belonged. Nothing can
+     * be filed against a number, so every one of them stayed unfiled however long
+     * the merchant list grew.
+     *
+     * Two existing steps, in order, rather than a third that rewrites the party
+     * itself: clear what is certainly wrong, then let [reparseStoredBodies] - which
+     * only ever fills a gap - read the name out of the body it already has. A
+     * merchant the user filed by hand is never cleared.
+     *
+     * @return how many rows lost an account number as their party.
+     */
+    suspend fun repairNumericParties(): Int {
+        val cleared = dao.clearNumericParties()
+        if (cleared > 0) reparseStoredBodies()
+        return cleared
+    }
+
     suspend fun retypeOwnMoney(): Int {
         val spending = TransactionType.entries.filter { it.countsAsSpending }.map { it.name }
+        val parsers = SaudiBanks.ALL.map(::BankMessageParser)
         var moved = 0
         // Batched for the same reason as reparseStoredBodies: one transaction over
         // the whole history holds the database long enough for the dashboard to
@@ -278,7 +304,14 @@ class TransactionRepository(
             inTransaction {
                 batch.forEach { row ->
                     val body = row.rawText ?: return@forEach
-                    val type = IntentClassifier.classify(body)?.type ?: return@forEach
+                    val message = RawMessage(body = body, receivedAt = Instant.EPOCH)
+                    // The sender is not stored, so every profile is tried. They
+                    // agree on the type - it comes from the shared classifier - and
+                    // differ only in what else they can read, so the first that
+                    // parses at all answers the question this pass is asking.
+                    val type = parsers.firstNotNullOfOrNull {
+                        (it.parse(message) as? ParseResult.Parsed)?.draft?.type
+                    } ?: return@forEach
                     if (type.countsAsSpending) return@forEach
                     if (dao.retype(row.id, type.name, CategoryGuess.forType(type)?.id) == 1) moved++
                 }

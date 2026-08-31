@@ -5,6 +5,8 @@ import androidx.compose.material.icons.outlined.AccountBalance
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.DirectionsCar
 import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material.icons.outlined.Flight
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.outlined.HomeWork
 import androidx.compose.material.icons.outlined.LocalHospital
 import androidx.compose.material.icons.outlined.Payments
@@ -48,6 +50,8 @@ val Category?.icon: ImageVector
         SaudiCategories.EDUCATION.id -> Icons.Outlined.School
         SaudiCategories.SHOPPING.id -> Icons.Outlined.ShoppingBag
         SaudiCategories.SERVICES.id -> Icons.Outlined.LocalLaundryService
+        SaudiCategories.TRAVEL.id -> Icons.Outlined.Flight
+        SaudiCategories.BONUS.id -> Icons.Outlined.Star
         SaudiCategories.ENTERTAINMENT.id -> Icons.Outlined.TheaterComedy
         SaudiCategories.FEES.id -> Icons.Outlined.WorkOutline
         SaudiCategories.CHARITY.id -> Icons.Outlined.Favorite

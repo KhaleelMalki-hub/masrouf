@@ -77,6 +77,29 @@ class MasroufApp : Application() {
             transactions.retypeOwnMoney()
             preferences.maintenanceVersion = 6
         }
+        if (done < 7) {
+            // Tiqmo joined the list of the owner's own wallets, which changes a
+            // stored row's type rather than only its category - so the filing pass
+            // below cannot reach it and this one has to.
+            transactions.retypeOwnMoney()
+            preferences.maintenanceVersion = 7
+        }
+        if (done < 8) {
+            // Travel became a category of its own, and 51,289 riyals of flights
+            // were already filed as transport - a gap-filling pass cannot move a
+            // row that has a category. refileAll can, and it keeps the categories
+            // the user chose by hand.
+            transactions.refileAll()
+            preferences.maintenanceVersion = 8
+        }
+        if (done < 9) {
+            // 2,014 records had an account number where a party belonged. Repair
+            // first, so the names exist, then file against them - the employer's
+            // transfers become مكافآت only once the employer is named.
+            transactions.repairNumericParties()
+            transactions.refileAll()
+            preferences.maintenanceVersion = 9
+        }
         transactions.fileUncategorised()
         catchUpOnSms()
     }

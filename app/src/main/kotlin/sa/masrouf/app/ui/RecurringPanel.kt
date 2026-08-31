@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import sa.masrouf.app.R
 import sa.masrouf.core.model.MerchantNames
 import sa.masrouf.core.model.RecurringDetector
+import sa.masrouf.core.model.RecurringDetector.spread
 import sa.masrouf.core.model.RecurringDetector.Cadence
 import sa.masrouf.core.model.SaudiCategories
 
@@ -148,10 +149,33 @@ private fun RecurringRow(item: RecurringDetector.Recurring, currencyLabel: Strin
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        Text(
-            text = item.typicalAmount.forDisplay(currencyLabel),
-            style = MoneyStyle.merge(MaterialTheme.typography.bodyMedium),
-        )
+        // A median shown alone reads as a promise. For a bill that moves - the
+        // electricity between 299 and 554, the phone between 288 and 1,104 - the
+        // owner read the single figure as what the app expected him to pay, and
+        // said so. The figure is still the honest one to lead with; the range
+        // beside it is what stops it being read as fixed.
+        val varies = item.spread() > RecurringDetector.VARIES_ABOVE
+        Column(horizontalAlignment = Alignment.End) {
+            Text(
+                text = if (varies) {
+                    stringResource(R.string.recurring_about, item.typicalAmount.forDisplay(currencyLabel))
+                } else {
+                    item.typicalAmount.forDisplay(currencyLabel)
+                },
+                style = MoneyStyle.merge(MaterialTheme.typography.bodyMedium),
+            )
+            if (varies) {
+                Text(
+                    text = stringResource(
+                        R.string.recurring_range,
+                        item.lowAmount.grouped(),
+                        item.highAmount.grouped(),
+                    ),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
     }
 }
 

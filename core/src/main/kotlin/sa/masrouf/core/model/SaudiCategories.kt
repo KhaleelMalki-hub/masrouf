@@ -87,6 +87,16 @@ object SaudiCategories {
     val ENTERTAINMENT = Category(id = "entertainment", labelAr = "ترفيه", labelEn = "Entertainment")
 
     /**
+     * Flights, hotels, and the agencies that sell them.
+     *
+     * Split out of [TRANSPORT] for the same reason [ENTERTAINMENT] was split out of
+     * [SHOPPING]: both are movement, but a petrol fill and a 9,761-riyal flight
+     * answer different questions. Left together, one trip buries a year of
+     * commuting and the month it falls in reads as a transport problem.
+     */
+    val TRAVEL = Category(id = "travel", labelAr = "سفر", labelEn = "Travel")
+
+    /**
      * Cash out of, or into, a machine.
      *
      * Not spending, and not a transfer either: the money has left the account but
@@ -106,6 +116,24 @@ object SaudiCategories {
      * decide about.
      */
     val INCOME = Category(id = "income", labelAr = "دخل", labelEn = "Income")
+
+    /**
+     * Money from the employer that is not the monthly salary: allowances, overtime,
+     * end-of-service and the like, arriving as a transfer from the employing body
+     * rather than as a salary deposit.
+     *
+     * Kept apart from [INCOME] rather than merged into it, at the owner's request
+     * and for his reason: he wants to read the two series over the years, and a
+     * month that carried both would otherwise show one figure he could not take
+     * apart. 39 transfers, 329,740 riyals since 2020, all of which had been sitting
+     * under [TRANSFERS] where they said nothing at all.
+     *
+     * Deliberately a category and not a [TransactionType]. Typing these as
+     * [TransactionType.SALARY] would make the dashboard read the newest one as "your
+     * salary" - 26,899 rather than 19,491 - and the comparison it draws against the
+     * month's spending would be wrong every month a bonus arrived.
+     */
+    val BONUS = Category(id = "bonus", labelAr = "مكافآت", labelEn = "Bonuses")
     val OTHER = Category(id = "other", labelAr = "أخرى", labelEn = "Other")
 
     /**
@@ -116,8 +144,8 @@ object SaudiCategories {
      * spending.
      */
     val ALL: List<Category> = listOf(
-        FOOD, GROCERIES, TRANSPORT, HOUSING, BILLS, HEALTH, EDUCATION, SHOPPING,
-        SERVICES, ENTERTAINMENT, FEES, CHARITY, CASH, TRANSFERS, INVESTMENT, INCOME,
+        FOOD, GROCERIES, TRANSPORT, TRAVEL, HOUSING, BILLS, HEALTH, EDUCATION, SHOPPING,
+        SERVICES, ENTERTAINMENT, FEES, CHARITY, CASH, TRANSFERS, INVESTMENT, INCOME, BONUS,
         OTHER,
     )
 

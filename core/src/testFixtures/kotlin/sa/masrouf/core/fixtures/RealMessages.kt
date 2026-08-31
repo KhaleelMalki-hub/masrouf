@@ -353,10 +353,13 @@ Date:23-9-7 11:03"""
     /**
      * An outgoing transfer to a relative who shares the surname. Real spending, and
      * the reason the owner is matched on two names rather than one.
+     *
+     * The given name is redacted like every other personal name here; the surname
+     * is not, because the surname *is* what this fixture exists to test.
      */
     const val SNB_TRANSFER_TO_RELATIVE = """حوالة صادرة داخلية
 مبلغ:20 SAR
-إلى:عبدالكريم مالكى
+إلى:RECIPIENT NAME مالكى
 إلى:100*013
 في:10/06/24 16:47"""
 

@@ -125,6 +125,8 @@
     <string name="refile_all_note">يُطبَّق على كل عمليات هذا المتجر، وعلى القادمة منه.</string>
     <string name="refile_done">صُنّفت %1$s عملية</string>
     <string name="category_charity">صدقة وزكاة</string>
+    <string name="category_travel">سفر</string>
+    <string name="category_bonus">مكافآت</string>
     <string name="category_entertainment">ترفيه</string>
     <string name="category_cash">نقد</string>
     <string name="category_income">دخل</string>
@@ -157,6 +159,8 @@
     <string name="recurring_title">مدفوعات متكررة</string>
     <string name="recurring_summary">%1$s · نحو %2$s شهرياً</string>
     <string name="recurring_next">القادم %1$s</string>
+    <string name="recurring_about">نحو %1$s</string>
+    <string name="recurring_range">%1$s – %2$s</string>
     <string name="cadence_daily">يومياً</string>
     <string name="cadence_weekly">أسبوعياً</string>
     <string name="cadence_fortnightly">كل أسبوعين</string>
