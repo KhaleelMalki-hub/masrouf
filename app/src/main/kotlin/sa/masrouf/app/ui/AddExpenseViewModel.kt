@@ -33,6 +33,7 @@ import sa.masrouf.core.model.TransactionType
 import sa.masrouf.core.money.Money
 import sa.masrouf.core.text.ArabicText
 import sa.masrouf.core.time.RiyadhTime
+import java.time.YearMonth
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
@@ -284,6 +285,19 @@ class AddExpenseViewModel(
     val incomeByMonth: StateFlow<List<IncomeMonth>> =
         repository.observeIncomeByMonth()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /**
+     * The individual deposits behind [incomeByMonth], keyed by month.
+     *
+     * Grouped here rather than in the screen so the screen holds no logic about
+     * what month a deposit belongs to - the same Riyadh boundary the query uses.
+     */
+    val incomeDeposits: StateFlow<Map<YearMonth, List<Transaction>>> =
+        repository.observeIncomeRows()
+            .map { rows ->
+                rows.groupBy { YearMonth.from(RiyadhTime.localDate(it.occurredAt)) }
+            }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     /** What the month brought in as employer bonuses, or null when none arrived. */
     val monthBonus: StateFlow<Money?> =

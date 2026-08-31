@@ -208,6 +208,12 @@ class FakeDao : TransactionDao {
             .sortedByDescending { it.month }
     }
 
+    override fun observeIncomeRows(): Flow<List<TransactionEntity>> = state.map { rows ->
+        rows.filter { it.status == Status.CONFIRMED.name && it.direction == "CREDIT" }
+            .filter { it.categoryId == "income" || it.categoryId == "bonus" }
+            .sortedByDescending { it.occurredAtMillis }
+    }
+
     override suspend fun clearNumericParties(): Int {
         val doomed = state.value.filter {
             val key = it.merchantKey

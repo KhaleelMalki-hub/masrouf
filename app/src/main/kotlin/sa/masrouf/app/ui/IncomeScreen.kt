@@ -1,5 +1,14 @@
 package sa.masrouf.app.ui
 
+import sa.masrouf.core.model.Transaction
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material.icons.outlined.ExpandLess
+import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material.icons.outlined.TrendingUp
 import androidx.compose.material.icons.outlined.Payments
@@ -55,6 +64,7 @@ import java.time.YearMonth
 @Composable
 fun IncomeScreen(
     months: List<IncomeMonth>,
+    deposits: Map<YearMonth, List<Transaction>>,
     currencyLabel: String,
     modifier: Modifier = Modifier,
 ) {
@@ -89,6 +99,7 @@ fun IncomeScreen(
                 YearCard(
                     year = year,
                     months = rows,
+                    deposits = deposits,
                     tallest = tallest,
                     currencyLabel = currencyLabel,
                 )
@@ -177,6 +188,7 @@ private fun LegendLine(colour: Color, label: String, amount: Money, currencyLabe
 private fun YearCard(
     year: Int,
     months: List<IncomeMonth>,
+    deposits: Map<YearMonth, List<Transaction>>,
     tallest: Long,
     currencyLabel: String,
 ) {
@@ -206,16 +218,44 @@ private fun YearCard(
                 color = MaterialTheme.colorScheme.outlineVariant,
             )
             for (month in months.sortedByDescending { it.month }) {
-                MonthRow(month = month, tallest = tallest, currencyLabel = currencyLabel)
+                MonthRow(
+                    month = month,
+                    deposits = deposits[month.month].orEmpty(),
+                    tallest = tallest,
+                    currencyLabel = currencyLabel,
+                )
             }
         }
     }
 }
 
+/**
+ * One month, and on tap the deposits it is made of.
+ *
+ * A month's total says a figure arrived. It does not say whether that was a salary
+ * and one bonus or a salary and three, and the owner asked that question the moment
+ * he saw the first total - so the answer is one tap away rather than on another
+ * screen.
+ */
 @Composable
-private fun MonthRow(month: IncomeMonth, tallest: Long, currencyLabel: String) {
+private fun MonthRow(
+    month: IncomeMonth,
+    deposits: List<Transaction>,
+    tallest: Long,
+    currencyLabel: String,
+) {
+    var expanded by rememberSaveable(month.month.toString()) { mutableStateOf(false) }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            // Only where there is something to open. A month with one deposit is
+            // already telling the whole truth, and a control that does nothing is
+            // worse than none.
+            .then(if (deposits.size > 1) Modifier.clickable { expanded = !expanded } else Modifier)
+            .padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -237,6 +277,70 @@ private fun MonthRow(month: IncomeMonth, tallest: Long, currencyLabel: String) {
             text = month.total.grouped(),
             style = MoneyStyle.merge(MaterialTheme.typography.bodySmall),
         )
+        if (deposits.size > 1) {
+            Icon(
+                imageVector = if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(18.dp),
+            )
+        } else {
+            Spacer(Modifier.width(18.dp))
+        }
+    }
+    // The split, spelled out, whenever there is one. The bar shows it as a length
+    // and the total shows it as one number, and neither answers "how much was the
+    // salary and how much was the bonus" without the reader doing the subtraction -
+    // which is what its owner said he was doing.
+    if (month.bonus.halalas > 0) {
+        Text(
+            text = stringResource(
+                R.string.income_split,
+                month.salary.grouped(),
+                month.bonus.grouped(),
+            ),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = 96.dp, bottom = 4.dp),
+        )
+    }
+    if (expanded) {
+        for (deposit in deposits.sortedByDescending { it.occurredAt }) {
+            DepositRow(deposit = deposit, currencyLabel = currencyLabel)
+        }
+    }
+    }
+}
+
+/** One deposit: the day it landed, what it was, and how much. */
+@Composable
+private fun DepositRow(deposit: Transaction, currencyLabel: String) {
+    val isBonus = deposit.categoryId == SaudiCategories.BONUS.id
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 24.dp, top = 2.dp, bottom = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(width = 3.dp, height = 12.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(
+                    bandColour(if (isBonus) SaudiCategories.BONUS else SaudiCategories.INCOME)
+                ),
+        )
+        Text(
+            text = deposit.occurredAt.dayLabel(),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = 8.dp).weight(1f),
+        )
+        Text(
+            text = deposit.amount.forDisplay(currencyLabel),
+            style = MoneyStyle.merge(MaterialTheme.typography.labelSmall),
+        )
+        Spacer(Modifier.width(18.dp))
     }
 }
 

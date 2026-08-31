@@ -178,6 +178,7 @@ fun AddExpenseScreen(
     val monthRows by viewModel.monthTransactions.collectAsStateWithLifecycle()
     val cardBanks by viewModel.cardBanks.collectAsStateWithLifecycle()
     val incomeMonths by viewModel.incomeByMonth.collectAsStateWithLifecycle()
+    val incomeDeposits by viewModel.incomeDeposits.collectAsStateWithLifecycle()
     // Survives rotation and process death: coming back to a screen the user was not
     // on is a small betrayal, and it costs one line not to.
     var destination by rememberSaveable { mutableStateOf(Destination.SPENDING) }
@@ -376,6 +377,7 @@ fun AddExpenseScreen(
         if (destination == Destination.INCOME) {
             IncomeScreen(
                 months = incomeMonths,
+                deposits = incomeDeposits,
                 currencyLabel = currency,
                 modifier = Modifier.padding(padding),
             )

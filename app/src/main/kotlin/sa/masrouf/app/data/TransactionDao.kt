@@ -185,6 +185,29 @@ interface TransactionDao {
     fun observeIncomeByMonth(): Flow<List<IncomeMonthRow>>
 
     /**
+     * The individual deposits behind [observeIncomeByMonth].
+     *
+     * Loaded whole rather than a month at a time, which the comment on the
+     * aggregate above would seem to argue against - but the two are different
+     * sizes. That one would have folded 22,000 rows; this one is filtered to two
+     * categories and returns about 220 in twelve years, and a month opened on tap
+     * has to be instant.
+     *
+     * A month's total says one figure arrived. It does not say whether that was a
+     * salary and one bonus or a salary and three, which is the question its owner
+     * asked next.
+     */
+    @Query(
+        """
+        SELECT * FROM transactions
+        WHERE direction = 'CREDIT' AND status = 'CONFIRMED'
+          AND category_id IN ('income', 'bonus')
+        ORDER BY occurred_at_millis DESC
+        """
+    )
+    fun observeIncomeRows(): Flow<List<TransactionEntity>>
+
+    /**
      * Files every transaction from one merchant at once.
      *
      * @return how many were refiled.

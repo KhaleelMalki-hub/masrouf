@@ -376,6 +376,15 @@ class TransactionRepository(
     fun observeIncomeByMonth(): Flow<List<IncomeMonth>> =
         dao.observeIncomeByMonth().map { rows -> rows.mapNotNull { it.toModel() } }
 
+    /**
+     * Every salary and bonus deposit, newest first.
+     *
+     * A row that cannot be read is skipped rather than substituted: an enum this
+     * app does not know would otherwise put a real deposit under the wrong heading.
+     */
+    fun observeIncomeRows(): Flow<List<Transaction>> =
+        dao.observeIncomeRows().map { rows -> rows.mapNotNull { runCatching { it.toModel() }.getOrNull() } }
+
     /** The merchants the user pays on a rhythm, largest first. See [RecurringDetector]. */
     fun observeRecurring(now: () -> Instant): Flow<List<RecurringDetector.Recurring>> =
         dao.observeConfirmedDebits()
