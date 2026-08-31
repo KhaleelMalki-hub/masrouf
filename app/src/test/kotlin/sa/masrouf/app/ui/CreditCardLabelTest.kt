@@ -60,14 +60,16 @@ class CreditCardLabelTest {
         assertNull(CreditCards.LIMIT_HALALAS["8202"])
     }
 
+    /**
+     * A card the app knows the bank or the limit of, but does not list as open, is
+     * a card whose tile never appears - the knowledge is recorded and then wasted.
+     * That was true of 1887 and 9994 until the owner confirmed both.
+     */
     @Test
-    fun `every card with a limit or an issuer is one the owner says is open`() {
+    fun `every card the app knows something about is one the owner says is open`() {
         val named = CreditCards.LIMIT_HALALAS.keys + CardIssuers.BANK_ID.keys
 
-        // 9994 is the exception and the reason this test names it: the owner uses it
-        // and its messages arrive, but it is not in ActiveCards, so it never appears
-        // on the dashboard. Flagged here rather than silently added.
-        assertEquals(setOf("9994", "1887"), named - ActiveCards.LAST4)
+        assertEquals(emptySet(), named - ActiveCards.LAST4)
     }
 
     @Test

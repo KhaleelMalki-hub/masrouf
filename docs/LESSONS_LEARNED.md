@@ -121,3 +121,20 @@ comment outlives the session that made it.
 outside the code — user statements, external systems, observed data.
 **Source:** session 2026-08-31, corrected in the same session by the owner
 
+### 2026-08-31 — A greedy rule two lines too early
+**Mistake:** `Rule(PURCHASE, listOf("سحب", "بطاق"))` was tested before the two ATM
+rules, so every machine withdrawal that names the card it was made with -
+`سحب نقدي بالريال - صراف الأهلي | بطاقة مدى *2907` - was filed as a card purchase.
+107 withdrawals worth 193,452 riyals, over nine years, in the app's oldest rule set.
+**Why:** The rule was written for one real message (`سحب ... بطاقة 9552* من SHBABIK
+RESTAURANT`) and placed where it worked for that one. Its tokens are a strict subset
+of the withdrawal messages' tokens, so it could only ever win against them - which
+the ordering comment above it asserted was correct without checking.
+**Rule:** In a first-match rule list, a new rule whose token set is a SUBSET of an
+existing rule's must go after it, never before. Check both directions when placing
+one: what this rule will now claim, and what will now be claimed from it. Then count
+the affected rows in the real corpus, both the set that moves and the set that must
+not.
+**How to apply:** Every addition or reordering in `IntentClassifier.RULES`.
+**Source:** session 2026-08-31, `CashOutTest`, maintenance pass 6
+

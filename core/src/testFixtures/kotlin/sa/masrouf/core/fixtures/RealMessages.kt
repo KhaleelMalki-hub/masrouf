@@ -295,6 +295,30 @@ Date:23-9-7 11:03"""
 في 06/26 21:51 
 الصرف المتبقي 23339.92 SAR"""
 
+    /** A machine withdrawal that names the card it was made with. */
+    const val SNB_ATM_WITHDRAWAL_BY_CARD = """سحب نقدي بالريال - صراف الأهلي
+مبلغ SAR 450
+بطاقة مدى *2907
+حساب 104*010
+موقع K.FAHAD RES COMPLEX"""
+
+    /** A cash advance taken against a credit card. Cash out, not a purchase. */
+    const val CASH_ADVANCE_ON_CREDIT_CARD = """سحب النقدي
+مبلغ SAR 69.20
+من بطاقة إئتمانية **8887
+تاريخ 28/11/24 10:02
+حد الصرف المتبقي SAR 6500.00"""
+
+    /**
+     * A shop purchase written with the same verb and the same card field. The only
+     * thing that separates it from the two above is that it says neither نقدي nor
+     * صراف, and it names where the money went.
+     */
+    const val CARD_PURCHASE_WRITTEN_AS_SAHB = """سحب مبلغ 159.00 SAR
+بطاقة **0926*
+من Monsoon Accessorize
+في 01/10/2022 11:43"""
+
     /** An ordinary purchase on the same credit card. Spending, and must stay so. */
     const val ENBD_ORDINARY_PURCHASE = """شراء بطاقة نقاط بيع (أثير)
 بطاقة: فيزا الائتمانية XX9994 
@@ -517,6 +541,7 @@ card number: **1887, mada
         SNB_SADAD_TO_OWN_CARD, SNB_SADAD_ELECTRICITY,
         BARQ_TRANSFER_TO_SELF, D360_TRANSFER_TO_SELF, SNB_TRANSFER_TO_RELATIVE,
         ENBD_CARD_SETTLES_OTHER_CARD, SNB_SADAD_UTILITY_BY_CARD, ENBD_ORDINARY_PURCHASE,
+        SNB_ATM_WITHDRAWAL_BY_CARD, CASH_ADVANCE_ON_CREDIT_CARD, CARD_PURCHASE_WRITTEN_AS_SAHB,
         SNB_ONLINE_PURCHASE, SNB_TRANSFER_IN, SNB_TRANSFER_OUT, SNB_ATM_DEPOSIT,
         D360_TRANSFER_IN, D360_TRANSFER_OUT, D360_OWN_ACCOUNTS_TRANSFER,
         BARQ_TRANSFER_OUT, BARQ_TOPUP_EN, BARQ_ONLINE_PURCHASE,

@@ -169,6 +169,11 @@ private fun CardTile(card: CardBalance, currencyLabel: String) {
 object ActiveCards {
     val LAST4: Set<String> = setOf(
         "5763", "7536", "8134", "2383", "8202", "3761", "7285", "2166", "9941",
+        // Both are in daily use and neither was being shown. 1887 is the owner's
+        // AlAhli mada card - 427 messages, the most recent three days old - and
+        // 9994 his Emirates NBD credit card, the one he settles the AlRajhi card
+        // from. Named by him, like every other entry here.
+        "1887", "9994",
     )
 }
 

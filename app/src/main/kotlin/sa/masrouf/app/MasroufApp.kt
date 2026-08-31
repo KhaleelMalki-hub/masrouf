@@ -69,6 +69,14 @@ class MasroufApp : Application() {
             transactions.retypeOwnMoney()
             preferences.maintenanceVersion = 5
         }
+        if (done < 6) {
+            // A machine withdrawal that names the card was read as a card purchase
+            // for as long as the app has existed - the card rule was tested before
+            // the ATM ones. Same pass again: it accepts a re-reading only when the
+            // row stops counting as spending, which is exactly this change.
+            transactions.retypeOwnMoney()
+            preferences.maintenanceVersion = 6
+        }
         transactions.fileUncategorised()
         catchUpOnSms()
     }

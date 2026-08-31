@@ -157,16 +157,24 @@ object IntentClassifier {
         // money going ONTO a card. Credit, and never spending.
         Rule(TransactionType.TRANSFER_IN, Direction.CREDIT, listOf("ايداع", "بطاق")),
 
+        // Cash out, and it must be tested before the card rule below.
+        //
+        // "سحب نقدي بالريال - صراف الأهلي | بطاقة مدى *2907 | موقع K.FAHAD RES
+        // COMPLEX" is a machine withdrawal that names the card it was made with, so
+        // the card rule claimed it and 107 withdrawals worth 193,452 riyals were
+        // counted as purchases. An ATM says نقدي or صراف; a shop says neither, which
+        // is what keeps the 3,470 real card purchases below out of this rule.
+        Rule(TransactionType.ATM_WITHDRAWAL, Direction.DEBIT, listOf("سحب", "صراف")),
+        Rule(TransactionType.ATM_WITHDRAWAL, Direction.DEBIT, listOf("سحب", "نقدي")),
+
         // "سحب مبلغ 299.25 SAR بطاقة 9552* من SHBABIK RESTAURANT" - a card
         // purchase, despite the word سحب. The card is what distinguishes it from
-        // the account withdrawal below, and it must be tested first.
+        // the bare account withdrawal further down.
         Rule(TransactionType.PURCHASE, Direction.DEBIT, listOf("سحب", "بطاق")),
 
         Rule(TransactionType.ATM_DEPOSIT, Direction.CREDIT, listOf("ايداع", "صراف")),
         // Monthly profit paid into a savings account. Income, not spending.
         Rule(TransactionType.TRANSFER_IN, Direction.CREDIT, listOf("ايداع", "ارباح")),
-        Rule(TransactionType.ATM_WITHDRAWAL, Direction.DEBIT, listOf("سحب", "صراف")),
-        Rule(TransactionType.ATM_WITHDRAWAL, Direction.DEBIT, listOf("سحب", "نقدي")),
 
         // "سحب من حساب104*010 مبلغSAR1500 ... الرصيد المتاح" - money leaving the
         // account with no card and no merchant named. Classified as a withdrawal
