@@ -93,10 +93,15 @@ a single scrolling screen in reading order: cards, month, what needs you, histor
 **Income** is salary and bonuses over the years — a different question over a
 different span, which is the whole reason it is not a panel on the other.
 
-The bar hides on the way down and returns on the way up, mirroring the top bar. It
-is not floating: that is Google's own pattern rather than anything in M3, this
-screen already has a FAB in the same corner, and two floating things over a column
-of figures is how a number gets covered — which has happened here once.
+The bar persists. It does not hide on scroll and it does not float, and both were
+tried on a real screen before being refused.
+
+Hiding it was the worse of the two: M3 hides app bars on scroll, never the
+navigation bar, and one small downward drag took away the only route to the other
+destination. Navigation you have to hunt for costs more than the height it saves.
+Floating is Google Photos' own pattern rather than anything in the specification,
+and this screen already has a floating button in the same corner — two floating
+things over a column of figures is how a number gets covered.
 
 Recording an expense is a button, not a form on the page.
 

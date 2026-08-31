@@ -356,3 +356,21 @@ proved by mutating the query and watching it go red.
 date arithmetic, anything beyond a plain select.
 **Source:** session 2026-08-31, `IncomeQueryTest`, mutation reproduced and reverted
 
+### 2026-08-31 — Recommended a pattern without checking the specification
+**Mistake:** The owner asked why the navigation bar was not floating like Google
+Photos. I answered confidently, refused floating for good reasons, and then
+recommended hiding it on scroll instead — presenting that as the M3-compliant way
+to get the height back. He agreed and it shipped. The first screenshot after it
+showed one small drag taking the bar away, and with it the only route to the other
+destination. M3 hides APP bars on scroll and never the navigation bar, which is
+the difference between chrome you may dismiss and the way out of the screen.
+**Why:** Two-thirds of the answer was checked — what a navigation bar is for, why
+floating was wrong here — and the third part was invented to have something to
+offer instead of "leave it". Confidence carried over from the checked parts.
+**Rule:** When declining a request, do not substitute an alternative you have not
+verified to the same standard as the refusal. "Leave it as it is" is a complete
+answer. If an alternative is offered, say which part is checked and which is a
+suggestion, and put it on a screen before calling it a recommendation.
+**How to apply:** Any design answer that refuses one thing and proposes another.
+**Source:** session 2026-08-31, reverted the same evening
+
