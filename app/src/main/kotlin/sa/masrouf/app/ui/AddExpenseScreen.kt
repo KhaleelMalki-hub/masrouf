@@ -1,11 +1,5 @@
 package sa.masrouf.app.ui
 
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material3.NavigationBarItem
@@ -135,24 +129,6 @@ fun AddExpenseScreen(
     // on is a small betrayal, and it costs one line not to.
     var destination by rememberSaveable { mutableStateOf(Destination.SPENDING) }
 
-    // How much of the navigation bar is hidden, in pixels, driven by the same
-    // gesture the top bar reads. Held here rather than inside the bar because the
-    // Scaffold measures the bar's height to pad its content: shrinking the bar
-    // without telling the Scaffold would leave a strip of dead space under the
-    // list, and moving it without shrinking it would leave the list padded for a
-    // bar that is no longer there.
-    val barHeightPx = with(LocalDensity.current) { NAV_BAR_HEIGHT.toPx() }
-    var navBarHidden by remember { mutableFloatStateOf(0f) }
-    val navBarScroll = remember(barHeightPx) {
-        object : NestedScrollConnection {
-            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                navBarHidden = (navBarHidden - available.y).coerceIn(0f, barHeightPx)
-                return Offset.Zero
-            }
-        }
-    }
-    val navBarOffset = navBarHidden
-    val navBarHeight = with(LocalDensity.current) { (barHeightPx - navBarHidden).toDp() }
     val monthsWithData by viewModel.monthsWithData.collectAsStateWithLifecycle()
     val query by viewModel.query.collectAsStateWithLifecycle()
     val categoryFilter by viewModel.categoryFilter.collectAsStateWithLifecycle()
@@ -279,8 +255,7 @@ fun AddExpenseScreen(
     Scaffold(
         modifier = modifier
             .fillMaxSize()
-            .nestedScroll(topBarScroll.nestedScrollConnection)
-            .nestedScroll(navBarScroll),
+            .nestedScroll(topBarScroll.nestedScrollConnection),
         snackbarHost = { SnackbarHost(snackbarHost) },
         topBar = {
             Column {
@@ -325,19 +300,20 @@ fun AddExpenseScreen(
             // question over a different span - what arrives, over years, rather
             // than where one month went.
             //
-            // It leaves on the way down and returns on the way up, mirroring the
-            // top bar above it. A floating bar was considered and refused: that is
-            // Google's own pattern rather than anything in the M3 specification,
-            // and this screen already has a FAB in the same corner - two floating
-            // things over a column of figures is how a number gets covered, which
-            // has happened here once already. Hiding on scroll buys the same height
-            // back without leaving the specification, and keeps the bar on the
-            // screen edge, where a target is effectively infinite to hit.
-            NavigationBar(
-                modifier = Modifier
-                    .height(navBarHeight)
-                    .graphicsLayer { translationY = navBarOffset }
-            ) {
+            // It does not hide on scroll, and it does not float. Both were tried.
+            //
+            // Hiding was the worse of the two and it was my own suggestion: M3 hides
+            // APP bars on scroll, never the navigation bar, and the reason showed up
+            // on the first screenshot - one small downward drag took the bar away,
+            // and with it the only route to the other destination. Navigation you
+            // have to hunt for costs more than the 80dp it saves.
+            //
+            // Floating is Google Photos' own pattern rather than anything in the
+            // specification, and this screen already has a FAB in the same corner:
+            // two floating things over a column of figures is how a number gets
+            // covered, which has happened here once. On the screen edge, a target is
+            // effectively infinite to hit.
+            NavigationBar {
                 for (target in Destination.entries) {
                     NavigationBarItem(
                         selected = destination == target,
