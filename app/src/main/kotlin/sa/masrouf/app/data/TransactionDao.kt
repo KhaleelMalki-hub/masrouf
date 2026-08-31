@@ -325,6 +325,17 @@ interface TransactionDao {
     )
     suspend fun clearNumericParties(): Int
 
+    /**
+     * Corrects one row's amount.
+     *
+     * The only write in this file that touches a figure the user may have seen, so
+     * it is deliberately narrow: one row, one field, by id. A row the user entered
+     * by hand is never a candidate - callers select on a stored body, which only a
+     * captured row has.
+     */
+    @Query("UPDATE transactions SET amount_halalas = :halalas WHERE id = :id AND source <> 'MANUAL'")
+    suspend fun setAmount(id: String, halalas: Long): Int
+
     /** Rows whose stored body is a credential. They should never have existed. */
     @Query("SELECT * FROM transactions WHERE raw_text IS NOT NULL")
     suspend fun allWithBody(): List<TransactionEntity>

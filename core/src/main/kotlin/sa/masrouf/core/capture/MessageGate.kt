@@ -56,6 +56,12 @@ object MessageGate {
      * false accept silently doubles a purchase and leaks a credential to disk.
      */
     private val OTP_MARKERS = listOf(
+        // "9399 is your password for the Alahli Credit Card transaction of SR
+        // 334.95." - a one-time password in English, carrying the full amount of
+        // the purchase it authorises. Twenty-five of them were stored as
+        // transactions, each keeping a credential on disk.
+        "IS YOUR PASSWORD",
+        "YOUR PASSWORD FOR",
         "رمز التحقق",
         "رمزالتحقق",
         "الرقم السري لمره واحده",

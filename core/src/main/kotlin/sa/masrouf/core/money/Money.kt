@@ -72,6 +72,13 @@ value class Money private constructor(val halalas: Long) : Comparable<Money> {
             }
         }
 
-        private val AMOUNT_TOKEN = Regex("^-?\\d+(?:\\.\\d{1,2})?$")
+        /**
+         * The integer part may be absent. AlRajhi writes a savings profit of four
+         * halalas as ".04", and refusing that stored nothing where four halalas
+         * belonged - or, read as "04", four riyals: the same digits, wrong by a
+         * hundred. `BigDecimal` accepts a leading point, so only this guard stood
+         * in the way.
+         */
+        private val AMOUNT_TOKEN = Regex("^-?(?:\\d+(?:\\.\\d{1,2})?|\\.\\d{1,2})$")
     }
 }

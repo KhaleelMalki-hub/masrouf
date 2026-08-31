@@ -138,3 +138,51 @@ not.
 **How to apply:** Every addition or reordering in `IntentClassifier.RULES`.
 **Source:** session 2026-08-31, `CashOutTest`, maintenance pass 6
 
+### 2026-08-31 — A regex may begin its match inside another number
+**Mistake:** `CURRENCY_AFTER` had no boundary before its number, so when a bank sent
+its own floating-point artifact - `الصرف المتبقي 21684.91999999999999 SAR` - the
+engine slid past the digits that could not be followed by SAR and matched
+`91999999999999 SAR` from inside the balance. An 8,315-riyal deposit was stored as
+ninety-two trillion, and every incoming total in the app was that number.
+**Why:** A regex will start anywhere that makes the rest of the pattern fit. Without
+an anchor, "a number next to a currency" also means "the tail of a number next to a
+currency". `BARE_DECIMAL` in the same file already had the lookarounds; the other
+two patterns were written later and did not.
+**Rule:** Any pattern that extracts a number from free text needs a boundary on both
+ends - `(?<![\d,])(?<!\d\.)` before, `(?![\d,])(?!\.\d)` after. Not `(?![\d.,])`: a
+bare full stop is a sentence ending, and blocking it loses every English message
+that puts the amount last.
+**How to apply:** Every numeric extraction pattern, in this repo and any other.
+**Source:** session 2026-08-31, `AmountVsBalanceTest`, maintenance pass 10
+
+### 2026-08-31 — A guard that fires late is worse than no guard
+**Mistake:** Added `المتبقي` to the disqualifying prefixes so a credit limit could
+not be read as an amount. Two tests went red: for those messages the balance was
+the ONLY candidate, so disqualifying it turned a wrong amount into no capture at
+all. The real defect was upstream - the extractor could not see the true amount,
+because `BARE_DECIMAL` capped the integer part at three digits unless commas were
+present, and `مبلغ 8500` has neither.
+**Why:** The fix was aimed at the symptom that was visible (a balance winning)
+rather than at why it had no competition (the amount was invisible).
+**Rule:** When a wrong candidate is being chosen, ask what the right candidate is
+and whether the code can see it at all, BEFORE suppressing the wrong one.
+Suppression with nothing to replace it converts a wrong answer into a missing one,
+and a missing transaction is not obviously better than a wrong figure.
+**How to apply:** Any ranking or scoring change - parsers, matchers, classifiers.
+**Source:** session 2026-08-31, `AmountExtractor.AMOUNT_LABEL`
+
+### 2026-08-31 — Simulate a risky repair over the whole corpus first
+**Practice worth keeping, not a mistake.** Before changing how amounts are read,
+both the old and the new logic were run over all 22,037 stored message bodies and
+the results diffed: 1,287 amounts changed, 275 messages became readable, 0 became
+unreadable, and a sample of every changed family was inspected by hand. The first
+attempt showed 159 losses, which is what led to the `مبلغ` label signal; the second
+showed 16, all one-time passwords, which is what led to the trailing-dot boundary.
+Neither would have been found by unit tests written from the same imagination that
+wrote the patch.
+**Rule:** A change to how stored data is interpreted gets simulated against the real
+corpus, old versus new, with the losses inspected individually - before it is
+written into the code, not after.
+**How to apply:** Parser, extractor, classifier and migration changes.
+**Source:** session 2026-08-31
+

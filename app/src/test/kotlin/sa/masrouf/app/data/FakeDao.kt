@@ -177,6 +177,12 @@ class FakeDao : TransactionDao {
         return 1
     }
 
+    override suspend fun setAmount(id: String, halalas: Long): Int {
+        val target = state.value.firstOrNull { it.id == id && it.source != "MANUAL" } ?: return 0
+        state.value = state.value.map { if (it.id == target.id) it.copy(amountHalalas = halalas) else it }
+        return 1
+    }
+
     override suspend fun clearNumericParties(): Int {
         val doomed = state.value.filter {
             val key = it.merchantKey

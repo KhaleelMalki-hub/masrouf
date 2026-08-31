@@ -35,20 +35,81 @@ object AmountExtractor {
     private val CURRENCY_PATTERN =
         CURRENCY_ALTERNATIVES.joinToString("|") { Regex.escape(it) }
 
-    /** `1,234.56` / `1234.5` / `87` - thousands separators optional, up to 2 decimals. */
-    private const val NUMBER_PATTERN = "\\d{1,3}(?:,\\d{3})+(?:\\.\\d{1,2})?|\\d+(?:\\.\\d{1,2})?"
+    /**
+     * `1,234.56` / `1234.5` / `87` / `.04` - thousands separators optional, up to 2
+     * decimals, and a leading decimal point with no integer part. The last of those
+     * is how AlRajhi writes a savings profit of four halalas ("مبلغ:.04 SAR"), which
+     * was read as four riyals - the same number, wrong by a hundred.
+     *
+     * The leading-dot form is listed first so it wins the alternation and captures
+     * the point; leave it last and the engine matches the digits alone.
+     */
+    private const val NUMBER_PATTERN =
+        "\\.\\d{1,2}|\\d{1,3}(?:,\\d{3})+(?:\\.\\d{1,2})?|\\d+(?:\\.\\d{1,2})?"
+
+    /**
+     * A number must begin and end at a number boundary.
+     *
+     * Without this the engine is free to start a match *inside* another number to
+     * make the rest of the pattern fit, and one real message made it do exactly
+     * that. A bank sent its own floating-point artifact:
+     *
+     *     إيداع في بطاقة 9552* مبلغ 8315.08 الصرف المتبقي 21684.91999999999999 SAR
+     *
+     * "21684.91" cannot be followed by SAR, so the match slid to the digits after
+     * the decimal point, where "91999999999999 SAR" fits perfectly. An 8,315-riyal
+     * deposit was stored as 91,999,999,999,999 - ninety-two trillion riyals, which
+     * is every incoming total this app will ever show, wrong, from one message.
+     *
+     * With the boundaries the balance line yields no candidate at all, which is the
+     * right answer: this file returns nothing rather than a guess.
+     */
+    private const val NUMBER_START = "(?<![\\d,])(?<!\\d\\.)"
+
+    /**
+     * A digit, or a decimal point with a digit behind it, means the match stopped
+     * inside a longer number. A bare full stop does not: an English message ends
+     * its sentence right after the amount ("...transaction of SR 334.95.").
+     */
+    private const val NUMBER_END = "(?![\\d,])(?!\\.\\d)"
 
     private val CURRENCY_BEFORE = Regex(
-        "(?<currency>$CURRENCY_PATTERN)\\s*(?<number>$NUMBER_PATTERN)",
+        "(?<currency>$CURRENCY_PATTERN)\\s*$NUMBER_START(?<number>$NUMBER_PATTERN)$NUMBER_END",
         RegexOption.IGNORE_CASE,
     )
 
     private val CURRENCY_AFTER = Regex(
-        "(?<number>$NUMBER_PATTERN)\\s*(?<currency>$CURRENCY_PATTERN)",
+        "$NUMBER_START(?<number>$NUMBER_PATTERN)$NUMBER_END\\s*(?<currency>$CURRENCY_PATTERN)",
         RegexOption.IGNORE_CASE,
     )
 
-    private val BARE_DECIMAL = Regex("(?<![\\d.,])(?<number>\\d{1,3}(?:,\\d{3})*\\.\\d{2})(?![\\d.,])")
+    /**
+     * A message that labels its own amount.
+     *
+     * The strongest signal there is, and it was not being used. "إيداع في بطاقة
+     * 2887* / مبلغ 8500 / الصرف المتبقي 32167.58 SAR" carries the amount with no
+     * currency beside it and the balance with one, so the balance won: 439 records
+     * stored a balance where an amount belonged, across nine years.
+     *
+     * Scored above an adjacent currency token, because a bank naming its own figure
+     * outranks a bank putting a currency near one.
+     */
+    private val AMOUNT_LABEL = Regex(
+        "(?:بمبلغ|مبلغ|AMOUNT)\\s*:?\\s*(?:$CURRENCY_PATTERN)?\\s*$NUMBER_START(?<number>$NUMBER_PATTERN)$NUMBER_END",
+        RegexOption.IGNORE_CASE,
+    )
+
+    /**
+     * A decimal amount standing on its own, with no label and no currency.
+     *
+     * The integer part is any length. It used to be capped at three digits unless
+     * thousands separators were present, which made every four-figure amount
+     * written without a comma invisible - and those are exactly the messages whose
+     * balance was picked up instead.
+     */
+    private val BARE_DECIMAL = Regex(
+        "$NUMBER_START(?<number>(?:\\d{1,3}(?:,\\d{3})+|\\d+)\\.\\d{2}|\\.\\d{2})$NUMBER_END"
+    )
 
     /**
      * Fragments that mark the number after them as something other than the amount
@@ -62,7 +123,11 @@ object AmountExtractor {
         "الرصيد",
         "رصيد",
         "المتاح",
-        "BALANCE", "AVAIL",
+        // "الصرف المتبقي" - what a credit card will still let through. A balance by
+        // another name, larger than the charge beside it, and the only one of the
+        // three the list did not already know.
+        "المتبقي",
+        "BALANCE", "AVAIL", "REMAIN",
         // Fees, sent as a second amount line right under the transfer amount
         // ("مبلغ2000.00SAR" then "رسوم0.00SAR").
         "رسوم",
@@ -111,6 +176,12 @@ object AmountExtractor {
             }
         }
 
+        // Highest first: a labelled amount beats a number that merely sits beside a
+        // currency token, which beats one standing on its own.
+        for (match in AMOUNT_LABEL.findAll(text)) {
+            val number = match.groups["number"] ?: continue
+            consider(number.range, number.value, currency = null, baseScore = 3)
+        }
         for (match in CURRENCY_BEFORE.findAll(text)) {
             val number = match.groups["number"] ?: continue
             consider(match.range, number.value, match.groups["currency"]?.value, baseScore = 2)
@@ -121,7 +192,7 @@ object AmountExtractor {
         }
         for (match in BARE_DECIMAL.findAll(text)) {
             val number = match.groups["number"] ?: continue
-            if (found.keys.any { it.overlaps(match.range) }) continue
+            if (found.keys.any { it.overlaps(number.range) }) continue
             consider(match.range, number.value, currency = null, baseScore = 0)
         }
 

@@ -100,6 +100,16 @@ class MasroufApp : Application() {
             transactions.refileAll()
             preferences.maintenanceVersion = 9
         }
+        if (done < 10) {
+            // The extractor could not see a four-figure amount without a comma, so
+            // 439 records stored a balance where an amount belonged, and one stored
+            // ninety-two trillion riyals. The gate also learned the English
+            // one-time-password wording, so the purge runs first: those bodies hold
+            // a credential and must go before anything else reads them.
+            transactions.purgeRejectedBodies()
+            transactions.repairAmounts()
+            preferences.maintenanceVersion = 10
+        }
         transactions.fileUncategorised()
         catchUpOnSms()
     }

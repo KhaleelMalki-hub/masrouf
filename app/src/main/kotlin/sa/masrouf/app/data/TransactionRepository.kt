@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.map
+import sa.masrouf.core.capture.AmountExtractor
 import sa.masrouf.core.capture.BankMessageParser
 import sa.masrouf.core.capture.MessageGate
 import sa.masrouf.core.capture.ParseResult
@@ -287,6 +288,43 @@ class TransactionRepository(
      *
      * @return how many rows lost an account number as their party.
      */
+    /**
+     * Re-reads the amount of every captured row whose body says something else.
+     *
+     * The riskiest pass in this file, and the one with the most behind it. The
+     * extractor could not see a four-figure amount written without a comma, so in
+     * "إيداع في بطاقة 2887* / مبلغ 8500 / الصرف المتبقي 32167.58 SAR" the only
+     * candidate carrying a currency token was the balance - and the balance was
+     * stored as the amount 439 times over nine years. One message went further: a
+     * bank sent its own floating-point artifact, "21684.91999999999999 SAR", and a
+     * match that began inside that number stored 91,999,999,999,999 riyals.
+     *
+     * Run over all 22,037 stored bodies before being written, comparing the old
+     * reading to the new: 1,287 amounts corrected, 275 messages that carried no
+     * readable amount at all now readable, and nothing lost. Every correction
+     * inspected was a balance or a fragment giving way to the figure the message
+     * labels as its own.
+     *
+     * Only captured rows: a hand-entered amount is what the user typed and is never
+     * re-derived. See [TransactionDao.setAmount].
+     *
+     * @return how many amounts changed.
+     */
+    suspend fun repairAmounts(): Int {
+        var fixed = 0
+        dao.allWithBody().chunked(REPARSE_BATCH).forEach { batch ->
+            inTransaction {
+                batch.forEach { row ->
+                    val body = row.rawText ?: return@forEach
+                    val read = AmountExtractor.extractOrNull(body)?.money ?: return@forEach
+                    if (read.halalas == row.amountHalalas) return@forEach
+                    if (dao.setAmount(row.id, read.halalas) == 1) fixed++
+                }
+            }
+        }
+        return fixed
+    }
+
     suspend fun repairNumericParties(): Int {
         val cleared = dao.clearNumericParties()
         if (cleared > 0) reparseStoredBodies()
