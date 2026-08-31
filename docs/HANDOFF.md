@@ -6,7 +6,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
 
 ## Where things stand
 
-- `main` at 115 commits. All tests green: **287** in `:core`, **163** in `:app`,
+- `main` at 120 commits. All tests green: **287** in `:core`, **163** in `:app`,
   **9** instrumented (`:app:connectedDebugAndroidTest`).
 - **`connectedDebugAndroidTest` uninstalls the app and deletes its database.**
   It has already cost the owner's phone once. Use the `masrouf35` emulator, or
@@ -16,8 +16,20 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
 - Database schema version 6. One-off repairs are a set in `MasroufApp.Repair`,
   each stamped with the version that introduced it, taken as a union and run once
   in declaration order. `CURRENT_MAINTENANCE_VERSION` is **13**.
-- Real data on the phone: ~22,014 transactions, ~2,190 unfiled, 34 learned
-  merchant rules of the owner's own.
+- Real data on the phone: ~22,014 transactions, ~2,190 unfiled, and the owner's
+  own learned merchant rules (34 and growing — he files one whenever a shop the
+  shipped list cannot name comes up).
+
+  A figure that moves with use does not belong in prose. Read the current ones:
+
+  ```bash
+  for f in masrouf.db masrouf.db-wal masrouf.db-shm; do
+    adb exec-out run-as sa.masrouf.app cat "databases/$f" > "local.${f#masrouf.}"
+  done
+  sqlite3 local.db "SELECT (SELECT COUNT(*) FROM transactions) rows,
+    (SELECT COUNT(*) FROM transactions WHERE category_id IS NULL) unfiled,
+    (SELECT COUNT(*) FROM merchant_rules) rules;"
+  ```
 
 ## Personal values live outside the repository
 
