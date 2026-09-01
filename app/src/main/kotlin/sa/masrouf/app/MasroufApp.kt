@@ -122,7 +122,7 @@ class MasroufApp : Application() {
          * passive markers beside it never reached, so a purchase the bank declined
          * on a cancelled card was stored as money spent.
          */
-        PURGE_REJECTED(20),
+        PURGE_REJECTED(21),
 
         /** Amounts the extractor now reads differently. Before anything reads them. */
         REPAIR_AMOUNTS(10),
@@ -176,7 +176,7 @@ class MasroufApp : Application() {
         REREAD_WHOLE_INBOX(20),
 
         /** Last: filing reads the merchant and the type everything above corrects. */
-        REFILE_ALL(20),
+        REFILE_ALL(21),
     }
 
     /**

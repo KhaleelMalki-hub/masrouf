@@ -168,6 +168,18 @@ object MessageGate {
         "POS LIMIT",
         "LIMIT HAS BEEN INCREASED",
         "حد الشراء",
+        // "تم تنفيذ أمر شراء رقم .032011030003802 للرمز1180 (الكمية المنفذة 12،
+        // سعر التنفيذ 39.65 ريال)" - a share order filled at the brokerage. There
+        // is no total in it, only a unit price and a count, and the extractor read
+        // the order NUMBER: 261 of them were stored as purchases of 74 halalas and
+        // similar. The cash that moved is reported separately, as a movement of the
+        // investment account.
+        "تنفيذ امر",
+        "تنفيذ أمر",
+        // "لقد تعذر اتمام عملية تحويل بمبلغ 500.00 ر.س" - a transfer that failed.
+        // Stored as a 500-riyal transfer out, which is money that never moved.
+        "تعذر اتمام",
+        "تعذر إتمام",
     )
 
     /** Phrases that mark a transaction as not completed. */

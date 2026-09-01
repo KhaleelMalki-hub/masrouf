@@ -710,6 +710,20 @@ MTCN:0000000000
      * inbox was re-read - the largest single figure in the whole history, and no
      * money moved at all.
      */
+    /**
+     * A share order filled. No total in it - a unit price and a count - so the
+     * extractor read the order number and stored 74 halalas. The cash that moved is
+     * reported separately as a movement of the investment account.
+     */
+    const val CAPITAL_ORDER_FILLED =
+        "تم تنفيذ أمر شراء رقم .000000000000000 للرمز1180 (بتاريخ 10:44:17 2020-11-03، " +
+            "الكمية المنفذة 12، سعر التنفيذ 39.650000 ريال)"
+
+    /** A transfer the brokerage could not complete. No money moved. */
+    const val CAPITAL_TRANSFER_FAILED =
+        "لقد تعذر اتمام عملية تحويل بمبلغ 500.00 ر.س الى حسابك الجاري 00000000000000 " +
+            "بتاريخ 08:25:38 2021-01-27، الرجاء المحاولة لاحقاً"
+
     const val CARD_LIMIT_RAISED =
         "Your Debit Card 5358XXXXXXXX2907 daily POS limit has been increased to SR 200000"
 
@@ -784,5 +798,6 @@ MTCN:0000000000
         RAJHI_CARD_STATEMENT_NOTICE, SNB_CARD_STATEMENT_NOTICE,
         RAJHI_TEMPORARY_CODE, SNB_BILL_ACTIVATION_CODE, CARD_DECLINED_AS_INACTIVE,
         STC_SECURITY_CODE, STC_DECLINED, CARD_LIMIT_RAISED,
+        CAPITAL_ORDER_FILLED, CAPITAL_TRANSFER_FAILED,
     )
 }

@@ -207,6 +207,29 @@ class StcPayTest {
         assertEquals(SaudiCategories.INVESTMENT, CategoryGuess.forMerchant(draft.merchantRaw))
     }
 
+    /**
+     * A filled share order carries no total - a unit price and a count - so the
+     * extractor read the order number and stored 261 purchases of a riyal or less.
+     */
+    @Test
+    fun `a filled share order is not a purchase`() {
+        val decision = MessageGate.evaluate(
+            RawMessage(RealMessages.CAPITAL_ORDER_FILLED, Instant.EPOCH, sender = "SNB-Capital")
+        )
+
+        assertTrue(decision is MessageGate.Decision.Reject)
+    }
+
+    /** A transfer that failed is money that never moved. */
+    @Test
+    fun `a transfer the brokerage could not complete is not a transfer`() {
+        val decision = MessageGate.evaluate(
+            RawMessage(RealMessages.CAPITAL_TRANSFER_FAILED, Instant.EPOCH, sender = "SNB-Capital")
+        )
+
+        assertTrue(decision is MessageGate.Decision.Reject)
+    }
+
     /** A raised card limit is not two hundred thousand riyals of shopping. */
     @Test
     fun `a limit notice is refused`() {

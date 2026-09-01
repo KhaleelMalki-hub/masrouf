@@ -15,7 +15,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
   off adb often; check `adb devices` before installing.
 - Database schema version 6. One-off repairs are a set in `MasroufApp.Repair`,
   each stamped with the version that introduced it, taken as a union and run once
-  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **18**.
+  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **21**.
 - Real data on the phone: ~22,014 transactions, ~2,190 unfiled, and the owner's
   own learned merchant rules (34 and growing — he files one whenever a shop the
   shipped list cannot name comes up).
@@ -158,9 +158,44 @@ Three fixes, and the second is the one to remember:
 Maintenance 18 re-reads the WHOLE inbox once (`REREAD_WHOLE_INBOX`), because
 these messages are older than any tail the launch catch-up reads.
 
+### What the inbox comparison found, in order (2026-09-01)
+
+Everything below came from one move: enumerate the senders in the raw inbox,
+subtract the ones the app understands, count what is left. Four earlier passes
+over the same history queried the database and found none of it.
+
+1. **STC Pay / STC Bank** - 4,446 messages, 2019-2026, no profile claimed the
+   sender. 1,845 purchases and 68 Western Union transfers (wages for domestic
+   staff, filed as `fees`) never recorded; 670 top-ups of that wallet recorded
+   from the bank's side as purchases and counted as spending.
+2. **The owner-name demotion ignored roles.** Every outgoing transfer names him -
+   he is sending it - so 94,126 riyals of wages read as his own money.
+3. **READ_SMS was never granted.** Every inbox read returned quietly, so the
+   launch catch-up had never run and the whole-inbox re-read reported success
+   having done nothing. A repair that cannot run now leaves the stamp below its
+   own version so the next launch retries.
+4. **SNB Capital** - 1,136 messages, sender unclaimed for the same reason:
+   "SNB-Capital" folds to SNBCAPITAL, which contains none of SNB's ids. 277
+   movements between current and investment accounts, plus share dividends.
+5. Three families that are not transactions at all and were being stored as one:
+   a raised card limit (200,000 riyals), 261 filled share orders (no total in
+   them, so the extractor read the order number), and 8 failed transfers.
+
+Net, after maintenance 21: **25,748 records** (from 22,020), 3,723 of them PENDING
+and awaiting the owner's review in the app - nothing auto-confirms. Spending by
+year moved as the corrections landed: 2022 down 122,531 (top-ups removed), 2024 up
+90,125 and 2025 up 97,281 (wallet purchases and wages added).
+
 ## Open items
 
-0. **1,857 records are still unfiled** - 529 of them in the last 24 months
+0. **3,723 records are PENDING.** They are the recovered history and the owner
+   has not seen them; the app has a confirm-all action for exactly this.
+0. **Senders still unread, and it is not known whether they are his**: urpay (70
+   transaction-like messages), SAIB (73), meem (85), Vision Bank (16), AlJazira
+   (25), STC's `900` landline bills (217 - probably already captured from the
+   paying bank's side, so adding them would double-count). Ask before parsing any
+   of them.
+0. **2,198 records are still unfiled** - 529 of them in the last 24 months
    (139,077 riyals), the rest older. They are spread over ~1,150 merchants at
    about two records each, almost all local shops registered in their owner's
    name, so no keyword list reaches them: they need his memory, one at a time,

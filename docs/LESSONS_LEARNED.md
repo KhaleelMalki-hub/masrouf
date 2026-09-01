@@ -423,3 +423,17 @@ suggestion, and put it on a screen before calling it a recommendation.
 **Rule:** In a mixed-script regex, put `\b` only on the Latin alternatives. Anchor Arabic ones with an explicit lookahead for what actually follows, and print the match result once before believing a guard works.
 **How to apply:** Any regex over Arabic text that reaches for a word boundary.
 **Source:** IntentClassifier.SENDER_LINE.
+
+### 2026-09-01 — A permission check that returns quietly is a feature that does not exist
+**Mistake:** Every path that reads the SMS inbox checked READ_SMS and returned silently when it was not granted. It was not granted on the owner's phone, so the launch catch-up documented as "a miss costs one launch" had never run once, and a one-off repair that re-reads the whole inbox stamped itself complete having imported nothing.
+**Why:** The check was written as a guard against crashing, not as a report of a capability the feature needs. Nothing downstream could tell "there was nothing to import" from "I was not allowed to look".
+**Rule:** A precondition failure must be visible in whatever records the work: leave the retry stamp unset, surface the state, or fail. Never let a no-op mark itself done - it cannot be retried, because nothing knows it did not happen.
+**How to apply:** Any permission, credential, or connectivity check that guards work with a persistent completion marker.
+**Source:** MasroufApp.rereadWholeInbox, maintenance 19.
+
+### 2026-09-01 — A message with no total will still hand you a number
+**Mistake:** 261 filled share orders ("تم تنفيذ أمر شراء رقم .032011030003802 للرمز1180، الكمية 12، سعر التنفيذ 39.65") were stored as purchases of 74 halalas and similar. The amount extractor read digits out of the ORDER NUMBER.
+**Why:** The parser's contract is "refuse to guess", and it does refuse when it finds nothing - but a message dense with identifiers always has something that looks like an amount. Refusal protects against absence, not against plausible noise.
+**Rule:** When a new sender is added, group its stored rows by amount and look at the smallest and largest. An amount that is implausible for its category - sub-riyal purchases, a six-figure card limit - means a number was read out of an identifier, and the fix belongs in the gate, not the extractor.
+**How to apply:** Immediately after any new parser's first import.
+**Source:** SNB Capital order fills, maintenance 21.
