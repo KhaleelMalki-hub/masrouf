@@ -795,6 +795,17 @@ object CategoryGuess {
         "TED BAKER" to SaudiCategories.SHOPPING,
         "LAVANDE" to SaudiCategories.SHOPPING,
         "UNITED LUXURY" to SaudiCategories.SHOPPING,
+
+        // Named by the owner, from the unfiled list of 2026-09-01. Each arrived
+        // once, in one spelling, and nothing in the string says what the shop sells.
+        // المطلق للأثاث والمفروشات. A family name as well as a shop, so if a
+        // different Almutlaq ever appears the owner's own rule overrides this.
+        "ALMUTLAQ" to SaudiCategories.SHOPPING,
+        // هوم بوكس, furniture and bedrooms. The terminal appends a branch number.
+        "HOMEBOX" to SaudiCategories.SHOPPING,
+        "HOME BOX" to SaudiCategories.SHOPPING,
+        // كورو, a Japanese restaurant in Jeddah. Sent as "Kuuru Jed".
+        "KUURU" to SaudiCategories.FOOD,
     ))
 
     /**

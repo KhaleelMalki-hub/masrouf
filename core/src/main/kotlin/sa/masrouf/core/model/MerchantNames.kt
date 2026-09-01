@@ -164,6 +164,12 @@ object MerchantNames {
         "MY GOLDEN" to MerchantName(ar = "إطاري الذهبي", en = "My Golden Tyre"),
         // The car wash, under its payment processor's descriptor.
         "SUREPAY SNB" to MerchantName(ar = "مغسلة ربوة التميز", en = "Rabwat Al Tamayuz Car Wash"),
+
+        // Named by the owner, 2026-09-01.
+        "ALMUTLAQ" to MerchantName(ar = "المطلق للأثاث", en = "Almutlaq Furniture"),
+        "HOMEBOX" to MerchantName(ar = "هوم بوكس", en = "Home Box"),
+        "HOME BOX" to MerchantName(ar = "هوم بوكس", en = "Home Box"),
+        "KUURU" to MerchantName(ar = "كورو", en = "Kuuru"),
     ))
 
     /**

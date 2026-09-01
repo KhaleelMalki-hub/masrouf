@@ -42,6 +42,13 @@ class OwnerNamedMerchantsTest {
             "Maan Hama" to SaudiCategories.SHOPPING,
             // A perfume shop.
             "LAURE" to SaudiCategories.SHOPPING,
+            // Named on 2026-09-01, off the list left unfiled after the party fix.
+            // المطلق للأثاث والمفروشات - furniture, and a family name besides.
+            "ALMUTLAQ" to SaudiCategories.SHOPPING,
+            // هوم بوكس. The branch number the terminal appends must not hide it.
+            "HOMEBOX 2" to SaudiCategories.SHOPPING,
+            // كورو, Japanese, in Jeddah. The city is glued to the name.
+            "Kuuru Jed" to SaudiCategories.FOOD,
             // الرقيب للأثاث, under every spelling its terminals have sent.
             "HAMAD M ALRUGAIB AND S" to SaudiCategories.SHOPPING,
             "HAMAD ALRUGAIB and SO" to SaudiCategories.SHOPPING,

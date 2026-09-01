@@ -141,7 +141,7 @@ class MasroufApp : Application() {
         RETYPE_OWN_MONEY(7),
 
         /** Last: filing reads the merchant and the type everything above corrects. */
-        REFILE_ALL(13),
+        REFILE_ALL(16),
     }
 
     /**
