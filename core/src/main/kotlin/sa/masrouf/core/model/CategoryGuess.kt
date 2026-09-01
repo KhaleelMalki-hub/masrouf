@@ -794,6 +794,13 @@ object CategoryGuess {
         "FUNDUQ" to SaudiCategories.TRAVEL,
         "MILLENNIUM" to SaudiCategories.TRAVEL,
         "FLY DUB" to SaudiCategories.TRAVEL,
+        // The airline, confirmed by the owner. Five records, all 2015-2017, in
+        // three spellings - "EMIRATES", "EMIRATES 01", "EMIRATES LEIS DXBT2" (the
+        // airport leisure arm, which is still a trip). Safe as a substring here
+        // because the bank of the same name never appears as a MERCHANT.
+        "EMIRATES" to SaudiCategories.TRAVEL,
+        // عصر الجوال, a mobile-phone shop, confirmed by the owner.
+        "ASER ALJAWAL" to SaudiCategories.SHOPPING,
         "BED AND BATH" to SaudiCategories.SHOPPING,
         "CHARRIOL" to SaudiCategories.SHOPPING,
         "WOJOOH" to SaudiCategories.SHOPPING,
