@@ -107,6 +107,48 @@ the party's real name in place of an account number on 1,300 rows.
    Drahim is the explicit anti-reference.
 5. **Manual recurring payments** — explicitly not wanted ("ممكن مستقبلاً").
 
+## Open decision: getting the data to a new phone
+
+The owner asked for this and is thinking about it. The findings are here so the
+question does not have to be re-derived.
+
+**Nothing is backed up today.** `allowBackup="false"`, and `dumpsys backup`
+confirms `sa.masrouf.app` is absent from the backup set. A new phone starts empty.
+
+What a phone change would cost, measured on the live database:
+
+| | recoverable |
+|---|---|
+| 21,977 rows captured from SMS | only if the messages themselves transfer |
+| 41 rows captured from notifications | no — notifications do not transfer |
+| **185 categories he filed by hand** | no — not in any message |
+| **35 learned merchant rules** | no — not in any message |
+
+Those last two are the months of decisions that cannot be recreated: the employer
+as bonuses, the cabinet maker, the portrait studio, the recruiter.
+
+Two ways, and they are not equal:
+
+1. `allowBackup="true"` — automatic, and sends twelve years of his financial
+   history to Google's servers. It contradicts the first line of this project's
+   own privacy rule, and the app does not even hold the INTERNET permission.
+2. **An explicit export/import** — one file he makes, moves himself, and imports.
+   Also covers a factory reset, a reinstall, and a different manufacturer. Nothing
+   leaves his hand. Recommended, and the open question on it is whether the file
+   should be encrypted with a passphrase: it is safest where it is most exposed,
+   which is in transit between two devices, and the cost is a passphrase he must
+   remember.
+
+Related, and the same fix closes it: the build installed on his phone is `debug`
+(`flags=[ DEBUGGABLE ... ]`, verified). Anyone with the phone, a cable and USB
+debugging can read the whole SQLite file with `run-as` - no root, no exploit. A
+signed `release` build closes that, and `release` currently has no signingConfig
+so it cannot be built at all. Export/import is what makes a release build
+practical: without it there would be no way to move the data.
+
+Also unset: `android:dataExtractionRules`, which on Android 12+ governs
+device-to-device transfer separately from cloud backup.
+
 ## Known gaps
 
 - `WEST` is three unrelated merchants and has no rule on purpose.
