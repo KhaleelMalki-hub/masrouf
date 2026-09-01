@@ -6,7 +6,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
 
 ## Where things stand
 
-- `main` at 120 commits. All tests green: **289** in `:core`, **171** in `:app`,
+- `main` at 120 commits. All tests green: **324** in `:core`, **171** in `:app`,
   **9** instrumented (`:app:connectedDebugAndroidTest`).
 - **`connectedDebugAndroidTest` uninstalls the app and deletes its database.**
   It has already cost the owner's phone once. Use the `masrouf35` emulator, or
@@ -15,7 +15,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
   off adb often; check `adb devices` before installing.
 - Database schema version 6. One-off repairs are a set in `MasroufApp.Repair`,
   each stamped with the version that introduced it, taken as a union and run once
-  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **23**.
+  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **25**.
 - Real data on the phone: ~22,014 transactions, ~2,190 unfiled, and the owner's
   own learned merchant rules (34 and growing — he files one whenever a shop the
   shipped list cannot name comes up).
@@ -215,6 +215,25 @@ older templates name no sender, so nothing in those messages distinguishes an
 allowance from any other incoming transfer. 2,405 incoming records still carry no
 party - card top-ups and cash deposits, which name nobody.
 
+### End-of-day state (2026-09-01, evening)
+
+Maintenance **25** stamped on the phone; 25,813 records; unfiled down to
+**2,114**; 42 pending (the AlJazira/SAIB import - he confirmed the big batch).
+The day's merchant identifications: Chanel (AL NOUJAI), West Elm (WES + full
+spelling), Emirates + FlyDubai, عصر الجوال, plus the descriptive batch
+(FUNDUQ/MILLENNIUM -> travel, WOJOOH/TOUS/CHARRIOL/BED AND BATH -> shopping,
+RESTURANT as the terminal spells it).
+
+UI: the quoted bank message is a soft inset that opens at the start of the
+Arabic line; the card row needs NO RTL steering - Compose reverses the axis
+itself, and the lesson about the two wrong fixes is in LESSONS_LEARNED.
+
+**Deferred by the owner:** the ثمانية font (font.thmanyah.com never delivered
+its download email). The plan when it arrives is recorded: gitignored asset -
+its EULA forbids redistribution and this repo is public - runtime load with a
+Plex fallback, Sans on the body roles, Serif Display considered for the two big
+headlines. No M3 impact beyond eyeballing Arabic line heights.
+
 ## Open items
 
 0. **3,723 records are PENDING.** They are the recovered history and the owner
@@ -291,6 +310,13 @@ Also unset: `android:dataExtractionRules`, which on Android 12+ governs
 device-to-device transfer separately from cloud backup.
 
 ## Known gaps
+
+- `MonthNavigationTest` fails rarely with "uncaught exceptions before the test
+  started" - some earlier test leaks a late-throwing coroutine. Twice seen,
+  green on every rerun and in isolation; not chased yet.
+- 66 cashback refunds still carry the word "بطاقه" as their party, and ~40 ENBD
+  card payments carry "XX8101": reparse fills missing parties but never
+  rewrites a wrong one. Cosmetic - all are non-spending types.
 
 - `WEST` is three unrelated merchants and has no rule on purpose.
 - Statement import is not wired into the app; see the note in `CLAUDE.md` about
