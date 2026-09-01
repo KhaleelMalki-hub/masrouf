@@ -15,7 +15,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
   off adb often; check `adb devices` before installing.
 - Database schema version 6. One-off repairs are a set in `MasroufApp.Repair`,
   each stamped with the version that introduced it, taken as a union and run once
-  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **22**.
+  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **23**.
 - Real data on the phone: ~22,014 transactions, ~2,190 unfiled, and the owner's
   own learned merchant rules (34 and growing — he files one whenever a shop the
   shipped list cannot name comes up).
@@ -219,10 +219,11 @@ party - card top-ups and cash deposits, which name nobody.
 
 0. **3,723 records are PENDING.** They are the recovered history and the owner
    has not seen them; the app has a confirm-all action for exactly this.
-0. **Accounts the owner has confirmed are his, used rarely**: urpay, SAIB, meem,
-   Vision Bank, AlJazira. Worth parsing eventually; he says the volume is very
-   small beside what is already captured. STC's `900` landline bills are probably
-   already captured from the paying bank's side, so adding them would double-count.
+0. **Accounts the owner has confirmed are his, used rarely**: urpay, meem,
+   Vision Bank. (AlJazira and SAIB were added 2026-09-01 - cards 3761 and 9097,
+   profiles + tiles + history re-read at maintenance 23.) STC's `900` landline
+   bills are probably already captured from the paying bank's side, so adding
+   them would double-count.
 0. **Senders still unread, and it is not known whether they are his**: urpay (70
    transaction-like messages), SAIB (73), meem (85), Vision Bank (16), AlJazira
    (25), STC's `900` landline bills (217 - probably already captured from the

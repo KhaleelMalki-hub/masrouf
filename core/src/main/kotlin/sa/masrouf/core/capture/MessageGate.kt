@@ -180,6 +180,10 @@ object MessageGate {
         // Stored as a 500-riyal transfer out, which is money that never moved.
         "تعذر اتمام",
         "تعذر إتمام",
+        // "نود التنبيه بأنك تجاوزت موعد سداد بطاقتك رقم2650" - a reminder that a
+        // payment is LATE, which the سداد rules would otherwise read as a payment
+        // made.
+        "تجاوزت موعد",
     )
 
     /** Phrases that mark a transaction as not completed. */

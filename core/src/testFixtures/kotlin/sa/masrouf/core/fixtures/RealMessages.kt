@@ -751,6 +751,52 @@ MTCN:0000000000
     const val CARD_LIMIT_RAISED =
         "Your Debit Card 5358XXXXXXXX2907 daily POS limit has been increased to SR 200000"
 
+    // ---- Bank AlJazira and SAIB, added when the owner named their cards -----
+    //
+    // AlJazira writes in English; SAIB masks accounts with an X-run. Names
+    // replaced, accounts zeroed, structure exact.
+
+    /** AlJazira: the card under "By:", the ACCOUNT under "From:", the shop at "At:". */
+    const val JAZIRA_ONLINE_PURCHASE = """Online Purchase
+By:3761;mada
+From: 0001
+Amount: SAR 3,000.00
+At: barq
+Date: 2026-06-29 12:24"""
+
+    const val JAZIRA_POS_PURCHASE = """POS Purchase (Google Pay)
+at: tarwah alarabyh est
+of: 1.00 SAR
+on: 2026-05-10 21:10
+Mada card: 3761"""
+
+    const val JAZIRA_INCOMING_TRANSFER = """Incoming Fund Transfer 
+Credited to Account: 0001
+Amount: 3,992.36 SAR
+From: SENDER NAME**
+[Arab National Bank]
+Debit from account: 0018
+at: 2026-06-16 08:46
+Ref: 0B00000000000000"""
+
+    /** A reminder that a payment is LATE - the سداد rules must never read it as one. */
+    const val JAZIRA_PAYMENT_OVERDUE =
+        "نود التنبيه بأنك تجاوزت موعد سداد بطاقتك رقم2650 ، الرجاء سداد المبلغ المستحق في أقرب وقت ممكن."
+
+    /** SAIB: the account masked as an X-run, under the same word as a person. */
+    const val SAIB_ONLINE_PURCHASE = """شراء انترنت
+بطاقة: XXX9097 مدى 
+من: XXX1001 
+مبلغ: SAR 10.00
+لدى: Health Endowment Fund R 
+في: 04-07 14:42"""
+
+    const val SAIB_INCOMING_TRANSFER = """حوالة واردة: داخلية
+مبلغ: SAR 56.00
+الى: XXX1001 
+من: SENDER NAME XXX2001 
+في: 12-30 19:25"""
+
     // ---- Sender identities -------------------------------------------------
 
     /** SMS sender ids exactly as they appear on the device. */
@@ -815,6 +861,8 @@ MTCN:0000000000
         STC_ADD_MONEY, STC_WESTERN_UNION, STC_WU_SHORT,
         CAPITAL_TO_INVESTMENT, CAPITAL_TO_CURRENT, CAPITAL_DIVIDEND,
         SNB_INCOMING_SENDER_INLINE, DIVIDEND_PAID_AS_SALARY,
+        JAZIRA_ONLINE_PURCHASE, JAZIRA_POS_PURCHASE, JAZIRA_INCOMING_TRANSFER,
+        SAIB_ONLINE_PURCHASE, SAIB_INCOMING_TRANSFER,
     )
 
     /** Every message that must never become a transaction. */
@@ -823,6 +871,6 @@ MTCN:0000000000
         RAJHI_CARD_STATEMENT_NOTICE, SNB_CARD_STATEMENT_NOTICE,
         RAJHI_TEMPORARY_CODE, SNB_BILL_ACTIVATION_CODE, CARD_DECLINED_AS_INACTIVE,
         STC_SECURITY_CODE, STC_DECLINED, CARD_LIMIT_RAISED,
-        CAPITAL_ORDER_FILLED, CAPITAL_TRANSFER_FAILED,
+        CAPITAL_ORDER_FILLED, CAPITAL_TRANSFER_FAILED, JAZIRA_PAYMENT_OVERDUE,
     )
 }

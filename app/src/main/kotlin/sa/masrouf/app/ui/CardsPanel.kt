@@ -276,7 +276,7 @@ internal fun orderedCards(cards: List<CardBalance>): List<CardBalance> = cards
     .filter { it.last4 in ActiveCards.LAST4 }
     .sortedWith(compareBy({ it.bankOrder }, { it.last4 }))
 
-private val BANK_ORDER = listOf("alrajhi", "snb", "d360", "barq")
+private val BANK_ORDER = listOf("alrajhi", "snb", "d360", "barq", "aljazira", "saib", "enbd")
 
 private val CardBalance.bankOrder: Int
     get() = BANK_ORDER.indexOf(CardIssuers.BANK_ID[last4] ?: bankId)
@@ -298,6 +298,9 @@ private const val STALE_AFTER_DAYS = 62L
 object ActiveCards {
     val LAST4: Set<String> = setOf(
         "5763", "7536", "8134", "2383", "8202", "3761", "7285", "2166", "9941",
+        // The two banks he named on 2026-09-01: 9097 is his SAIB mada card, and
+        // 3761 - listed above since before its issuer was known - is AlJazira's.
+        "9097",
         // Both are in daily use and neither was being shown. 1887 is the owner's
         // AlAhli mada card - 427 messages, the most recent three days old - and
         // 9994 his Emirates NBD credit card, the one he settles the AlRajhi card
@@ -321,6 +324,12 @@ object ActiveCards {
  */
 object CardIssuers {
     val BANK_ID: Map<String, String> = mapOf(
+        // Named by the owner on 2026-09-01. 7536 is a MasterCard, but drawn on the
+        // account rather than on credit - the network is not the question a tile
+        // answers, the bank is.
+        "3761" to "aljazira",  // mada debit
+        "9097" to "saib",      // mada debit
+        "7536" to "snb",       // mastercard, debit
         "2383" to "alrajhi",   // credit
         "5763" to "alrajhi",   // mada debit
         "8134" to "alrajhi",   // credit

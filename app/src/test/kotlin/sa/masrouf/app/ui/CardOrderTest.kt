@@ -46,12 +46,15 @@ class CardOrderTest {
         assertEquals(listOf("1887", "7285"), ordered.map { it.last4 })
     }
 
-    /** An issuer the app cannot name is the least interesting tile, so it is last. */
+    /**
+     * The unknown-issuer fallback (sort last) is dormant: as of 2026-09-01 the
+     * owner has named a bank for every open card. This holds that state, so a card
+     * added to the open list without an issuer shows up as a red test rather than
+     * as a tile that sorts strangely.
+     */
     @Test
-    fun `a card of no known bank sorts after every card of a known one`() {
-        val ordered = orderedCards(listOf(card("7536"), card("7285"), card("2383")))
-
-        assertEquals(listOf("2383", "7285", "7536"), ordered.map { it.last4 })
+    fun `every open card has a named issuer`() {
+        assertEquals(emptySet(), ActiveCards.LAST4 - CardIssuers.BANK_ID.keys)
     }
 
     @Test

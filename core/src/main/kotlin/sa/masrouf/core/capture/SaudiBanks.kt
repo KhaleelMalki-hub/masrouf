@@ -309,8 +309,57 @@ object SaudiBanks {
         ),
     )
 
-    val ALL: List<BankProfile> =
-        listOf(AL_RAJHI, SNB, D360, BARQ, EMIRATES_NBD, STC_PAY, SNB_CAPITAL)
+    /**
+     * Bank AlJazira, which writes to this owner in English. Card 3761, a mada debit
+     * card he uses.
+     *
+     * "By:3761;mada" is the card and "At: barq" the merchant, while "From: 8001" is
+     * the ACCOUNT - four digits under a label that names a party everywhere else,
+     * which is why the counterparty guard matters here as much as it does at SNB.
+     */
+    val AL_JAZIRA = BankProfile(
+        id = "aljazira",
+        senderIds = setOf("ALJAZIRASMS", "JAZIRA BANK", "ALJAZIRA", "JAZIRABANK"),
+        merchantPatterns = listOf(
+            Regex("""(?m)^At\s*:\s*(.+)$""", RegexOption.IGNORE_CASE),
+            Regex("""(?m)^لدى\s*:?\s*(.+)$"""),
+        ),
+        counterpartyPatterns = listOf(
+            Regex("""(?m)^From\s*:\s*(?!\**\d)(.+)$""", RegexOption.IGNORE_CASE),
+        ),
+        cardPatterns = listOf(
+            // "By:3761;mada", "Mada card: 3761", "بطاقتك رقم2650".
+            Regex("""(?m)^By\s*:?\s*\**\s*(\d{4})""", RegexOption.IGNORE_CASE),
+            Regex("""card\s*:?\s*\**\s*(\d{4})""", RegexOption.IGNORE_CASE),
+            Regex("""بطاقت?ك?\s*رقم\s*\**\s*(\d{4})"""),
+        ),
+    )
+
+    /**
+     * The Saudi Investment Bank. Card 9097, a mada debit card.
+     *
+     * It masks an account as "XXX1001" rather than with asterisks, so the guard
+     * that keeps an account out of the party field has to refuse an X-mask too:
+     * "من: XXX1001" is the funding account and "من: NAME XXX2001" is a person.
+     */
+    val SAIB = BankProfile(
+        id = "saib",
+        senderIds = setOf("SAIB", "SAIB AD"),
+        merchantPatterns = listOf(
+            Regex("""(?m)^لدى\s*:?\s*(.+)$"""),
+        ),
+        counterpartyPatterns = listOf(
+            Regex("""(?m)^من\s*:?\s*(?!X{2,}\d)(?!\**\d)(.+)$""", RegexOption.IGNORE_CASE),
+        ),
+        cardPatterns = listOf(
+            // "بطاقة: XXX9097 مدى" - an X mask, as Emirates NBD writes it.
+            Regex("""بطاقة\s*:?\s*X*\s*(\d{4})""", RegexOption.IGNORE_CASE),
+        ),
+    )
+
+    val ALL: List<BankProfile> = listOf(
+        AL_RAJHI, SNB, D360, BARQ, EMIRATES_NBD, STC_PAY, SNB_CAPITAL, AL_JAZIRA, SAIB,
+    )
 
     /** A registry covering every sender the app understands. */
     fun registry(): ParserRegistry = ParserRegistry(ALL.map(::BankMessageParser))

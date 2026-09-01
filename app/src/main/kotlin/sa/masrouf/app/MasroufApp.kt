@@ -122,7 +122,7 @@ class MasroufApp : Application() {
          * passive markers beside it never reached, so a purchase the bank declined
          * on a cancelled card was stored as money spent.
          */
-        PURGE_REJECTED(21),
+        PURGE_REJECTED(23),
 
         /** Amounts the extractor now reads differently. Before anything reads them. */
         REPAIR_AMOUNTS(10),
@@ -173,10 +173,10 @@ class MasroufApp : Application() {
          * claimed STC Pay - they are older than any tail. Deduplication is what
          * makes re-reading everything safe, and it is what it is for.
          */
-        REREAD_WHOLE_INBOX(20),
+        REREAD_WHOLE_INBOX(23),
 
         /** Last: filing reads the merchant and the type everything above corrects. */
-        REFILE_ALL(22),
+        REFILE_ALL(23),
     }
 
     /**
