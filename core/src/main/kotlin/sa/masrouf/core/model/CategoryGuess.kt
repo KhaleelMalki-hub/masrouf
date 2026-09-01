@@ -787,6 +787,18 @@ object CategoryGuess {
         "AIRLINE" to SaudiCategories.TRAVEL,
         "TOURISM" to SaudiCategories.TRAVEL,
 
+        // What the name says, continued - from the records still unfiled after the
+        // 2026-09-01 sweeps, each checked against the whole merchant column.
+        // "RESTURANT" is not a typo here: it is the spelling on the terminal.
+        "RESTURANT" to SaudiCategories.FOOD,
+        "FUNDUQ" to SaudiCategories.TRAVEL,
+        "MILLENNIUM" to SaudiCategories.TRAVEL,
+        "FLY DUB" to SaudiCategories.TRAVEL,
+        "BED AND BATH" to SaudiCategories.SHOPPING,
+        "CHARRIOL" to SaudiCategories.SHOPPING,
+        "WOJOOH" to SaudiCategories.SHOPPING,
+        "TOUS" to SaudiCategories.SHOPPING,
+
         // Brands the list did not carry, each seen in the owner's own history.
         // "Saudia Airl01es" is how one 2016 terminal wrote it - "IN" came through
         // as "01" - so the keyword stops before the corruption.

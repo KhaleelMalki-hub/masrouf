@@ -2,7 +2,6 @@ package sa.masrouf.app.ui
 
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.rememberScrollState
@@ -81,18 +80,17 @@ fun CardsPanel(
         // and its limit wrapped to two lines. There are at most a dozen cards, so
         // laziness buys nothing and costs the intrinsic measurement that makes the
         // row size itself.
-        val scroll = rememberScrollState()
-        // ...and costs the one thing LazyRow did give: a scroll that starts where
-        // Arabic starts. `horizontalScroll` opens at offset 0, which is the LEFT
-        // edge in either direction, so in RTL the first card - the one the owner
-        // asked to see first - opened half off the right of the screen.
+        // ...and costs the one thing LazyRow did give: a scroll that starts
+        // where Arabic starts. `horizontalScroll` opens at offset 0, which is the
+        // LEFT edge in either direction, so in RTL the row opened at its far end.
+        // `reverseScrolling` moves the zero to the other edge - declaratively, so
+        // it survives recreation. The first fix scrolled there in a LaunchedEffect
+        // instead, and a theme change put the row back at the wrong end: a saved
+        // scroll position is restored, but an effect that already ran is not re-run.
         val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-        LaunchedEffect(isRtl, scroll.maxValue) {
-            if (isRtl) scroll.scrollTo(scroll.maxValue)
-        }
         Row(
             modifier = Modifier
-                .horizontalScroll(scroll)
+                .horizontalScroll(rememberScrollState(), reverseScrolling = isRtl)
                 .height(IntrinsicSize.Max)
                 .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),

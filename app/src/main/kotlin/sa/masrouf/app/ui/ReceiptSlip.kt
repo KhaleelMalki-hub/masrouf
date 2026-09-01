@@ -1,5 +1,8 @@
 package sa.masrouf.app.ui
 
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.foundation.border
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -135,11 +138,22 @@ fun ReceiptSlip(
  */
 @Composable
 private fun BankWords(raw: String, modifier: Modifier = Modifier) {
+    // A quiet inset, not a hole. `surfaceContainerLowest` under a dynamic dark
+    // scheme is within a hair of pure black, and a black rectangle inside an
+    // elevated card reads as a rendering fault, not as quoted material. One step
+    // down from the card with a hairline is how M3 quotes: still recessed, still
+    // the same material.
+    val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(3.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+            .clip(RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant,
+                shape = RoundedCornerShape(8.dp),
+            )
             .padding(horizontal = 12.dp, vertical = 10.dp),
     ) {
         Text(
@@ -153,7 +167,9 @@ private fun BankWords(raw: String, modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
                 .padding(top = 4.dp)
-                .horizontalScroll(rememberScrollState()),
+                // The zero point of a sideways scroll is the LEFT edge in either
+                // direction; unreversed, an Arabic message opened showing its END.
+                .horizontalScroll(rememberScrollState(), reverseScrolling = isRtl),
         )
     }
 }

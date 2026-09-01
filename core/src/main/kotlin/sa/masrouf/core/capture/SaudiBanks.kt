@@ -257,8 +257,10 @@ object SaudiBanks {
         id = "stcpay",
         senderIds = setOf("STCPAY", "STC PAY", "STCBANK", "STC BANK"),
         merchantPatterns = listOf(
-            // "في: Health Endowment Fund", never "في: 26/06/26 01:58".
-            Regex("""(?m)^في\s*+:?+\s*+(?!\d)(.+)$"""),
+            // "في: Health Endowment Fund", never "في: 26/06/26 01:58" and never
+            // "في بطاقة **3396" - the cashback template puts the CARD after the
+            // same word, and 66 refunds took the word بطاقة as their party.
+            Regex("""(?m)^في\s*+:?+\s*+(?!\d)(?!بطاق)(.+)$"""),
             // "من:AL DRE" beneath "من:*7667", which is the card.
             Regex("""(?m)^من\s*+:?+\s*+(?!\**\d)(?!X{2,}\d)(.+)$"""),
         ),

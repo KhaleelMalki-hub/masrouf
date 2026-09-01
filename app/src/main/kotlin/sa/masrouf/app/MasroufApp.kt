@@ -149,7 +149,7 @@ class MasroufApp : Application() {
          * stored with no party at all - unfileable, since a category is learned
          * from a merchant. Measured at 337 recovered on the owner's history.
          */
-        REPARSE_BODIES(24),
+        REPARSE_BODIES(25),
 
         /** Salary deposits an older classifier read as transfers. */
         RETYPE_SALARY(3),
@@ -176,7 +176,7 @@ class MasroufApp : Application() {
         REREAD_WHOLE_INBOX(23),
 
         /** Last: filing reads the merchant and the type everything above corrects. */
-        REFILE_ALL(24),
+        REFILE_ALL(25),
     }
 
     /**
