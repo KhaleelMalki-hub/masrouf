@@ -806,6 +806,11 @@ object CategoryGuess {
         "HOME BOX" to SaudiCategories.SHOPPING,
         // كورو, a Japanese restaurant in Jeddah. Sent as "Kuuru Jed".
         "KUURU" to SaudiCategories.FOOD,
+        // شانيل on Tahlia in Jeddah, under its operator's name - 23,240 riyals, a
+        // handbag, and the largest unfiled record in the history. Nothing in the
+        // descriptor says Chanel; the owner remembered the shop from the date and
+        // the fact that Samsung Pay means he was standing in it.
+        "AL NOUJAI" to SaudiCategories.SHOPPING,
         // ريفي, household goods (reefi.me). Two records arrive as the bare word,
         // which "REEFI STORE" cannot reach, and a bare "REEFI" keyword is what
         // filed 29 meals at الساج الريفي as shopping once before.
@@ -827,6 +832,14 @@ object CategoryGuess {
         "ويسترين يونيون" to SaudiCategories.FEES,
         "WESTERN UNION" to SaudiCategories.FEES,
         "WU" to SaudiCategories.FEES,
+
+        // The brokerage. Money moved to the investment account is money he still
+        // has - the category countsAsSpending already excludes - and a dividend is
+        // money that arrived there, which is neither a purchase nor a transfer
+        // between strangers.
+        "الحساب الاستثماري" to SaudiCategories.INVESTMENT,
+        "ارباح شركة" to SaudiCategories.INVESTMENT,
+        "أرباح شركة" to SaudiCategories.INVESTMENT,
     ))
 
     /**

@@ -49,6 +49,8 @@ class OwnerNamedMerchantsTest {
             "HOMEBOX 2" to SaudiCategories.SHOPPING,
             // كورو, Japanese, in Jeddah. The city is glued to the name.
             "Kuuru Jed" to SaudiCategories.FOOD,
+            // شانيل in Jeddah, billed under its operator's name.
+            "AL NOUJAI" to SaudiCategories.SHOPPING,
             // ريفي, household goods, as the terminal sends it: the bare word.
             "Reefi" to SaudiCategories.SHOPPING,
             "reefi" to SaudiCategories.SHOPPING,

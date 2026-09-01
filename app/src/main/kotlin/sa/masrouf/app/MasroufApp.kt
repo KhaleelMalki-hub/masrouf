@@ -68,6 +68,8 @@ class MasroufApp : Application() {
     suspend fun runMaintenance() {
         val done = preferences.maintenanceVersion
         val repairs = Repair.entries.filter { done < it.introducedIn }.toSortedSet()
+        // A repair that could not run must not be recorded as done. See below.
+        var deferred = false
 
         for (repair in repairs) {
             when (repair) {
@@ -78,11 +80,25 @@ class MasroufApp : Application() {
                 Repair.REPARSE_BODIES -> transactions.reparseStoredBodies()
                 Repair.RETYPE_SALARY -> transactions.retypeSalaryDeposits()
                 Repair.RETYPE_OWN_MONEY -> transactions.retypeOwnMoney()
-                Repair.REREAD_WHOLE_INBOX -> rereadWholeInbox()
+                Repair.REREAD_WHOLE_INBOX -> if (!rereadWholeInbox()) deferred = true
                 Repair.REFILE_ALL -> transactions.refileAll()
             }
         }
-        preferences.maintenanceVersion = CURRENT_MAINTENANCE_VERSION
+        // A repair that could not run leaves the stamp below the version that
+        // introduced it, so the next launch tries again.
+        //
+        // Written after READ_SMS was found ungranted on the owner's phone. Every
+        // path that reads the inbox checked the permission and returned quietly,
+        // so the launch catch-up documented as "a miss costs one launch" had never
+        // run at all, and the one-off re-read that recovers seven years of a wallet
+        // reported success having done nothing. A silent no-op that stamps itself
+        // complete is worse than a failure: it cannot be retried, because nothing
+        // knows it did not happen.
+        preferences.maintenanceVersion = if (deferred) {
+            minOf(CURRENT_MAINTENANCE_VERSION, Repair.REREAD_WHOLE_INBOX.introducedIn - 1)
+        } else {
+            CURRENT_MAINTENANCE_VERSION
+        }
 
         transactions.fileUncategorised()
         catchUpOnSms()
@@ -106,7 +122,7 @@ class MasroufApp : Application() {
          * passive markers beside it never reached, so a purchase the bank declined
          * on a cancelled card was stored as money spent.
          */
-        PURGE_REJECTED(18),
+        PURGE_REJECTED(20),
 
         /** Amounts the extractor now reads differently. Before anything reads them. */
         REPAIR_AMOUNTS(10),
@@ -145,7 +161,7 @@ class MasroufApp : Application() {
          * top-ups of it, 650,280 riyals, were stored as purchases at a shop of that
          * name and counted as money spent.
          */
-        RETYPE_OWN_MONEY(18),
+        RETYPE_OWN_MONEY(19),
 
         /**
          * The whole inbox, re-read once, because the app can now understand a
@@ -157,10 +173,10 @@ class MasroufApp : Application() {
          * claimed STC Pay - they are older than any tail. Deduplication is what
          * makes re-reading everything safe, and it is what it is for.
          */
-        REREAD_WHOLE_INBOX(18),
+        REREAD_WHOLE_INBOX(20),
 
         /** Last: filing reads the merchant and the type everything above corrects. */
-        REFILE_ALL(18),
+        REFILE_ALL(20),
     }
 
     /**
@@ -182,13 +198,14 @@ class MasroufApp : Application() {
      * the duplicate detector keeps the overlap with what is already stored from
      * doubling anything.
      */
-    private suspend fun rereadWholeInbox() {
+    private suspend fun rereadWholeInbox(): Boolean {
         val granted = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) ==
             PackageManager.PERMISSION_GRANTED
-        if (!granted) return
+        if (!granted) return false
         val all = SmsInbox(contentResolver).read(newestFirst = false)
-        if (all.isEmpty()) return
+        if (all.isEmpty()) return false
         HistoryImport(transactions).run(all)
+        return true
     }
 
     private suspend fun catchUpOnSms() {

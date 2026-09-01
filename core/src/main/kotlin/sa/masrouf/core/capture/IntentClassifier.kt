@@ -194,6 +194,17 @@ object IntentClassifier {
         // riyals are reported again by the wallet as they are actually spent.
         Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, listOf("CASH", "IN")),
 
+        // ---- The brokerage ----------------------------------------------------
+        //
+        // "تم تحويل مبلغ 826.56 ر.س من الحساب الاستثماري ... الى الحساب الجاري" and
+        // the reverse. His own money moving between his own two accounts, 277 times
+        // - and the generic transfer rules below would have called half of it
+        // spending. Written as ordered pairs because which account is the SOURCE is
+        // the entire question, and a token set has no order: each rule names the
+        // account the money LEFT.
+        Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, listOf("من الحساب الجاري", "الاستثماري")),
+        Rule(TransactionType.OWN_TRANSFER, Direction.CREDIT, listOf("من الحساب الاستثماري", "الجاري")),
+
         // ---- The wallet's own vocabulary --------------------------------------
         //
         // STC Pay wrote none of the words above. 4,446 of its messages sat in the

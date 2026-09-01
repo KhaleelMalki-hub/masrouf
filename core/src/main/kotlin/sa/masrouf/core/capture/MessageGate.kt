@@ -161,6 +161,13 @@ object MessageGate {
         // One marker, not four: every one of these notices in a twelve-year corpus
         // says كشف حساب, and no completed transaction in that corpus says it.
         "كشف حساب",
+        // "Your Debit Card 5358XXXXXXXX2907 daily POS limit has been increased to
+        // SR 200000" - a limit, not a purchase. It was stored as a 200,000-riyal
+        // purchase the moment the inbox was re-read: the largest single figure in
+        // the history, and no money moved at all.
+        "POS LIMIT",
+        "LIMIT HAS BEEN INCREASED",
+        "حد الشراء",
     )
 
     /** Phrases that mark a transaction as not completed. */

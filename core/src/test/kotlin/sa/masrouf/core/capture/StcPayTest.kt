@@ -169,6 +169,54 @@ class StcPayTest {
         )
     }
 
+    /**
+     * The brokerage, whose sender no profile claimed either: "SNB-Capital" folds to
+     * SNBCAPITAL, which contains none of the bank's sender ids, so 1,136 messages
+     * were skipped. Four families and all four are the owner's own money.
+     */
+    @Test
+    fun `moving money to and from the investment account is never spending`() {
+        val toInvestment = BankMessageParser(SaudiBanks.SNB_CAPITAL)
+            .parse(RawMessage(RealMessages.CAPITAL_TO_INVESTMENT, Instant.EPOCH))
+        val toCurrent = BankMessageParser(SaudiBanks.SNB_CAPITAL)
+            .parse(RawMessage(RealMessages.CAPITAL_TO_CURRENT, Instant.EPOCH))
+
+        assertEquals(
+            TransactionType.OWN_TRANSFER,
+            (toInvestment as ParseResult.Parsed).draft.type,
+        )
+        assertEquals(Direction.DEBIT, toInvestment.draft.direction)
+        assertEquals(
+            TransactionType.OWN_TRANSFER,
+            (toCurrent as ParseResult.Parsed).draft.type,
+        )
+        assertEquals(Direction.CREDIT, toCurrent.draft.direction)
+    }
+
+    /**
+     * The company that paid is not the category. Keyed on the company name, an
+     * Aramco dividend would file under fuel and a Jarir one under bookshops.
+     */
+    @Test
+    fun `a dividend files as investment, not as the company that paid it`() {
+        val draft = (BankMessageParser(SaudiBanks.SNB_CAPITAL)
+            .parse(RawMessage(RealMessages.CAPITAL_DIVIDEND, Instant.EPOCH)) as ParseResult.Parsed)
+            .draft
+
+        assertEquals(TransactionType.TRANSFER_IN, draft.type)
+        assertEquals(SaudiCategories.INVESTMENT, CategoryGuess.forMerchant(draft.merchantRaw))
+    }
+
+    /** A raised card limit is not two hundred thousand riyals of shopping. */
+    @Test
+    fun `a limit notice is refused`() {
+        val decision = MessageGate.evaluate(
+            RawMessage(RealMessages.CARD_LIMIT_RAISED, Instant.EPOCH, sender = "SNB-AlAhli")
+        )
+
+        assertTrue(decision is MessageGate.Decision.Reject)
+    }
+
     @Test
     fun `a refusal for want of balance is not a transaction`() {
         val decision = MessageGate.evaluate(

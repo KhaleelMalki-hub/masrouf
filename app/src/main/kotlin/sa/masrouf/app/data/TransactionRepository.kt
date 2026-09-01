@@ -360,6 +360,12 @@ class TransactionRepository(
      *
      * @return how many rows stopped counting as spending.
      */
+    /** Whether a stored party is one of the owner's own wallets. */
+    private fun isOwnWallet(merchantRaw: String?): Boolean {
+        val key = merchantRaw?.let(ArabicText::normalizeMerchant) ?: return false
+        return SaudiBanks.OWN_WALLETS.any { ArabicText.normalizeMerchant(it) == key }
+    }
+
     suspend fun retypeOwnMoney(): Int {
         val spending = TransactionType.entries.filter { it.countsAsSpending }.map { it.name }
         val parsers = SaudiBanks.ALL.map(::BankMessageParser)
@@ -379,6 +385,21 @@ class TransactionRepository(
                     val type = parsers.firstNotNullOfOrNull {
                         (it.parse(message) as? ParseResult.Parsed)?.draft?.type
                     } ?: return@forEach
+                    // The stored party decides too, not only the re-parse.
+                    //
+                    // "شراء محلي عبر الانترنت / بـ3000 SAR / من STC Pay" is a
+                    // top-up of his own wallet, and the row already says so - the
+                    // merchant was read correctly when it was captured. But this
+                    // pass takes the FIRST profile that parses at all, and AlRajhi
+                    // parses it without reading a merchant after "من", so the
+                    // wallet was invisible here and 253 top-ups worth 124,422
+                    // riyals stayed counted as spending while 416 identical ones
+                    // moved.
+                    if (isOwnWallet(row.merchantRaw)) {
+                        val own = TransactionType.OWN_TRANSFER
+                        if (dao.retype(row.id, own.name, CategoryGuess.forType(own)?.id) == 1) moved++
+                        return@forEach
+                    }
                     if (type.countsAsSpending) return@forEach
                     if (dao.retype(row.id, type.name, CategoryGuess.forType(type)?.id) == 1) moved++
                 }

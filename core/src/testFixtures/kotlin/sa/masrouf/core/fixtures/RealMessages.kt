@@ -685,6 +685,34 @@ MTCN:0000000000
 المبلغ: 250.00 ر.س
 بتاريخ: 2024/03/02 19:00:00"""
 
+    // ---- SNB Capital, the brokerage -----------------------------------------
+    //
+    // 1,136 messages skipped as an unknown sender: "SNB-Capital" contains none of
+    // the bank's own sender ids. Account numbers zeroed, amounts kept.
+
+    /** Money leaving the current account for the investment account. His own. */
+    const val CAPITAL_TO_INVESTMENT =
+        "تم تحويل مبلغ 5,000.00 ر.س من الحساب الجاري (104**010) الى الحساب الاستثماري " +
+            "00000000000000 بتاريخ 09:06:30 2025-06-17. رمز العملية 00000000000000"
+
+    /** And the same movement back. */
+    const val CAPITAL_TO_CURRENT =
+        "تم تحويل مبلغ 826.56 ر.س من الحساب الاستثماري 00000000000000 الى الحساب الجاري " +
+            "(104**010) بتاريخ 09:06:30 2025-06-17. مجموع الرصيد الاستثماري المتاح هو 0 ر.س"
+
+    /** A share dividend. Money earned, arriving in the investment account. */
+    const val CAPITAL_DIVIDEND =
+        "تم إيداع 19.26 ر.س أرباح شركة (أرباح ارامكو الربع الثالث 2024 EXTN00000000FNRO) " +
+            "في الحساب الاستثماري رقم 00000000000000"
+
+    /**
+     * A limit, not a purchase. Stored as a 200,000-riyal purchase the moment the
+     * inbox was re-read - the largest single figure in the whole history, and no
+     * money moved at all.
+     */
+    const val CARD_LIMIT_RAISED =
+        "Your Debit Card 5358XXXXXXXX2907 daily POS limit has been increased to SR 200000"
+
     // ---- Sender identities -------------------------------------------------
 
     /** SMS sender ids exactly as they appear on the device. */
@@ -747,6 +775,7 @@ MTCN:0000000000
         SNB_POS_TERMINAL_ID, RAJHI_FLAT_POS,
         STC_ONLINE_PURCHASE, STC_POS_PURCHASE, STC_CARD_PURCHASE, STC_WALLET_TOPUP,
         STC_ADD_MONEY, STC_WESTERN_UNION, STC_WU_SHORT,
+        CAPITAL_TO_INVESTMENT, CAPITAL_TO_CURRENT, CAPITAL_DIVIDEND,
     )
 
     /** Every message that must never become a transaction. */
@@ -754,6 +783,6 @@ MTCN:0000000000
         RAJHI_OTP, SNB_OTP, SNB_ACTIVATION_CODE, D360_OTP, BARQ_OTP, BARQ_DECLINED,
         RAJHI_CARD_STATEMENT_NOTICE, SNB_CARD_STATEMENT_NOTICE,
         RAJHI_TEMPORARY_CODE, SNB_BILL_ACTIVATION_CODE, CARD_DECLINED_AS_INACTIVE,
-        STC_SECURITY_CODE, STC_DECLINED,
+        STC_SECURITY_CODE, STC_DECLINED, CARD_LIMIT_RAISED,
     )
 }

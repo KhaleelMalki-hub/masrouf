@@ -19,7 +19,7 @@ object SaudiBanks {
     // 650,280 riyals were stored as purchases "لدى STC Pay" and counted as money
     // spent - they are top-ups of his own wallet, and what he actually bought with
     // them was reported by the wallet itself, to a sender no parser had ever read.
-    private val OWN_WALLETS = setOf("barq", "Tiqmo", "STC Pay", "stc pay", "STCPAY")
+    val OWN_WALLETS = setOf("barq", "Tiqmo", "STC Pay", "stc pay", "STCPAY")
 
     /**
      * AlRajhi. The terse sender: labels are glued to values ("بـSR 8.28",
@@ -275,7 +275,28 @@ object SaudiBanks {
         ownWalletMerchants = OWN_WALLETS,
     )
 
-    val ALL: List<BankProfile> = listOf(AL_RAJHI, SNB, D360, BARQ, EMIRATES_NBD, STC_PAY)
+    /**
+     * SNB Capital, the brokerage. A separate sender from the bank, and one no
+     * profile claimed: "SNB-Capital" folds to SNBCAPITAL, which contains none of
+     * SNB's sender ids, so 1,136 messages were skipped as an unknown sender.
+     *
+     * What they carry is money the owner still has - 277 movements between his
+     * current and investment accounts - and money he earned: share dividends. The
+     * dividend's party is the phrase rather than the company, deliberately. The
+     * company name would file an Aramco dividend under whatever Aramco's rule says
+     * and a Jarir one under bookshops.
+     */
+    val SNB_CAPITAL = BankProfile(
+        id = "snbcapital",
+        senderIds = setOf("SNBCAPITAL", "SNB CAPITAL", "NCBCAPITAL", "NCB CAPITAL"),
+        counterpartyPatterns = listOf(
+            Regex("""(أرباح شركة)"""),
+            Regex("""(الحساب الاستثماري)"""),
+        ),
+    )
+
+    val ALL: List<BankProfile> =
+        listOf(AL_RAJHI, SNB, D360, BARQ, EMIRATES_NBD, STC_PAY, SNB_CAPITAL)
 
     /** A registry covering every sender the app understands. */
     fun registry(): ParserRegistry = ParserRegistry(ALL.map(::BankMessageParser))
