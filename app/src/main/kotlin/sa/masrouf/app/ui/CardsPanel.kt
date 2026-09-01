@@ -1,7 +1,5 @@
 package sa.masrouf.app.ui
 
-import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.runtime.key
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.rememberScrollState
@@ -80,17 +78,17 @@ fun CardsPanel(
         // and its limit wrapped to two lines. There are at most a dozen cards, so
         // laziness buys nothing and costs the intrinsic measurement that makes the
         // row size itself.
-        // ...and costs the one thing LazyRow did give: a scroll that starts
-        // where Arabic starts. `horizontalScroll` opens at offset 0, which is the
-        // LEFT edge in either direction, so in RTL the row opened at its far end.
-        // `reverseScrolling` moves the zero to the other edge - declaratively, so
-        // it survives recreation. The first fix scrolled there in a LaunchedEffect
-        // instead, and a theme change put the row back at the wrong end: a saved
-        // scroll position is restored, but an effect that already ran is not re-run.
-        val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+        // Plain horizontalScroll, and nothing steering it. Offset 0 is the START
+        // in the current layout direction - Compose reverses the axis under RTL by
+        // itself - so a fresh state opens on the first card with no help. Two
+        // "fixes" lived here briefly, each fighting a problem that did not exist:
+        // a LaunchedEffect that scrolled to maxValue, then reverseScrolling, which
+        // double-flips what RTL already flipped and opened the row at its far end.
+        // The misplaced opening they were written against was a stale saved offset
+        // from an earlier container, restored across the container change.
         Row(
             modifier = Modifier
-                .horizontalScroll(rememberScrollState(), reverseScrolling = isRtl)
+                .horizontalScroll(rememberScrollState())
                 .height(IntrinsicSize.Max)
                 .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),

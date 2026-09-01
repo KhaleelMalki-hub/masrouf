@@ -437,3 +437,10 @@ suggestion, and put it on a screen before calling it a recommendation.
 **Rule:** When a new sender is added, group its stored rows by amount and look at the smallest and largest. An amount that is implausible for its category - sub-riyal purchases, a six-figure card limit - means a number was read out of an identifier, and the fix belongs in the gate, not the extractor.
 **How to apply:** Immediately after any new parser's first import.
 **Source:** SNB Capital order fills, maintenance 21.
+
+### 2026-09-01 — Compose already reverses a horizontal scroll under RTL
+**Mistake:** Twice "fixed" a card row that opened at the wrong end: first a LaunchedEffect scrolling to maxValue (broken by activity recreation restoring saved state without re-running effects), then `reverseScrolling = isRtl` — which double-flips what RTL already flips, and reliably opened the row at its far end.
+**Why:** The original misplaced opening was a stale saved scroll offset surviving a change of container (LazyRow → Row), not a wrong zero point. `Modifier.horizontalScroll` is direction-aware: offset 0 is the START in the current layout direction.
+**Rule:** Before steering a scroll position, reproduce the misplacement from a FRESH state (clear data or first install). A position restored from state is evidence about the past container, not about the current code — and a default that is already correct needs no help.
+**How to apply:** Any scroll-position "fix" in an RTL app; any behaviour that only appears after an upgrade.
+**Source:** CardsPanel.kt, three commits in one day.
