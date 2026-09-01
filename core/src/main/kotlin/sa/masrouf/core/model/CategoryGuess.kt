@@ -768,6 +768,33 @@ object CategoryGuess {
         "TAMEENI" to SaudiCategories.BILLS,
         "SAUDI CREDIT BUREAU" to SaudiCategories.BILLS,
         "AWQAF" to SaudiCategories.CHARITY,
+
+        // ---- What the name says it is, rather than who it is ------------------
+        // A shop that puts its trade in its own name has already filed itself, and
+        // one word reaches every branch, spelling and city of it. These were found
+        // among the records left unfiled after the party fix, and each was checked
+        // against the whole 22,000-record merchant column before being written -
+        // "REEFI" once matched a restaurant called الساج الريفي and filed 29 meals
+        // as shopping, so a word that is a word in ordinary use does not go here.
+        "RESTAUR" to SaudiCategories.FOOD,
+        "CATERING" to SaudiCategories.FOOD,
+        "SWEETS" to SaudiCategories.FOOD,
+        "GROCER" to SaudiCategories.GROCERIES,
+        "PHARMAC" to SaudiCategories.HEALTH,
+        "LAUNDRY" to SaudiCategories.SERVICES,
+        "FURNITURE" to SaudiCategories.SHOPPING,
+        "BOOKSTORE" to SaudiCategories.SHOPPING,
+        "AIRLINE" to SaudiCategories.TRAVEL,
+        "TOURISM" to SaudiCategories.TRAVEL,
+
+        // Brands the list did not carry, each seen in the owner's own history.
+        // "Saudia Airl01es" is how one 2016 terminal wrote it - "IN" came through
+        // as "01" - so the keyword stops before the corruption.
+        "SAUDIA AIRL" to SaudiCategories.TRAVEL,
+        "VIRGIN MEGA" to SaudiCategories.SHOPPING,
+        "TED BAKER" to SaudiCategories.SHOPPING,
+        "LAVANDE" to SaudiCategories.SHOPPING,
+        "UNITED LUXURY" to SaudiCategories.SHOPPING,
     ))
 
     /**

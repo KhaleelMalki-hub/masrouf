@@ -388,3 +388,17 @@ suggestion, and put it on a screen before calling it a recommendation.
 **Rule:** Swapping a lazy container for a scrolled one loses more than laziness. In an RTL app, scroll to `maxValue` on first composition, and verify on a device in Arabic - the compiler and every unit test are silent about it.
 **How to apply:** Any `horizontalScroll` in an app with an RTL locale.
 **Source:** CardsPanel.kt, this session.
+
+### 2026-09-01 — A field pattern is a bet on what ends a field
+**Mistake:** Every merchant and party pattern in the app was anchored with `(?m)^`, and normalisation folded carriage returns into spaces. 588 records - 330,211 riyals - were stored with an amount and no party, unfileable, while the name sat in the body untouched.
+**Why:** "One field per line" was read off the senders that use newlines. Four others end a field with a carriage return, the literal characters `^M`, a pipe, or a run of padding spaces, and a line-anchored pattern fails on all of them silently - there is no error, just a null where a name belongs.
+**Rule:** Normalise every field boundary a sender uses into one boundary, once, before parsing - do not teach each pattern a new separator. And when a whole family of records is missing the same field, suspect the separator before the pattern.
+**How to apply:** Any parser reading labelled fields out of machine-written text.
+**Source:** ArabicText.FIELD_BREAK, maintenance pass 15.
+
+### 2026-09-01 — Measure a parser change on the real corpus before writing it
+**Mistake:** None this time, and that is the point: the fix was simulated over all 12,748 stored bodies first, and the first two versions of it were wrong - one filed 58 cashback notices as purchases at "بطاقة **3396", another truncated existing merchant names by treating two spaces as a boundary.
+**Why:** A regex that satisfies the sample you wrote it against tells you nothing about the 12,000 you did not. The corpus is on the device and costs one query to read.
+**Rule:** Before changing an extractor, run old and new over every stored body and count three things: GAINED, CHANGED, LOST. Ship when gained is large, changed is explainable line by line, and lost is understood - not when the new test passes.
+**How to apply:** Any change to a pattern that has already run against real data.
+**Source:** the 337-gain / 89-change / 2-loss measurement behind pass 15.

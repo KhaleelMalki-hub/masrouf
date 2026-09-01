@@ -157,6 +157,10 @@ object MessageGate {
     /** Phrases that mark a transaction as not completed. */
     private val DECLINED_MARKERS = listOf(
         "عملية مرفوضة",
+        // The active voice, which the passive markers below do not reach: "تم رفض
+        // العملية: البطاقة غير نشطة". It stored 97 riyals of spending on a card
+        // that had been cancelled, against a purchase that never happened.
+        "رفض العملية",
         "عمليه مرفوضه",
         "مرفوضة",
         "رصيد غير كافي",

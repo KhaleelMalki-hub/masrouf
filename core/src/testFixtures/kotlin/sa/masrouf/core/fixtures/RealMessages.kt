@@ -540,6 +540,69 @@ card number: **1887, mada
 لدى Noon One Subscription
 2026-08-26 16:42:55"""
 
+    // ---- Senders that do not use newlines -----------------------------------
+    //
+    // Four templates that stored an amount and no merchant at all, each for the
+    // same reason: every field pattern in this app is anchored to the start of a
+    // line, and these senders end a field with something else. 588 records in a
+    // real corpus carried no party; these are what most of them looked like.
+
+    /**
+     * Emirates NBD's أثير purchases, whose fields are separated by a carriage
+     * return alone. Written as a code point, per the rule against invisible
+     * characters in source - it is invisible in an editor and in a diff.
+     *
+     * Balance invented.
+     */
+    val ENBD_ATHIR_PURCHASE = listOf(
+        "شراء بطاقة نقاط بيع (أثير)",
+        "بطاقة: فيزا الائتمانية XX9994 ",
+        "مبلغ: SAR 99.00 ",
+        "لدى: Aldrees 1437 ",
+        "في SAUDI ARABIA ",
+        "رصيد: 11,111.00 ريال ",
+        "في: 2026-08-11 02:29:51 ",
+    ).joinToString(Char(0x0D).toString())
+
+    /**
+     * The same message as it reaches storage on this owner's phone: the carriage
+     * return already written out in caret notation, two ordinary characters. 68
+     * stored bodies carry it. No bank writes `^M` on purpose, so whatever produced
+     * it sits above this app - and the app has to read it either way.
+     */
+    val ENBD_ATHIR_PURCHASE_CARET =
+        ENBD_ATHIR_PURCHASE.replace(Char(0x0D).toString(), "^M")
+
+    /** SNB's mada Pay template: one line, fields divided by pipes, merchant labelled. */
+    const val SNB_MADA_PAY_PIPES =
+        "شراء عبر نقاط البيع (مدى Pay) | مبلغ 25 SAR | اسم المتجر FOWL AL TAKHSSY | " +
+            "بطاقة مدى *2907 | حساب 104*010 | في 17/06/2023 09:30"
+
+    /**
+     * The same family with a terminal id in front of the merchant. The `من` guard
+     * refuses a value that starts with digits, because that is also how an account
+     * number appears; the name is read from after them.
+     */
+    const val SNB_POS_TERMINAL_ID =
+        "شراء عبر نقاط البيع (Mada Pay)\nمبلغ 236.00 SAR\nبطاقة ائتمانية ***0926 \n" +
+            "من 21140 CENTERPOINT -DOM\nالتاريخ 04/02/2023 21:02\nالصرف المتبقي 2,222.00 SAR"
+
+    /**
+     * AlRajhi's 2015-2019 template: the whole transaction on one line, the merchant
+     * unlabelled between "في" and the date, the columns padded with spaces. Its
+     * "سحب" is a purchase at a terminal, not a machine withdrawal. 335 records.
+     *
+     * Balance invented; the padding is kept exactly, because it is the boundary.
+     */
+    const val RAJHI_FLAT_POS =
+        "سحب مبلغ 289.00 SAR بطاقة 1004* في EXTRA                    MAKKAH       SA " +
+            "2015/09/02 19:42 الصرف المتبقي 33,333.00 SAR"
+
+    /** A purchase the bank refused. No money moved, so nothing may be stored. */
+    const val CARD_DECLINED_AS_INACTIVE =
+        "تم رفض العملية: البطاقة غير نشطة\nالعملية: شراء\nالبطاقة: 7404\n" +
+            "المبلغ: SAR 97.31\nالحساب: Mrsool\nالتاريخ: 8/3/26 2:07"
+
     // ---- Sender identities -------------------------------------------------
 
     /** SMS sender ids exactly as they appear on the device. */
@@ -591,12 +654,14 @@ card number: **1887, mada
         SNB_ONLINE_PURCHASE, SNB_TRANSFER_IN, SNB_TRANSFER_OUT, SNB_ATM_DEPOSIT,
         D360_TRANSFER_IN, D360_TRANSFER_OUT, D360_OWN_ACCOUNTS_TRANSFER,
         BARQ_TRANSFER_OUT, BARQ_TOPUP_EN, BARQ_ONLINE_PURCHASE,
+        ENBD_ATHIR_PURCHASE, ENBD_ATHIR_PURCHASE_CARET, SNB_MADA_PAY_PIPES,
+        SNB_POS_TERMINAL_ID, RAJHI_FLAT_POS,
     )
 
     /** Every message that must never become a transaction. */
     val MUST_BE_REJECTED = listOf(
         RAJHI_OTP, SNB_OTP, SNB_ACTIVATION_CODE, D360_OTP, BARQ_OTP, BARQ_DECLINED,
         RAJHI_CARD_STATEMENT_NOTICE, SNB_CARD_STATEMENT_NOTICE,
-        RAJHI_TEMPORARY_CODE, SNB_BILL_ACTIVATION_CODE,
+        RAJHI_TEMPORARY_CODE, SNB_BILL_ACTIVATION_CODE, CARD_DECLINED_AS_INACTIVE,
     )
 }

@@ -74,7 +74,12 @@ object ArabicText {
         0x0009, // TAB
         0x000B, // VERTICAL TAB
         0x000C, // FORM FEED
-        0x000D, // CARRIAGE RETURN
+        // NOT the carriage return, which is a line break - see FIELD_BREAK. It was
+        // in this set, and a sender that separates its fields with CR alone had
+        // every one of them collapsed onto a single line. Field patterns are
+        // anchored to the start of a line, so all of them stopped matching at once:
+        // 68 Emirates NBD purchases stored their amount and no merchant, the name
+        // sitting untouched in the body.
     ).mapTo(HashSet()) { it.toChar() }
 
     /** Arabic letters whose written form varies between senders but means the same thing. */
@@ -139,12 +144,45 @@ object ArabicText {
     /** Removes bidi controls, zero-width characters and tatweel. */
     fun stripInvisible(input: String): String = input.filterNot { it in INVISIBLE }
 
+    /**
+     * What senders use to end a field, other than a newline.
+     *
+     * Three of them, each found by a family of messages that stored an amount and
+     * no merchant:
+     * - a carriage return alone (Emirates NBD's أثير purchases);
+     * - the two literal characters `^M`, which is a carriage return that something
+     *   upstream of this app has already written out in caret notation. 68 stored
+     *   bodies carry it and no bank writes it on purpose;
+     * - a pipe, which D360 and SNB's newer templates use to put every field of a
+     *   message on one line;
+     * - a run of five or more spaces BETWEEN two visible characters, which the
+     *   older AlRajhi templates use to pad a column ("EXTRA        MAKKAH   SA").
+     *   Short runs are left alone - they are typing slips inside a name - and so is
+     *   indentation, which separates a field from nothing.
+     *
+     * A boundary, not noise: a field pattern that reads to the end of its line
+     * would otherwise swallow every field after it.
+     */
+    private val FIELD_BREAK = Regex("""\r\n?|\^M|\s*\|\s*|(?<=\S)[ ]{5,}(?=\S)""")
+
+    /**
+     * Rewrites every field boundary a sender uses as a newline.
+     *
+     * Space-like characters are unified first, because a column padded with
+     * no-break spaces is a boundary exactly as one padded with ordinary ones, and
+     * the run has to be visible as spaces before it can be counted.
+     */
+    fun normalizeFieldBreaks(input: String): String =
+        FIELD_BREAK.replace(unifySpaces(input), "\n")
+
+    /** Space-like characters as plain U+0020, newlines untouched. */
+    private fun unifySpaces(input: String): String = buildString(input.length) {
+        for (ch in input) append(if (ch in SPACE_LIKE) ' ' else ch)
+    }
+
     /** Collapses space-like characters into single U+0020 spaces and trims. Newlines are kept. */
     fun normalizeWhitespace(input: String): String {
-        val unified = buildString(input.length) {
-            for (ch in input) append(if (ch in SPACE_LIKE) ' ' else ch)
-        }
-        return unified
+        return unifySpaces(input)
             .split('\n')
             .joinToString("\n") { line -> line.replace(SPACE_RUN, " ").trim() }
             .trim()
@@ -158,7 +196,9 @@ object ArabicText {
      * from between two spaces does not leave a double space behind.
      */
     fun normalize(input: String): String =
-        normalizeWhitespace(normalizeNumericSeparators(normalizeDigits(stripInvisible(input))))
+        normalizeWhitespace(
+            normalizeFieldBreaks(normalizeNumericSeparators(normalizeDigits(stripInvisible(input))))
+        )
 
     /**
      * Aggressive folding used only for *matching* (merchant comparison, dedup keys),

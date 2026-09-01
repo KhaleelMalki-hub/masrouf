@@ -36,6 +36,20 @@ object SaudiBanks {
             // "لـ3016", the destination account of an incoming transfer, which
             // after tatweel removal becomes "ل3016".
             Regex("""(?m)^ل(?!دى)(?![*\d\s])(.+)$"""),
+            // The 2015-2019 template, which writes the whole transaction on one
+            // line and gives the merchant no label at all: "سحب مبلغ 289.00 SAR
+            // بطاقة 1004* في EXTRA      MAKKAH   SA 2015/09/02 19:42". Its "سحب"
+            // is a point-of-sale purchase, not a machine withdrawal - the ATM
+            // messages of the same era name no merchant.
+            //
+            // Anchored on the fields around it rather than on the line, and it
+            // stops at the date, which is the only thing that always follows.
+            // 335 records in this corpus, 255,631 riyals, every one of them stored
+            // with no party at all.
+            Regex(
+                """(?m)(?:سحب|شراء)\s+مبلغ\s+[\d.,]+\s*[A-Za-z]{0,3}\s*بطاقة\s*\d{3,4}\*?\s*""" +
+                    """في\s+(.+?)(?=\s+\d{2}/\d{2}|\s+\d{4}/\d{2}/\d{2}|$)"""
+            ),
         ),
         counterpartyPatterns = listOf(
             Regex("""(?m)^من\d{4}\s*;\s*(.+)$"""),
@@ -93,6 +107,14 @@ object SaudiBanks {
         merchantPatterns = listOf(
             Regex("""(?m)^من\s+(?!\**\d)(.+)$"""),
             Regex("""(?m)^لدى\s*:?\s*(.+)$"""),
+            // mada Pay names the field outright. 50 records carried it and not one
+            // was read, because nothing looked for this label.
+            Regex("""(?m)^اسم\s+المتجر\s*:?\s*(.+)$"""),
+            // "من 21140 CENTERPOINT -DOM": a terminal id in front of the name. The
+            // guard above refuses it - correctly, since the same shape is how an
+            // account number appears - so the name is taken from after the digits
+            // rather than by loosening a guard that 2,014 records paid for.
+            Regex("""(?m)^من\s+\d{3,7}\s+(?=\D)(.+)$"""),
         ),
         counterpartyPatterns = listOf(
             // The party by name, first, because the account it used is in the same

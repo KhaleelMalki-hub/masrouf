@@ -98,8 +98,14 @@ class MasroufApp : Application() {
      *   install at or past it has already had it.
      */
     enum class Repair(val introducedIn: Int) {
-        /** Bodies the gate now refuses. First: a credential must not be read again. */
-        PURGE_REJECTED(12),
+        /**
+         * Bodies the gate now refuses. First: a credential must not be read again.
+         *
+         * Raised to 15 for "رفض العملية" - the active voice of a refusal, which the
+         * passive markers beside it never reached, so a purchase the bank declined
+         * on a cancelled card was stored as money spent.
+         */
+        PURGE_REJECTED(15),
 
         /** Amounts the extractor now reads differently. Before anything reads them. */
         REPAIR_AMOUNTS(10),
@@ -118,8 +124,15 @@ class MasroufApp : Application() {
          * right amount and balance and no card, so a card paid off in full still
          * showed the figure from before it was paid - the balance was in the
          * database, attached to nothing.
+         *
+         * Raised to 15 for the senders that end a field with something other than a
+         * newline: a carriage return, the two characters `^M`, a pipe, a run of
+         * padding. Normalisation folded all of them into spaces, so every
+         * line-anchored field pattern stopped matching at once and 588 records were
+         * stored with no party at all - unfileable, since a category is learned
+         * from a merchant. Measured at 337 recovered on the owner's history.
          */
-        REPARSE_BODIES(14),
+        REPARSE_BODIES(15),
 
         /** Salary deposits an older classifier read as transfers. */
         RETYPE_SALARY(3),

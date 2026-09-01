@@ -15,7 +15,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
   off adb often; check `adb devices` before installing.
 - Database schema version 6. One-off repairs are a set in `MasroufApp.Repair`,
   each stamped with the version that introduced it, taken as a union and run once
-  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **14**.
+  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **15**.
 - Real data on the phone: ~22,014 transactions, ~2,190 unfiled, and the owner's
   own learned merchant rules (34 and growing — he files one whenever a shop the
   shipped list cannot name comes up).
@@ -108,8 +108,32 @@ captured instead, and maintenance pass 14 re-read the stored bodies. A card whos
 remaining allowance equals its ceiling is never marked stale: it owes nothing, and
 a settled card sends no further message to refresh itself with.
 
+### The party nobody could read (2026-09-01)
+
+588 records - 330,211 riyals - were stored with no party at all, and unfileable:
+a category is learned from a merchant. In nearly all of them the name was in the
+body untouched. Every field pattern here is anchored to the start of a line, and
+these senders end a field with something else, which `ArabicText.normalize` was
+folding into a space: a carriage return (Emirates NBD's أثير), the two literal
+characters `^M` (the same, already written in caret notation by something above
+this app), a pipe (D360 and SNB's newer templates), or a run of five or more
+padding spaces (AlRajhi 2015-2019, one line per transaction).
+
+One fix in `ArabicText.FIELD_BREAK` plus two labels nothing looked for
+(`اسم المتجر`, and a terminal id in front of the name) and the flat AlRajhi
+template whose merchant sits unlabelled between the card and the date.
+
+Measured on the phone, maintenance pass 15: **no party 588 → 120, unfiled
+2,196 → 1,857.** The gate also learnt "رفض العملية", the active voice of a
+refusal, which had stored a declined purchase as money spent.
+
 ## Open items
 
+0. **1,857 records are still unfiled** - 529 of them in the last 24 months
+   (139,077 riyals), the rest older. They are spread over ~1,150 merchants at
+   about two records each, almost all local shops registered in their owner's
+   name, so no keyword list reaches them: they need his memory, one at a time,
+   and filing one files every record from it. 120 still carry no party at all.
 1. **Five merchants he has not placed**, all on the cancelled 7404, all one-off
    except OBOUD BAH: `AL NOUJAI` (23,240), `OBOUD BAH` (6,175 over 7 visits),
    `AL MUASHA` (4,672), `ALATLAL T` (3,950), `AL RASHED` (3,114). Nothing in the
