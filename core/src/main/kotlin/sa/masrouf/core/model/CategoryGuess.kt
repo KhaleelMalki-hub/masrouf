@@ -801,6 +801,13 @@ object CategoryGuess {
         "EMIRATES" to SaudiCategories.TRAVEL,
         // عصر الجوال, a mobile-phone shop, confirmed by the owner.
         "ASER ALJAWAL" to SaudiCategories.SHOPPING,
+        // ويست إلم, named by the owner. His history carries it in full once and
+        // as "WES" twice - same day, same terminal, furniture-sized amounts. Three
+        // characters, so MerchantMatch requires the whole word: it cannot reach
+        // into WEST SIDE CAFE, and the bare "WEST" - which could be either - is
+        // deliberately NOT here. It stays for the owner, as it always has.
+        "WEST ELM" to SaudiCategories.SHOPPING,
+        "WES" to SaudiCategories.SHOPPING,
         "BED AND BATH" to SaudiCategories.SHOPPING,
         "CHARRIOL" to SaudiCategories.SHOPPING,
         "WOJOOH" to SaudiCategories.SHOPPING,
