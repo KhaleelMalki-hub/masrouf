@@ -109,7 +109,7 @@ object SaudiBanks {
         // honest.
         senderIds = setOf("SNB ALAHLI", "SNBALAHLI", "SNB NEO", "ALAHLI"),
         merchantPatterns = listOf(
-            Regex("""(?m)^من\s+(?!\**\d)(.+)$"""),
+            Regex("""(?m)^من\s+(?!\**\d)(?!X{2,}\d)(.+)$"""),
             Regex("""(?m)^لدى\s*:?\s*(.+)$"""),
             // mada Pay names the field outright. 50 records carried it and not one
             // was read, because nothing looked for this label.
@@ -130,8 +130,8 @@ object SaudiBanks {
             //
             // The negative lookaheads keep these off the account lines, which some
             // templates introduce with the very same words.
-            Regex("""(?m)^مرسل\s*+:?+\s*+(?:من\s+)?+(?!\**\d)(.+)$"""),
-            Regex("""(?m)^مستفيد\s*+:?+\s*+(?!\**\d)(.+)$"""),
+            Regex("""(?m)^مرسل\s*+:?+\s*+(?:من\s+)?+(?!\**\d)(?!X{2,}\d)(.+)$"""),
+            Regex("""(?m)^مستفيد\s*+:?+\s*+(?!\**\d)(?!X{2,}\d)(.+)$"""),
             // "من1007* NAME" (incoming) and "ل0106* NAME" (outgoing).
             Regex("""(?m)^(?:من|ل)\d{4}\*\s*(.+)$"""),
             // The sender on the heading line itself - "حوالة محلية واردة من امانة
@@ -147,7 +147,7 @@ object SaudiBanks {
             // the second time in this file - see IntentClassifier.SENDER_LINE.
             // The capture stops at "إلى", which some of these templates put on the
             // same line: without it the party reads "حنين مقادمي إلى 104*010".
-            Regex("""(?m)^(?:حوالة|حواله|تحويل)[^\n]*?\sمن\s+(?!\**\d)(.+?)(?=\s+(?:إلى|الى)\s|$)"""),
+            Regex("""(?m)^(?:حوالة|حواله|تحويل)[^\n]*?\sمن\s+(?!\**\d)(?!X{2,}\d)(.+?)(?=\s+(?:إلى|الى)\s|$)"""),
         ),
         cardPatterns = listOf(
             // "بطاقة مدى *2907" and, newer, "بطاقة مدى: **2907".
@@ -174,7 +174,7 @@ object SaudiBanks {
         id = "d360",
         senderIds = setOf("D360 BANK", "D360BANK", "D360"),
         counterpartyPatterns = listOf(
-            // `(?!\**\d)`, not `(?![*\d])`: D360 masks a name with LEADING asterisks
+            // `(?!\**\d)(?!X{2,}\d)`, not `(?![*\d])`: D360 masks a name with LEADING asterisks
             // ("من: ****RECIPIENT NAME") and writes an account as digits with
             // trailing ones ("حساب: 2207****"). Refusing every asterisk refuses the
             // masked name too; refusing asterisks-then-digit refuses only the
@@ -191,8 +191,8 @@ object SaudiBanks {
             // bodies too: "الى:3016 / من:SENDER NAME" gave up the account number
             // while the name sat one line below it. 710 rows survived the repair
             // pass because these two lines did not have the guard.
-            Regex("""(?m)^(?:إلى|الى)\s*+:?+\s*+(?!\**\d)(.+)$"""),
-            Regex("""(?m)^من\s*+:?+\s*+(?!\**\d)(.+)$"""),
+            Regex("""(?m)^(?:إلى|الى)\s*+:?+\s*+(?!\**\d)(?!X{2,}\d)(.+)$"""),
+            Regex("""(?m)^من\s*+:?+\s*+(?!\**\d)(?!X{2,}\d)(.+)$"""),
         ),
         cardPatterns = listOf(
             Regex("""(?m)^حساب\s*:?\s*\**\s*(\d{4})"""),
@@ -231,8 +231,8 @@ object SaudiBanks {
             Regex("""(?m)^At\s*:\s*(.+)$""", RegexOption.IGNORE_CASE),
         ),
         counterpartyPatterns = listOf(
-            Regex("""(?m)^From\s*+:\s*+(?!\**\d)(.+)$""", RegexOption.IGNORE_CASE),
-            Regex("""(?m)^(?:الى|إلى)\s*+:?+\s*+(?!\**\d)(.+)$"""),
+            Regex("""(?m)^From\s*+:\s*+(?!\**\d)(?!X{2,}\d)(.+)$""", RegexOption.IGNORE_CASE),
+            Regex("""(?m)^(?:الى|إلى)\s*+:?+\s*+(?!\**\d)(?!X{2,}\d)(.+)$"""),
         ),
         cardPatterns = listOf(
             // "بطاقة: فيزا الائتمانية XX9994" and "to Account: XX8101" - the digits
@@ -260,7 +260,7 @@ object SaudiBanks {
             // "في: Health Endowment Fund", never "في: 26/06/26 01:58".
             Regex("""(?m)^في\s*+:?+\s*+(?!\d)(.+)$"""),
             // "من:AL DRE" beneath "من:*7667", which is the card.
-            Regex("""(?m)^من\s*+:?+\s*+(?!\**\d)(.+)$"""),
+            Regex("""(?m)^من\s*+:?+\s*+(?!\**\d)(?!X{2,}\d)(.+)$"""),
         ),
         counterpartyPatterns = listOf(
             // The channel FIRST, and these are counterparty patterns rather than
@@ -275,7 +275,7 @@ object SaudiBanks {
             Regex("""(?m)^حوالة\s+(WU)\b"""),
             Regex("""(?m)^اسم المستلم\s*:?\s*(.+)$"""),
             Regex("""(?m)^اسم المرسل\s*:?\s*(.+)$"""),
-            Regex("""(?m)^(?:الى|إلى)\s*+:?+\s*+(?!\**\d)(.+)$"""),
+            Regex("""(?m)^(?:الى|إلى)\s*+:?+\s*+(?!\**\d)(?!X{2,}\d)(.+)$"""),
         ),
         cardPatterns = listOf(
             // "البطاقة: ***8611؛ VISA" and "رقم البطاقة: ****0926".
@@ -325,7 +325,7 @@ object SaudiBanks {
             Regex("""(?m)^لدى\s*:?\s*(.+)$"""),
         ),
         counterpartyPatterns = listOf(
-            Regex("""(?m)^From\s*:\s*(?!\**\d)(.+)$""", RegexOption.IGNORE_CASE),
+            Regex("""(?m)^From\s*:\s*(?!\**\d)(?!X{2,}\d)(.+)$""", RegexOption.IGNORE_CASE),
         ),
         cardPatterns = listOf(
             // "By:3761;mada", "Mada card: 3761", "بطاقتك رقم2650".
@@ -333,6 +333,7 @@ object SaudiBanks {
             Regex("""card\s*:?\s*\**\s*(\d{4})""", RegexOption.IGNORE_CASE),
             Regex("""بطاقت?ك?\s*رقم\s*\**\s*(\d{4})"""),
         ),
+        ownWalletMerchants = OWN_WALLETS,
     )
 
     /**
@@ -349,12 +350,13 @@ object SaudiBanks {
             Regex("""(?m)^لدى\s*:?\s*(.+)$"""),
         ),
         counterpartyPatterns = listOf(
-            Regex("""(?m)^من\s*:?\s*(?!X{2,}\d)(?!\**\d)(.+)$""", RegexOption.IGNORE_CASE),
+            Regex("""(?m)^من\s*:?\s*(?!\**\d)(?!X{2,}\d)(.+)$""", RegexOption.IGNORE_CASE),
         ),
         cardPatterns = listOf(
             // "بطاقة: XXX9097 مدى" - an X mask, as Emirates NBD writes it.
             Regex("""بطاقة\s*:?\s*X*\s*(\d{4})""", RegexOption.IGNORE_CASE),
         ),
+        ownWalletMerchants = OWN_WALLETS,
     )
 
     val ALL: List<BankProfile> = listOf(

@@ -141,6 +141,11 @@ object IntentClassifier {
         // ائتمانية - it says الصرف المتبقي instead.
         Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, listOf("SADAD", "ائتمان")),
 
+        // "نشكر لك سداد مبلغ200.00 لحساب البطاقة رقم2650" - AlJazira thanking him
+        // for paying his own card. Before the bare سداد rule below, which would
+        // count the same riyals a second time as a bill.
+        Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, listOf("سداد", "لحساب البطاق")),
+
         Rule(TransactionType.BILL_PAYMENT, Direction.DEBIT, listOf("سداد")),
 
         // ---- AlAhli's older template family -------------------------------

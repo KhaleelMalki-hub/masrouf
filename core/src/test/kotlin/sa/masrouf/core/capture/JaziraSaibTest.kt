@@ -19,11 +19,16 @@ class JaziraSaibTest {
         (BankMessageParser(profile).parse(RawMessage(body, Instant.EPOCH))
             as? ParseResult.Parsed)?.draft ?: error("not parsed")
 
+    /**
+     * The captured sample is a top-up of his barq wallet, which is exactly the
+     * kind of "purchase" that must not be one: the same riyals are reported again
+     * by the wallet as they are actually spent.
+     */
     @Test
-    fun `an aljazira online purchase reads card, amount and merchant`() {
+    fun `an aljazira purchase at his own wallet is a transfer, with card and amount read`() {
         val draft = parsed(SaudiBanks.AL_JAZIRA, RealMessages.JAZIRA_ONLINE_PURCHASE)
 
-        assertEquals(TransactionType.PURCHASE, draft.type)
+        assertEquals(TransactionType.OWN_TRANSFER, draft.type)
         assertEquals(Money.ofMajor("3000").halalas, draft.amount.halalas)
         assertEquals("3761", draft.accountLast4)
         assertEquals("barq", draft.merchantRaw)
