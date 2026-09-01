@@ -61,4 +61,4 @@ class Preferences(context: Context) {
  * same number as the version that introduced it, and the two together decide what
  * an install behind this one still needs.
  */
-const val CURRENT_MAINTENANCE_VERSION = 16
+const val CURRENT_MAINTENANCE_VERSION = 17

@@ -806,6 +806,17 @@ object CategoryGuess {
         "HOME BOX" to SaudiCategories.SHOPPING,
         // كورو, a Japanese restaurant in Jeddah. Sent as "Kuuru Jed".
         "KUURU" to SaudiCategories.FOOD,
+        // ريفي, household goods (reefi.me). Two records arrive as the bare word,
+        // which "REEFI STORE" cannot reach, and a bare "REEFI" keyword is what
+        // filed 29 meals at الساج الريفي as shopping once before.
+        //
+        // Safe here for two reasons, and only here. MerchantMatch tries an exact
+        // match on the whole name before any partial one, so "Reefi" is caught by
+        // this rule while "Al Saj Al Reefi Restau" - a different string - never
+        // reaches it exactly. And the partial pass takes the FIRST rule in list
+        // order, so this sits last, below both spellings of the restaurant and
+        // below RESTAUR. Moving it up re-opens the old defect.
+        "REEFI" to SaudiCategories.SHOPPING,
     ))
 
     /**

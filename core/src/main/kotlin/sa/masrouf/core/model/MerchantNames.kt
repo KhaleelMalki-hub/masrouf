@@ -170,6 +170,7 @@ object MerchantNames {
         "HOMEBOX" to MerchantName(ar = "هوم بوكس", en = "Home Box"),
         "HOME BOX" to MerchantName(ar = "هوم بوكس", en = "Home Box"),
         "KUURU" to MerchantName(ar = "كورو", en = "Kuuru"),
+        "REEFI STORE" to MerchantName(ar = "ريفي", en = "Reefi"),
     ))
 
     /**

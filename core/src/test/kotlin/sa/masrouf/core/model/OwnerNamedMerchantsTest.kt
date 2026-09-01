@@ -49,6 +49,9 @@ class OwnerNamedMerchantsTest {
             "HOMEBOX 2" to SaudiCategories.SHOPPING,
             // كورو, Japanese, in Jeddah. The city is glued to the name.
             "Kuuru Jed" to SaudiCategories.FOOD,
+            // ريفي, household goods, as the terminal sends it: the bare word.
+            "Reefi" to SaudiCategories.SHOPPING,
+            "reefi" to SaudiCategories.SHOPPING,
             // الرقيب للأثاث, under every spelling its terminals have sent.
             "HAMAD M ALRUGAIB AND S" to SaudiCategories.SHOPPING,
             "HAMAD ALRUGAIB and SO" to SaudiCategories.SHOPPING,
@@ -112,11 +115,13 @@ class OwnerNamedMerchantsTest {
         assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("ALSAAJ ALREEFI"))
 
         assertEquals(SaudiCategories.TRAVEL, CategoryGuess.forMerchant("Flyin"))
-        // The truncated linens spelling reaches no rule: at five characters it is
-        // shorter than the truncation rule's floor, and a keyword short enough to
-        // catch it is the substring that caused all this. Two rows; the user files
-        // them once, as with the recruiter.
-        assertEquals(null, CategoryGuess.forMerchant("reefi"))
+        // This read `null` until 2026-09-01, when the owner named the shop
+        // (reefi.me, household goods) and the bare word got a rule of its own. It
+        // is reached by MerchantMatch's EXACT pass, which runs before any partial
+        // one, so the restaurant two lines above - a different string entirely - is
+        // unaffected. The assertions above are what proves that, and they are why
+        // the rule sits last in the list.
+        assertEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("reefi"))
         assertEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("FLYING TI"))
         assertEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("FLYING TIGER COPENHAGE"))
     }
@@ -147,6 +152,21 @@ class OwnerNamedMerchantsTest {
         // The companies a broad keyword would have taken with it.
         assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("INTERNATIONAL OVEN CO."))
         assertEquals(null, CategoryGuess.forMerchant("International Regions"))
+    }
+
+    /**
+     * The rule that pays for the bare "REEFI" being safe, and the one that would
+     * go red first if it were moved up the list. الساج الريفي is a restaurant whose
+     * name contains the shop's whole name; 29 meals were filed as shopping the last
+     * time a keyword reached into it.
+     */
+    @Test
+    fun `the household shop does not swallow the restaurant that shares its name`() {
+        assertEquals(
+            SaudiCategories.FOOD,
+            CategoryGuess.forMerchant("Al Saj Al Reefi Restau"),
+        )
+        assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("ALSAAJ ALREEFI"))
     }
 
     /**
