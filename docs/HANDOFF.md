@@ -15,7 +15,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
   off adb often; check `adb devices` before installing.
 - Database schema version 6. One-off repairs are a set in `MasroufApp.Repair`,
   each stamped with the version that introduced it, taken as a union and run once
-  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **21**.
+  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **22**.
 - Real data on the phone: ~22,014 transactions, ~2,190 unfiled, and the owner's
   own learned merchant rules (34 and growing — he files one whenever a shop the
   shipped list cannot name comes up).
@@ -186,10 +186,43 @@ and awaiting the owner's review in the app - nothing auto-confirms. Spending by
 year moved as the corrections landed: 2022 down 122,531 (top-ups removed), 2024 up
 90,125 and 2025 up 97,281 (wallet purchases and wages added).
 
+### The income audit (2026-09-01)
+
+Asked for because the figures felt wrong. Three defects, and the rest checks out.
+
+- **The dashboard's salary was the newest row typed SALARY.** A company he holds
+  shares in pays dividends "بصيغة إيداع راتب" - the bank message is word for word
+  a salary deposit, and only the company's own SMS the same day says otherwise -
+  so twice (Dec 2024, Jul 2025) the app measured his month against a salary of 50
+  riyals. It now takes the largest of the three most recent: a quarter, long
+  enough to outvote one odd deposit and short enough to show a raise.
+- **347 incoming transfers had no sender at all**, because SNB wrote the sender on
+  the heading line until 2021 ("حوالة محلية واردة من X", "تحويل من X") and every
+  pattern was looking for a line of its own. Among them two allowances from his
+  employer, filed as ordinary transfers - the name is the only thing that
+  separates money from an employer from money from anyone else. All 40 employer
+  transfers now file as bonuses.
+- 150 of those were "حوالة واردة من حسابك الاستثماري" - his own money coming back
+  from the brokerage, now filed as investment rather than as an incoming transfer.
+
+What is sound: 184 salary rows against 187 salary-shaped messages in the inbox
+(the other three are two dividend notices and a duplicate); exactly 12 a year
+since 2020; amounts consistent at each raise; none pending, none a debit, none
+double-counted. Bonuses match the inbox year for year.
+
+What is genuinely absent rather than missed: **no bonus before August 2020.** The
+older templates name no sender, so nothing in those messages distinguishes an
+allowance from any other incoming transfer. 2,405 incoming records still carry no
+party - card top-ups and cash deposits, which name nobody.
+
 ## Open items
 
 0. **3,723 records are PENDING.** They are the recovered history and the owner
    has not seen them; the app has a confirm-all action for exactly this.
+0. **Accounts the owner has confirmed are his, used rarely**: urpay, SAIB, meem,
+   Vision Bank, AlJazira. Worth parsing eventually; he says the volume is very
+   small beside what is already captured. STC's `900` landline bills are probably
+   already captured from the paying bank's side, so adding them would double-count.
 0. **Senders still unread, and it is not known whether they are his**: urpay (70
    transaction-like messages), SAIB (73), meem (85), Vision Bank (16), AlJazira
    (25), STC's `900` landline bills (217 - probably already captured from the

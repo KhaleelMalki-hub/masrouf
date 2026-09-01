@@ -685,6 +685,30 @@ MTCN:0000000000
 المبلغ: 250.00 ر.س
 بتاريخ: 2024/03/02 19:00:00"""
 
+    /**
+     * An incoming transfer whose sender is on the heading line, which is how SNB
+     * wrote it until 2021. The employer's name is what makes this an allowance
+     * rather than an ordinary transfer, and it was being thrown away.
+     *
+     * The employer is an organisation, not a person, so it stays as sent.
+     */
+    const val SNB_INCOMING_SENDER_INLINE = """حوالة محلية واردة من امانة العاصمة المقدسة
+مبلغ SAR 3664.10
+حساب 104*010
+عبر 
+في 26/11/2020 10:33"""
+
+    /**
+     * A share dividend the company pays out "بصيغة إيداع راتب". The bank message is
+     * word for word a salary deposit; only the company's own SMS, sent the same
+     * day, says what it is. Kept because it is what makes the dashboard's salary
+     * reading a MAX over three rather than the newest row.
+     */
+    const val DIVIDEND_PAID_AS_SALARY = """ايداع رواتب
+مبلغ SAR 50
+حساب0104*
+في 21/07/25 13:53"""
+
     // ---- SNB Capital, the brokerage -----------------------------------------
     //
     // 1,136 messages skipped as an unknown sender: "SNB-Capital" contains none of
@@ -790,6 +814,7 @@ MTCN:0000000000
         STC_ONLINE_PURCHASE, STC_POS_PURCHASE, STC_CARD_PURCHASE, STC_WALLET_TOPUP,
         STC_ADD_MONEY, STC_WESTERN_UNION, STC_WU_SHORT,
         CAPITAL_TO_INVESTMENT, CAPITAL_TO_CURRENT, CAPITAL_DIVIDEND,
+        SNB_INCOMING_SENDER_INLINE, DIVIDEND_PAID_AS_SALARY,
     )
 
     /** Every message that must never become a transaction. */

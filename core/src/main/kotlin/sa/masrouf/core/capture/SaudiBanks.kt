@@ -134,6 +134,20 @@ object SaudiBanks {
             Regex("""(?m)^مستفيد\s*+:?+\s*+(?!\**\d)(.+)$"""),
             // "من1007* NAME" (incoming) and "ل0106* NAME" (outgoing).
             Regex("""(?m)^(?:من|ل)\d{4}\*\s*(.+)$"""),
+            // The sender on the heading line itself - "حوالة محلية واردة من امانة
+            // العاصمة المقدسة", "تحويل من TALAL MAQADMI", "حوالة واردة من حسابك
+            // الاستثماري" - which is how SNB wrote an incoming transfer until 2021.
+            // 845 records had no party at all because of it, 1,280,957 riyals, and
+            // among them two allowances from the owner's employer that were filed
+            // as ordinary transfers: the name is the only thing that separates
+            // money from an employer from money from anyone else.
+            //
+            // Whitespace, not `\b`: Java has no word boundary between a space and
+            // an Arabic letter, so the guard would match nothing at all. That is
+            // the second time in this file - see IntentClassifier.SENDER_LINE.
+            // The capture stops at "إلى", which some of these templates put on the
+            // same line: without it the party reads "حنين مقادمي إلى 104*010".
+            Regex("""(?m)^(?:حوالة|حواله|تحويل)[^\n]*?\sمن\s+(?!\**\d)(.+?)(?=\s+(?:إلى|الى)\s|$)"""),
         ),
         cardPatterns = listOf(
             // "بطاقة مدى *2907" and, newer, "بطاقة مدى: **2907".

@@ -454,12 +454,25 @@ interface TransactionDao {
     )
     suspend fun retype(id: String, type: String, categoryId: String?): Int
 
-    /** The most recent salary the bank announced, in halalas. Read, not inferred. */
+    /**
+     * The salary the bank last announced, in halalas. Read, not inferred.
+     *
+     * The largest of the three most recent, not simply the newest. A company the
+     * owner holds shares in pays its dividends "بصيغة إيداع راتب" - the bank
+     * message is word for word a salary deposit and only the company's own SMS says
+     * otherwise - so on 21 July 2025 the newest salary was 50 riyals, and the
+     * dashboard spent six days measuring his month against it.
+     *
+     * Three, because that is a quarter: long enough for one odd deposit to be
+     * outvoted, short enough that a raise shows up the month it arrives.
+     */
     @Query(
         """
-        SELECT amount_halalas FROM transactions
-        WHERE type = 'SALARY' AND direction = 'CREDIT' AND status = 'CONFIRMED'
-        ORDER BY occurred_at_millis DESC LIMIT 1
+        SELECT MAX(amount_halalas) FROM (
+            SELECT amount_halalas FROM transactions
+            WHERE type = 'SALARY' AND direction = 'CREDIT' AND status = 'CONFIRMED'
+            ORDER BY occurred_at_millis DESC LIMIT 3
+        )
         """
     )
     fun observeLatestSalary(): Flow<Long?>

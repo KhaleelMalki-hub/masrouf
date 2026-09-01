@@ -838,6 +838,9 @@ object CategoryGuess {
         // money that arrived there, which is neither a purchase nor a transfer
         // between strangers.
         "الحساب الاستثماري" to SaudiCategories.INVESTMENT,
+        // How the bank names it when the money is coming BACK: "حوالة واردة من
+        // حسابك الاستثماري". His own money either way.
+        "حسابك الاستثماري" to SaudiCategories.INVESTMENT,
         "ارباح شركة" to SaudiCategories.INVESTMENT,
         "أرباح شركة" to SaudiCategories.INVESTMENT,
     ))
