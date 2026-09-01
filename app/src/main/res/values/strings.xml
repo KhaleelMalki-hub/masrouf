@@ -154,9 +154,11 @@
     <string name="card_balance">الرصيد</string>
     <string name="card_credit_left">المتبقي من الحد</string>
     <string name="card_of_limit">من %1$s</string>
+    <string name="card_settled">مسددة بالكامل · الحد %1$s</string>
     <string name="card_as_of">حتى %1$s</string>
     <string name="card_as_of_stale">آخر خبر منها %1$s</string>
     <string name="card_no_balance">البنك لا يرسل الرصيد</string>
+    <string name="card_balance_not_heard">لم يصلني رصيد جديد</string>
     <plurals name="unfiled_banner">
         <item quantity="one">عملية واحدة بلا تصنيف</item>
         <item quantity="two">عمليتان بلا تصنيف</item>

@@ -374,3 +374,17 @@ suggestion, and put it on a screen before calling it a recommendation.
 **How to apply:** Any design answer that refuses one thing and proposes another.
 **Source:** session 2026-08-31, reverted the same evening
 
+
+### 2026-08-31 — A fixed height clips; it does not grow
+**Mistake:** Gave a row of card tiles `Modifier.height(132.dp)` to make them uniform. A card that gained a credit limit clipped its last line; raised to 150dp, a card that gained "مسددة بالكامل" wrapped and clipped again.
+**Why:** A hand-typed height encodes the tallest content at the moment it is typed. Every later feature that adds a line invalidates it, silently and only on the device.
+**Rule:** Make sibling elements uniform by measuring them, not by typing a number: `Modifier.height(IntrinsicSize.Max)` on the parent. If that means giving up a lazy container, give it up - laziness buys nothing under a few dozen children.
+**How to apply:** Any time "make these the same size" is the requirement.
+**Source:** CardsPanel.kt, this session.
+
+### 2026-08-31 — `horizontalScroll` starts at the left, in both directions
+**Mistake:** Replaced a `LazyRow` with `Row` + `horizontalScroll` and the Arabic screen opened half-way into its first card.
+**Why:** `LazyRow` starts at the start of the content in the current layout direction. `horizontalScroll` starts at scroll offset 0, which is the LEFT edge whichever direction the content runs, so under RTL it opens at the END of the list.
+**Rule:** Swapping a lazy container for a scrolled one loses more than laziness. In an RTL app, scroll to `maxValue` on first composition, and verify on a device in Arabic - the compiler and every unit test are silent about it.
+**How to apply:** Any `horizontalScroll` in an app with an RTL locale.
+**Source:** CardsPanel.kt, this session.

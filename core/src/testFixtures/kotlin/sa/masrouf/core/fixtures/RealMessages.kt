@@ -235,6 +235,19 @@ Date:23-11-30 12:22"""
 التاجر: Amazon SA
 في: 24/8/26 10:34"""
 
+    /**
+     * The same settlement, with the card field's halves reversed.
+     *
+     * AlRajhi began sending "عبر:فيزا;8134" in April 2026 where it had always sent
+     * "عبر8134;فيزا". Ten of these arrived with no card attached: the amount and
+     * the balance were read correctly and belonged to nothing, so the tile for a
+     * card paid off in full kept showing what was left before it was paid.
+     */
+    const val RAJHI_SETTLEMENT_CARD_LAST = """بطاقة فيزا:سداد بـSR 3000 
+عبر:فيزا;8134
+رصيد:41000 SR
+؜2/5/26 22:46"""
+
     /** Credit card settlement payment. */
     const val RAJHI_CARD_SETTLEMENT = """بطاقة فيزا:سداد بـSR 10000
 عبر2383;فيزا

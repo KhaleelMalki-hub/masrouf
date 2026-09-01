@@ -6,7 +6,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
 
 ## Where things stand
 
-- `main` at 120 commits. All tests green: **287** in `:core`, **163** in `:app`,
+- `main` at 120 commits. All tests green: **289** in `:core`, **171** in `:app`,
   **9** instrumented (`:app:connectedDebugAndroidTest`).
 - **`connectedDebugAndroidTest` uninstalls the app and deletes its database.**
   It has already cost the owner's phone once. Use the `masrouf35` emulator, or
@@ -15,7 +15,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
   off adb often; check `adb devices` before installing.
 - Database schema version 6. One-off repairs are a set in `MasroufApp.Repair`,
   each stamped with the version that introduced it, taken as a union and run once
-  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **13**.
+  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **14**.
 - Real data on the phone: ~22,014 transactions, ~2,190 unfiled, and the owner's
   own learned merchant rules (34 and growing — he files one whenever a shop the
   shipped list cannot name comes up).
@@ -90,6 +90,23 @@ the party's real name in place of an account number on 1,300 rows.
 - He settles the AlRajhi card from the Emirates NBD card and the reverse.
 - Salary arrives as "ايداع رواتب", 19,491 SAR around the 26th. Bonuses arrive as
   transfers from `امانة العاصمة المقدسة` — his employer.
+
+### The card tiles (end of session)
+
+The row is a `Row` with `horizontalScroll` at `IntrinsicSize.Max`, not a `LazyRow`:
+a height typed by hand clipped twice, and a dozen cards make laziness worthless.
+`horizontalScroll` opens at offset 0, which is the LEFT edge in both directions, so
+in Arabic it opened half-way into the first card - hence the `LaunchedEffect` that
+scrolls to `maxValue` under RTL. Order is `orderedCards`, asserted in
+`CardOrderTest`: الراجحي, الأهلي, D360, برق, then by number.
+
+8134 reads **41,000.00 · مسددة بالكامل**, matching his bank app. It was stale
+because AlRajhi reversed its card field in April 2026 (`عبر:فيزا;8134` for
+`عبر8134;فيزا`) and ten settlements stored their amount and balance attached to no
+card at all. The pattern is in `SaudiBanks`, card-first so the network half is not
+captured instead, and maintenance pass 14 re-read the stored bodies. A card whose
+remaining allowance equals its ceiling is never marked stale: it owes nothing, and
+a settled card sends no further message to refresh itself with.
 
 ## Open items
 

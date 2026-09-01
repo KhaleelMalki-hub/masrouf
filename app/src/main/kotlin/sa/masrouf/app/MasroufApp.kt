@@ -110,8 +110,16 @@ class MasroufApp : Application() {
         /** Balances never read out of bodies that carry one. */
         BACKFILL_BALANCES(1),
 
-        /** Merchants and cards an older parser could not extract. */
-        REPARSE_BODIES(1),
+        /**
+         * Merchants and cards an older parser could not extract.
+         *
+         * Raised to 14 for AlRajhi's reversed card field: "عبر:فيزا;8134" where it
+         * had always written "عبر8134;فيزا". Ten settlements were stored with the
+         * right amount and balance and no card, so a card paid off in full still
+         * showed the figure from before it was paid - the balance was in the
+         * database, attached to nothing.
+         */
+        REPARSE_BODIES(14),
 
         /** Salary deposits an older classifier read as transfers. */
         RETYPE_SALARY(3),

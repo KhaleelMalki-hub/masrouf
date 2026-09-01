@@ -43,6 +43,15 @@ object SaudiBanks {
         cardPatterns = listOf(
             // "عبر:5763;مدى-جوجل باي" as well as "عبر5763": the colon is newer.
             Regex("""عبر\s*:?\s*(\d{4})"""),
+            // And the halves the other way round: "عبر:فيزا;8134". AlRajhi started
+            // sending this in April 2026 and ten settlements arrived with no card
+            // at all - their amounts and balances stored correctly and attached to
+            // nothing, so the tile for a card the owner had paid off in full went
+            // on showing a figure from before he paid it.
+            //
+            // Card FIRST above, network first here, because the pattern that runs
+            // first wins and "عبر:فيزا;8134" must not give up "فيزا".
+            Regex("""عبر\s*:?\s*[^\d;\n]{1,12};\s*(\d{4})"""),
             Regex("""بطاقة\s*:?\s*\**\s*(\d{4})"""),
             // English templates: "By:1335 ;Visa" and "Card:1335 ;Visa".
             Regex("""(?m)^By\s*:\s*(\d{4})"""),

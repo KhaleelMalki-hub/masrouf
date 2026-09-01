@@ -1,5 +1,13 @@
 package sa.masrouf.app.ui
 
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -48,7 +56,11 @@ fun CardsPanel(
     currencyLabel: String,
     modifier: Modifier = Modifier,
 ) {
-    val open = cards.filter { it.last4 in ActiveCards.LAST4 }
+    // Ordered by bank, in the order the owner named, and within a bank by the card
+    // number so the row is the same every launch. It arrives ordered by most recent
+    // activity, which reshuffles the row whenever a card is used - and a row that
+    // moves is a row you have to read rather than recognise.
+    val open = orderedCards(cards)
     if (open.isEmpty()) return
 
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -58,12 +70,35 @@ fun CardsPanel(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 16.dp),
         )
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp),
+        // One height for every tile, set by the tallest content any of them can
+        // carry: left to wrap, a card showing a limit stands taller than one whose
+        // bank sends no figure, and a row at four different heights reads as a
+        // fault rather than as a difference in what is known.
+        //
+        // A Row measuring its own tallest child, not a LazyRow at a height typed by
+        // hand. A fixed height clips instead of growing and was wrong twice - at
+        // 132dp when a card gained its ceiling, and at 150dp when "مسددة بالكامل"
+        // and its limit wrapped to two lines. There are at most a dozen cards, so
+        // laziness buys nothing and costs the intrinsic measurement that makes the
+        // row size itself.
+        val scroll = rememberScrollState()
+        // ...and costs the one thing LazyRow did give: a scroll that starts where
+        // Arabic starts. `horizontalScroll` opens at offset 0, which is the LEFT
+        // edge in either direction, so in RTL the first card - the one the owner
+        // asked to see first - opened half off the right of the screen.
+        val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+        LaunchedEffect(isRtl, scroll.maxValue) {
+            if (isRtl) scroll.scrollTo(scroll.maxValue)
+        }
+        Row(
+            modifier = Modifier
+                .horizontalScroll(scroll)
+                .height(IntrinsicSize.Max)
+                .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            items(open, key = { it.last4 }) { card ->
-                CardTile(card = card, currencyLabel = currencyLabel)
+            for (card in open) {
+                key(card.last4) { CardTile(card = card, currencyLabel = currencyLabel) }
             }
         }
     }
@@ -85,6 +120,22 @@ private fun CardTile(card: CardBalance, currencyLabel: String) {
     val isArabic = LocalConfiguration.current.locales[0].language == "ar"
     val tint = mark?.colour ?: MaterialTheme.colorScheme.outline
     val limit = CreditCards.limitHalalas[card.last4]
+    val ageDays = Duration.between(Instant.ofEpochMilli(card.atMillis), Instant.now()).toDays()
+
+    // A reading is old. Whether it is out of DATE is a different question, and the
+    // threshold alone answered it wrongly.
+    //
+    // "Two statement cycles" was reasoned about a card in use. A card settled in
+    // full and then left alone never sends another message, so it goes silent
+    // forever - and the app was hiding a figure that was exactly right, while the
+    // owner's bank app showed the same number.
+    //
+    // A remaining allowance equal to the ceiling means nothing is owed, and nothing
+    // can change it but a purchase, which would send a message. So a full card is
+    // never stale: the silence IS the confirmation. Anything short of the ceiling
+    // is a debt that gets paid without the bank saying so, and that is what ages.
+    val settledInFull = limit != null && card.halalas == limit
+    val stale = ageDays > STALE_AFTER_DAYS && !settledInFull
     // A card's nature belongs to the card, not to whichever message happened to
     // arrive last. AlRajhi writes "رصيد" for a credit card exactly as it does for a
     // current account, so the reader files the figure as an account balance and the
@@ -93,7 +144,9 @@ private fun CardTile(card: CardBalance, currencyLabel: String) {
     val isCredit = card.kind == BalanceReader.Kind.CREDIT_LIMIT.name || limit != null
 
     Card(
-        modifier = Modifier.width(168.dp),
+        modifier = Modifier
+            .width(168.dp)
+            .fillMaxHeight(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
     ) {
       Column(
@@ -114,7 +167,16 @@ private fun CardTile(card: CardBalance, currencyLabel: String) {
             )
         }
         Spacer(Modifier.height(8.dp))
-        val halalas = card.halalas
+        // A credit card's remaining allowance is only true until the next payment,
+        // and this one had been settled in full for five months while the tile
+        // still showed a fifth of its limit. The date said so in the faintest line
+        // on the card and was read as a footnote, which is what a footnote is for.
+        //
+        // So past the threshold the figure is not shown at all. The app does not
+        // know what is on that card today, and "—" is what it says everywhere else
+        // it does not know. A number it cannot stand behind is worse than a blank:
+        // the blank is questioned, the number is believed.
+        val halalas = card.halalas?.takeIf { !stale }
         if (halalas != null) {
             Text(
                 text = stringResource(if (isCredit) R.string.card_credit_left else R.string.card_balance),
@@ -131,16 +193,29 @@ private fun CardTile(card: CardBalance, currencyLabel: String) {
             // make the app understate the limit and overstate what has been used.
             if (limit != null) {
                 Text(
-                    text = stringResource(R.string.card_of_limit, Money.ofHalalas(limit).grouped()),
+                    text = stringResource(
+                        if (settledInFull) R.string.card_settled else R.string.card_of_limit,
+                        Money.ofHalalas(limit).grouped(),
+                    ),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         } else {
-            // The bank never puts a figure in its messages. Saying so beats a
-            // blank, which reads as the app having failed to read one.
+            // Two different silences, and they are not the same fact: this bank
+            // has never sent a figure, or it sent one long enough ago that the app
+            // will not stand behind it.
+            //
+            // The second says the app has not HEARD, not that the number is
+            // unknowable. The owner read the first wording as the app claiming
+            // nobody could know, and showed his bank's own app saying 41,000 - it
+            // knows because it asks the bank; this app has no internet permission
+            // and reads messages, so it can only ever know what was sent to it.
             Text(
-                text = stringResource(R.string.card_no_balance),
+                text = stringResource(
+                    if (stale && card.halalas != null) R.string.card_balance_not_heard
+                    else R.string.card_no_balance
+                ),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -161,8 +236,6 @@ private fun CardTile(card: CardBalance, currencyLabel: String) {
         // read. The threshold is a card's own rhythm: a card in use reports within
         // a statement cycle, and two of those without a word is the point where the
         // figure stops describing now.
-        val ageDays = Duration.between(Instant.ofEpochMilli(card.atMillis), Instant.now()).toDays()
-        val stale = ageDays > STALE_AFTER_DAYS
         Text(
             text = stringResource(
                 if (stale) R.string.card_as_of_stale else R.string.card_as_of,
@@ -179,8 +252,39 @@ private fun CardTile(card: CardBalance, currencyLabel: String) {
     }
 }
 
+/**
+ * Where each bank sits in the row, as the owner reads them.
+ *
+ * The owner's own order, not an alphabet and not an inference: AlRajhi first
+ * because it carries the account his salary lands in, then AlAhli, then D360, then
+ * barq. A bank not listed - a card whose issuer is unknown - goes last rather than
+ * first, so an unnamed card never displaces a named one.
+ *
+ * Resolved the same way the tile resolves its label: the owner's statement first,
+ * the message stamp second.
+ */
+/**
+ * The open cards, in the order the owner reads them: his banks in the order he
+ * thinks of them, and within a bank by number so a card never moves between
+ * launches. A bank the list does not name sorts last rather than first - an
+ * unknown issuer is the least interesting tile, not the most.
+ *
+ * Composition-free so it can be asserted; ordering was wrong on the screen twice
+ * before it was a function.
+ */
+internal fun orderedCards(cards: List<CardBalance>): List<CardBalance> = cards
+    .filter { it.last4 in ActiveCards.LAST4 }
+    .sortedWith(compareBy({ it.bankOrder }, { it.last4 }))
+
+private val BANK_ORDER = listOf("alrajhi", "snb", "d360", "barq")
+
+private val CardBalance.bankOrder: Int
+    get() = BANK_ORDER.indexOf(CardIssuers.BANK_ID[last4] ?: bankId)
+        .takeIf { it >= 0 } ?: BANK_ORDER.size
+
 /** Two statement cycles. Past this, a balance describes the past. */
 private const val STALE_AFTER_DAYS = 62L
+
 
 /**
  * The cards the user says are open, by their last four digits.
