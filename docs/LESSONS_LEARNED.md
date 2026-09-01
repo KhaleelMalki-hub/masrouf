@@ -402,3 +402,24 @@ suggestion, and put it on a screen before calling it a recommendation.
 **Rule:** Before changing an extractor, run old and new over every stored body and count three things: GAINED, CHANGED, LOST. Ship when gained is large, changed is explainable line by line, and lost is understood - not when the new test passes.
 **How to apply:** Any change to a pattern that has already run against real data.
 **Source:** the 337-gain / 89-change / 2-loss measurement behind pass 15.
+
+### 2026-09-01 — A sender with no parser is invisible to every query over the database
+**Mistake:** Four separate deep passes over this history - all of them querying the stored transactions - reported the history as complete. A whole wallet, STC Pay, had sent 4,446 messages between 2019 and 2026 and produced not one row, because no profile claimed the sender. The owner asked "why did none of this show up earlier", and he was right to.
+**Why:** Every question was asked of the data that made it in. Missing data has no rows to be counted, no null to be found, no anomaly to be spotted - it is absent, and absence looks exactly like "nothing happened".
+**Rule:** To find what a capture pipeline is missing, compare the SOURCE against the store, never the store against itself. Enumerate the senders in the raw inbox, subtract the ones the app understands, and count what is left - by message, by amount, by year.
+**How to apply:** Any ingestion pipeline, at the first sign that a total looks low or a history looks quiet.
+**Source:** STC Pay, 650,280 riyals miscounted and ~195,000 never recorded.
+
+### 2026-09-01 — Whose name it is decides what the name means
+**Mistake:** An outgoing transfer that mentions the account holder was demoted to "money between his own accounts". Every outgoing transfer mentions him - he is the sender - so 68 wage transfers to domestic staff abroad, 94,126 riyals, left his spending entirely.
+**Why:** The rule tested for the name anywhere in the body, which conflated the two roles a name can play. It survived because the templates it was written against happened to name him only as the beneficiary.
+**Rule:** When a rule keys on an identity, key it on the identity IN A ROLE - beneficiary, sender, payer - and drop the lines that carry the other role before matching. An identity check with no role is a coin flip that agrees with you at first.
+**How to apply:** Any rule that reads "if this names X".
+**Source:** IntentClassifier.withoutSenderLines.
+
+### 2026-09-01 — `\b` does not exist between an Arabic letter and a colon
+**Mistake:** The sender-line guard `^\s*(?:اسم\s+المرسل|...)\b` matched nothing at all, so the fix above did nothing until a debug print showed it.
+**Why:** Java defines a word boundary over `[A-Za-z0-9_]`. Between an Arabic letter and a colon both sides are non-word, so there is no boundary and `\b` fails - silently, as a guard that reads as present and does nothing. The same shape as the lookahead defect recorded earlier in this file.
+**Rule:** In a mixed-script regex, put `\b` only on the Latin alternatives. Anchor Arabic ones with an explicit lookahead for what actually follows, and print the match result once before believing a guard works.
+**How to apply:** Any regex over Arabic text that reaches for a word boundary.
+**Source:** IntentClassifier.SENDER_LINE.

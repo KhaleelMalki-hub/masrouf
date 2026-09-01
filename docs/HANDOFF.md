@@ -15,7 +15,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
   off adb often; check `adb devices` before installing.
 - Database schema version 6. One-off repairs are a set in `MasroufApp.Repair`,
   each stamped with the version that introduced it, taken as a union and run once
-  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **15**.
+  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **18**.
 - Real data on the phone: ~22,014 transactions, ~2,190 unfiled, and the owner's
   own learned merchant rules (34 and growing — he files one whenever a shop the
   shipped list cannot name comes up).
@@ -126,6 +126,37 @@ template whose merchant sits unlabelled between the card and the date.
 Measured on the phone, maintenance pass 15: **no party 588 → 120, unfiled
 2,196 → 1,857.** The gate also learnt "رفض العملية", the active voice of a
 refusal, which had stored a declined purchase as money spent.
+
+### The wallet nobody had read (2026-09-01)
+
+Found by comparing the phone's INBOX against the database rather than querying the
+database again. **A sender with no parser produces no rows, and a sender that
+produces no rows is invisible to every query over stored data** - which is why
+four earlier passes over this history missed it entirely.
+
+STC Pay (now STC Bank; the owner has stopped using it) sent **4,446 messages
+between 2019 and 2026** and nothing in the app had ever claimed the sender:
+
+| | |
+|---|---|
+| purchases never recorded | 1,845 (~100,800 SAR) |
+| Western Union transfers never recorded | 68 (94,126 SAR) — wages for domestic staff |
+| top-ups counted as SPENDING from the bank's side | 670 rows, **650,280 SAR** |
+| security codes only luck kept off the disk | 889 |
+
+Three fixes, and the second is the one to remember:
+
+1. `SaudiBanks.STC_PAY`, and STC Pay added to `OWN_WALLETS` so its top-ups stop
+   counting as spending.
+2. **The owner-name demotion now ignores sender lines.** Every outgoing transfer
+   names the owner - he is sending it - and the rule that demotes a transfer to
+   himself asked only whether his name appeared *anywhere*. All 68 WU transfers
+   say `اسم المرسل`, so 94,126 riyals of wages read as his own money.
+3. The gate learnt `رمز الأمان`, STC Pay's wording for a one-time code, which was
+   its single most common message.
+
+Maintenance 18 re-reads the WHOLE inbox once (`REREAD_WHOLE_INBOX`), because
+these messages are older than any tail the launch catch-up reads.
 
 ## Open items
 

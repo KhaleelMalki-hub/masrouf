@@ -194,6 +194,20 @@ object IntentClassifier {
         // riyals are reported again by the wallet as they are actually spent.
         Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, listOf("CASH", "IN")),
 
+        // ---- The wallet's own vocabulary --------------------------------------
+        //
+        // STC Pay wrote none of the words above. 4,446 of its messages sat in the
+        // inbox with no parser for the sender at all, so the wallet's seven years -
+        // 1,845 purchases and 52 international transfers - were never in the app,
+        // while the 670 top-ups that funded them were counted as spending from the
+        // bank's side.
+
+        // "تغذية محفظة عبر ماستركارد" and "إضافة أموال لحسابك | عبر:*5763": his own
+        // money arriving in his own wallet. Never spending and never income, and
+        // both directions of the same movement say so.
+        Rule(TransactionType.OWN_TRANSFER, Direction.CREDIT, listOf("تغذي", "محفظ")),
+        Rule(TransactionType.OWN_TRANSFER, Direction.CREDIT, listOf("اضاف", "اموال")),
+
         // Transfer wording, as stems. Banks insert words into the middle of their
         // own phrases ("حوالة صادرة محلية", "حوالة محلية صادرة", "حوالات فورية
         // واردة"), and statements use a different noun than messages do - حوالة in
@@ -213,6 +227,11 @@ object IntentClassifier {
         Rule(TransactionType.REFUND, Direction.CREDIT, listOf("CASH", "REWARD")),
 
         Rule(TransactionType.PURCHASE, Direction.DEBIT, listOf("شراء")),
+        // "مشتريات إنترنت" and "مشتريات داخلية", the wallet's two purchase
+        // templates - 1,762 of them. A different root from شراء, so no rule above
+        // could reach either. Below استرداد, because a cashback notice says
+        // "كاسترداد نقدي على مشترياتك" and is money coming back, not going out.
+        Rule(TransactionType.PURCHASE, Direction.DEBIT, listOf("مشتري")),
         Rule(TransactionType.PURCHASE, Direction.DEBIT, listOf("PURCHASE")),
         // AlRajhi's English point-of-sale template says only "PoS". Matched as a
         // whole word, so it cannot fire inside another word.
@@ -279,11 +298,39 @@ object IntentClassifier {
         //
         // Only ever demotes TRANSFER_OUT, and only to a type with the same
         // direction, so no other verdict can be changed by a name.
-        if (rule.type == TransactionType.TRANSFER_OUT && namesOwner(folded)) {
+        if (rule.type == TransactionType.TRANSFER_OUT && namesOwner(withoutSenderLines(text))) {
             return Intent(TransactionType.OWN_TRANSFER, Direction.DEBIT)
         }
         return Intent(rule.type, rule.direction)
     }
+
+    /**
+     * The message with its SENDER lines removed.
+     *
+     * Every outgoing transfer names the owner - he is the one sending it. What
+     * decides whether the money stayed with him is who RECEIVED it, and the
+     * demotion above could not tell the two apart: it asked whether the name
+     * appeared anywhere.
+     *
+     * It cost 68 transfers worth 94,126 riyals. STC Pay writes "اسم المرسل" on
+     * every international transfer, so wages sent to domestic staff abroad read as
+     * the owner moving money to himself and left his spending entirely.
+     *
+     * Only the lines that say sender are dropped. "من" is not among them: half the
+     * templates use it for the funding ACCOUNT rather than a person, and a transfer
+     * the owner makes to himself still names him on a beneficiary line, which is
+     * what the demotion is for.
+     */
+    private fun withoutSenderLines(text: String): String =
+        text.lineSequence().filterNot(SENDER_LINE::containsMatchIn).joinToString("\n")
+            .let(ArabicText::foldForMatching)
+
+    // `\b` only on the Latin alternative. Java defines a word boundary over
+    // [A-Za-z0-9_], so between an Arabic letter and a colon there is no boundary at
+    // all and "اسم المرسل:" matched nothing - the guard read as present and did
+    // nothing, which is the same defect a lookahead had here once before.
+    private val SENDER_LINE =
+        Regex("""^\s*(?:اسم\s+المرسل|المرسل|مرسل|FROM\b)""", RegexOption.IGNORE_CASE)
 
     /** Whether folded text names the account holder. See [AccountOwner]. */
     private fun namesOwner(foldedText: String): Boolean =

@@ -77,6 +77,15 @@ object MessageGate {
         // transactions, each keeping a credential on disk.
         "IS YOUR PASSWORD",
         "YOUR PASSWORD FOR",
+        // "رمز الأمان هو: 4821 لدفع مبلغ SAR 120 للتاجر: Mrsool" - STC Pay's
+        // wording, and its most common message: 889 of them in this inbox, each
+        // carrying a live code and the full amount of the purchase it authorises.
+        // Nothing had ever read a message from that sender, so not one was stored -
+        // luck, not a control, and the luck ends the moment the sender gets a
+        // parser, which is what this change does.
+        "رمز الامان",
+        "رمز الأمان",
+        "رمزالامان",
         "رمز التحقق",
         "رمزالتحقق",
         "الرقم السري لمره واحده",

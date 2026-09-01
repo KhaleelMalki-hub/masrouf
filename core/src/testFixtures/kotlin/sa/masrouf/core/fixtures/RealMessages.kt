@@ -603,6 +603,88 @@ card number: **1887, mada
         "تم رفض العملية: البطاقة غير نشطة\nالعملية: شراء\nالبطاقة: 7404\n" +
             "المبلغ: SAR 97.31\nالحساب: Mrsool\nالتاريخ: 8/3/26 2:07"
 
+    // ---- STC Pay, the wallet that became STC Bank ---------------------------
+    //
+    // 4,446 messages spanning 2019-2026, none of them ever read: no profile
+    // claimed the sender. Names and account numbers replaced, balances invented,
+    // codes zeroed; wording, labels and structure exactly as sent.
+
+    /** The commonest purchase template. The merchant follows "في:", as does a date. */
+    const val STC_ONLINE_PURCHASE = """مشتريات إنترنت
+البطاقة: ***8611؛ VISA
+المبلغ: 10 SAR 
+في: Health Endowment Fund
+من حساب رقم: ***0000
+بتاريخ: 2024/09/10 08:34:51"""
+
+    /** A purchase at a terminal, paid with the wallet's card through Apple Pay. */
+    const val STC_POS_PURCHASE = """مشتريات داخلية
+البطاقة: ***4735؛ Apple Pay
+المبلغ: 20 SAR 
+في: SPEED TRACK3
+بتاريخ: 2024/09/06 21:49:36"""
+
+    /**
+     * The terse template, which writes the card and the merchant under the same
+     * label and tells them apart only by the asterisk.
+     */
+    const val STC_CARD_PURCHASE = """شراء VISA
+من:*7667
+بـ:72.59 SAR
+من:AL DRE
+في: 26/06/26 01:58"""
+
+    /** His own money entering his own wallet. Never spending, never income. */
+    const val STC_WALLET_TOPUP = """تغذية محفظة stc pay
+بـ  :  100.00 ر.س 
+البطاقة: 2907*، مدى
+في: 22/01/25 - 21:01"""
+
+    /** The same, in the wallet's newer wording. */
+    const val STC_ADD_MONEY = """إضافة أموال لحسابك
+بـ:1000.00 ر.س
+عبر:*5763
+في:2026-05-16 11:55"""
+
+    /**
+     * Wages sent abroad. Filed by the channel; the recipient is a domestic worker
+     * and her name is stored as the note, never matched against a shipped rule.
+     */
+    const val STC_WESTERN_UNION = """خصم عبر حوالة دولية
+المبلغ : 1,482.75 ر.س
+الرسوم: 17.25 ر.س
+اسم المرسل: OWNER NAME
+MTCN: 0000000000
+اسم المستلم: RECIPIENT NAME
+حساب المستلم: استلام عبر ويسترين يونيون
+دولة المستلم: Philippines
+شركة الحوالات: ويسترين يونيون
+بتاريخ: 2024-06-02 10:12:00"""
+
+    /** The short form of the same transfer, which names no channel but says WU. */
+    const val STC_WU_SHORT = """حوالة WU
+مبلغ:982.75 ر.س
+رسوم: 17.25 ر.س
+MTCN:0000000000
+إلى: RECIPIENT NAME
+حساب:000*
+ دولة:أندونيسيا
+ في:16/05/26 11:55"""
+
+    /**
+     * The wallet's most common message of all - 889 of them - and the reason the
+     * gate had to learn a new wording before this sender got a parser. It carries a
+     * live code and the full amount of the purchase it authorises.
+     */
+    const val STC_SECURITY_CODE =
+        "رمز الأمان هو: 000000 لدفع مبلغ SAR 120.00 للتاجر: Mrsool"
+
+    /** A purchase the wallet refused for want of balance. */
+    const val STC_DECLINED = """رصيد غير كافي
+لا يمكن إتمام العملية
+المبلغ: 250.00 ر.س
+بتاريخ: 2024/03/02 19:00:00"""
+
     // ---- Sender identities -------------------------------------------------
 
     /** SMS sender ids exactly as they appear on the device. */
@@ -610,6 +692,7 @@ card number: **1887, mada
     const val SENDER_SNB = "SNB-AlAhli"
     const val SENDER_D360 = "D360 Bank"
     const val SENDER_BARQ = "barq app"
+    const val SENDER_STC_PAY = "STCPAY"
 
     data class Sample(val sender: String, val body: String)
 
@@ -631,6 +714,10 @@ card number: **1887, mada
         Sample(SENDER_BARQ, BARQ_TRANSFER_OUT),
         Sample(SENDER_BARQ, BARQ_TOPUP_EN),
         Sample(SENDER_BARQ, BARQ_ONLINE_PURCHASE),
+        Sample(SENDER_STC_PAY, STC_ONLINE_PURCHASE),
+        Sample(SENDER_STC_PAY, STC_POS_PURCHASE),
+        Sample(SENDER_STC_PAY, STC_CARD_PURCHASE),
+        Sample(SENDER_STC_PAY, STC_WESTERN_UNION),
     )
 
     /** Rejectable messages paired with their sender. */
@@ -640,6 +727,8 @@ card number: **1887, mada
         Sample(SENDER_SNB, SNB_ACTIVATION_CODE),
         Sample(SENDER_D360, D360_OTP),
         Sample(SENDER_BARQ, BARQ_OTP),
+        Sample(SENDER_STC_PAY, STC_SECURITY_CODE),
+        Sample(SENDER_STC_PAY, STC_DECLINED),
         Sample(SENDER_BARQ, BARQ_DECLINED),
     )
 
@@ -656,6 +745,8 @@ card number: **1887, mada
         BARQ_TRANSFER_OUT, BARQ_TOPUP_EN, BARQ_ONLINE_PURCHASE,
         ENBD_ATHIR_PURCHASE, ENBD_ATHIR_PURCHASE_CARET, SNB_MADA_PAY_PIPES,
         SNB_POS_TERMINAL_ID, RAJHI_FLAT_POS,
+        STC_ONLINE_PURCHASE, STC_POS_PURCHASE, STC_CARD_PURCHASE, STC_WALLET_TOPUP,
+        STC_ADD_MONEY, STC_WESTERN_UNION, STC_WU_SHORT,
     )
 
     /** Every message that must never become a transaction. */
@@ -663,5 +754,6 @@ card number: **1887, mada
         RAJHI_OTP, SNB_OTP, SNB_ACTIVATION_CODE, D360_OTP, BARQ_OTP, BARQ_DECLINED,
         RAJHI_CARD_STATEMENT_NOTICE, SNB_CARD_STATEMENT_NOTICE,
         RAJHI_TEMPORARY_CODE, SNB_BILL_ACTIVATION_CODE, CARD_DECLINED_AS_INACTIVE,
+        STC_SECURITY_CODE, STC_DECLINED,
     )
 }

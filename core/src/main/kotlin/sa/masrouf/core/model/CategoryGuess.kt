@@ -817,6 +817,16 @@ object CategoryGuess {
         // order, so this sits last, below both spellings of the restaurant and
         // below RESTAUR. Moving it up re-opens the old defect.
         "REEFI" to SaudiCategories.SHOPPING,
+
+        // Money sent abroad through Western Union out of the STC Pay wallet: 68
+        // transfers, 94,126 riyals, every one of them wages for domestic staff, as
+        // the owner confirmed. Filed by the CHANNEL rather than the recipient,
+        // because the recipient is a person and a person does not belong in a
+        // shipped rule. "WU" is two characters, so MerchantMatch requires it to be
+        // a whole word and it cannot reach inside another name.
+        "ويسترين يونيون" to SaudiCategories.FEES,
+        "WESTERN UNION" to SaudiCategories.FEES,
+        "WU" to SaudiCategories.FEES,
     ))
 
     /**

@@ -15,7 +15,11 @@ package sa.masrouf.core.capture
 object SaudiBanks {
 
     /** Wallet names that are the user's own, not a shop. See [BankProfile.ownWalletMerchants]. */
-    private val OWN_WALLETS = setOf("barq", "Tiqmo")
+    // STC Pay joined this set on 2026-09-01, seven years late. 670 records worth
+    // 650,280 riyals were stored as purchases "لدى STC Pay" and counted as money
+    // spent - they are top-ups of his own wallet, and what he actually bought with
+    // them was reported by the wallet itself, to a sender no parser had ever read.
+    private val OWN_WALLETS = setOf("barq", "Tiqmo", "STC Pay", "stc pay", "STCPAY")
 
     /**
      * AlRajhi. The terse sender: labels are glued to values ("بـSR 8.28",
@@ -224,7 +228,54 @@ object SaudiBanks {
         ),
     )
 
-    val ALL: List<BankProfile> = listOf(AL_RAJHI, SNB, D360, BARQ, EMIRATES_NBD)
+    /**
+     * STC Pay, which became STC Bank. Closed now, but seven years of it - 2019 to
+     * 2026 - sat in the inbox unread, because nothing in the app had ever claimed
+     * the sender: 1,845 purchases, 52 international transfers, and 889 security
+     * codes that only luck kept off the disk.
+     *
+     * Two habits of its own. It labels the merchant with "في:" - the same word it
+     * uses for the date, hence the digit guard - and it writes the card and the
+     * merchant under the same "من:" label, telling them apart only by the asterisk
+     * that precedes an identifier.
+     */
+    val STC_PAY = BankProfile(
+        id = "stcpay",
+        senderIds = setOf("STCPAY", "STC PAY", "STCBANK", "STC BANK"),
+        merchantPatterns = listOf(
+            // "في: Health Endowment Fund", never "في: 26/06/26 01:58".
+            Regex("""(?m)^في\s*+:?+\s*+(?!\d)(.+)$"""),
+            // "من:AL DRE" beneath "من:*7667", which is the card.
+            Regex("""(?m)^من\s*+:?+\s*+(?!\**\d)(.+)$"""),
+        ),
+        counterpartyPatterns = listOf(
+            // The channel FIRST, and these are counterparty patterns rather than
+            // merchant ones because a transfer is not merchant-bearing: the parser
+            // reads a merchant only for a purchase or a refund.
+            //
+            // A wage sent abroad therefore files by HOW it was sent, which is a
+            // fact about the money, rather than by WHO received it - a domestic
+            // worker, whose name is a person's name and has no place in a shipped
+            // category rule. The body keeps it either way.
+            Regex("""(?m)^شركة الحوالات\s*:?\s*(.+)$"""),
+            Regex("""(?m)^حوالة\s+(WU)\b"""),
+            Regex("""(?m)^اسم المستلم\s*:?\s*(.+)$"""),
+            Regex("""(?m)^اسم المرسل\s*:?\s*(.+)$"""),
+            Regex("""(?m)^(?:الى|إلى)\s*+:?+\s*+(?!\**\d)(.+)$"""),
+        ),
+        cardPatterns = listOf(
+            // "البطاقة: ***8611؛ VISA" and "رقم البطاقة: ****0926".
+            Regex("""بطاقة\s*:?\s*\**\s*(\d{4})"""),
+            // "عبر:*5763" - the funding card of a top-up.
+            Regex("""عبر\s*:?\s*\**\s*(\d{4})"""),
+            // "شراء VISA / من:*7667" - the card under the same label as a merchant,
+            // told apart by the asterisk.
+            Regex("""(?m)^من\s*:?\s*\*(\d{4})"""),
+        ),
+        ownWalletMerchants = OWN_WALLETS,
+    )
+
+    val ALL: List<BankProfile> = listOf(AL_RAJHI, SNB, D360, BARQ, EMIRATES_NBD, STC_PAY)
 
     /** A registry covering every sender the app understands. */
     fun registry(): ParserRegistry = ParserRegistry(ALL.map(::BankMessageParser))

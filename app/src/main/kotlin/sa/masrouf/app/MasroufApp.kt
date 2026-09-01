@@ -78,6 +78,7 @@ class MasroufApp : Application() {
                 Repair.REPARSE_BODIES -> transactions.reparseStoredBodies()
                 Repair.RETYPE_SALARY -> transactions.retypeSalaryDeposits()
                 Repair.RETYPE_OWN_MONEY -> transactions.retypeOwnMoney()
+                Repair.REREAD_WHOLE_INBOX -> rereadWholeInbox()
                 Repair.REFILE_ALL -> transactions.refileAll()
             }
         }
@@ -105,7 +106,7 @@ class MasroufApp : Application() {
          * passive markers beside it never reached, so a purchase the bank declined
          * on a cancelled card was stored as money spent.
          */
-        PURGE_REJECTED(15),
+        PURGE_REJECTED(18),
 
         /** Amounts the extractor now reads differently. Before anything reads them. */
         REPAIR_AMOUNTS(10),
@@ -137,11 +138,29 @@ class MasroufApp : Application() {
         /** Salary deposits an older classifier read as transfers. */
         RETYPE_SALARY(3),
 
-        /** The user's own money, wherever it is still counted as spending. */
-        RETYPE_OWN_MONEY(7),
+        /**
+         * The user's own money, wherever it is still counted as spending.
+         *
+         * Raised to 18 when STC Pay was recognised as one of his own wallets: 670
+         * top-ups of it, 650,280 riyals, were stored as purchases at a shop of that
+         * name and counted as money spent.
+         */
+        RETYPE_OWN_MONEY(18),
+
+        /**
+         * The whole inbox, re-read once, because the app can now understand a
+         * sender it never could.
+         *
+         * Every launch reads the tail of the inbox, which is enough for a message
+         * that arrived while the receiver was asleep. It is not enough for 4,446
+         * messages from 2019 onward that were passed over because no profile
+         * claimed STC Pay - they are older than any tail. Deduplication is what
+         * makes re-reading everything safe, and it is what it is for.
+         */
+        REREAD_WHOLE_INBOX(18),
 
         /** Last: filing reads the merchant and the type everything above corrects. */
-        REFILE_ALL(17),
+        REFILE_ALL(18),
     }
 
     /**
@@ -155,6 +174,23 @@ class MasroufApp : Application() {
      * are not the same clock. Deduplication keeps the overlap from doubling
      * anything; that is what it is for.
      */
+    /**
+     * Re-reads every message in the inbox, not just the tail.
+     *
+     * Run once, from the repair set, when a sender the app could not read becomes
+     * one it can. Everything it produces lands PENDING like any other capture, and
+     * the duplicate detector keeps the overlap with what is already stored from
+     * doubling anything.
+     */
+    private suspend fun rereadWholeInbox() {
+        val granted = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) ==
+            PackageManager.PERMISSION_GRANTED
+        if (!granted) return
+        val all = SmsInbox(contentResolver).read(newestFirst = false)
+        if (all.isEmpty()) return
+        HistoryImport(transactions).run(all)
+    }
+
     private suspend fun catchUpOnSms() {
         val granted = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) ==
             PackageManager.PERMISSION_GRANTED
