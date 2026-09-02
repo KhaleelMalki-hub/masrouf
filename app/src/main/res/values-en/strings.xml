@@ -134,6 +134,10 @@
     <string name="nav_spending">Spending</string>
     <string name="nav_income">Income</string>
     <string name="cards_title">Your cards</string>
+    <string name="card_kind_mada">On mada cards</string>
+    <string name="card_kind_credit">On credit cards</string>
+    <string name="card_kind_mada_short">mada</string>
+    <string name="card_kind_credit_short">Credit</string>
     <string name="card_balance">Balance</string>
     <string name="card_credit_left">Credit left</string>
     <string name="card_of_limit">of %1$s</string>

@@ -20,7 +20,9 @@ import sa.masrouf.app.data.IncomeMonth
 import sa.masrouf.app.data.TransactionRepository
 import sa.masrouf.app.data.categoryShares
 import sa.masrouf.app.data.investedTotal
+import sa.masrouf.app.data.spendingByCardKind
 import sa.masrouf.app.data.spendingTotal
+import sa.masrouf.core.model.CardKind
 import sa.masrouf.core.model.Category
 import sa.masrouf.core.model.Direction
 import sa.masrouf.core.model.RecurringDetector
@@ -342,6 +344,18 @@ class AddExpenseViewModel(
             .map { it.categoryShares() }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    /**
+     * What kind of card each one is. Read once: it is a fact about the card, not
+     * about the month, and deciding it reads every stored body.
+     */
+    private val _cardKinds = MutableStateFlow<Map<String, CardKind>>(emptyMap())
+    val cardKinds: StateFlow<Map<String, CardKind>> = _cardKinds.asStateFlow()
+
+    /** The month split into mada and credit, for the cards whose kind is known. */
+    val monthByCardKind: StateFlow<List<Pair<CardKind, Money>>> =
+        combine(confirmedThisMonth, _cardKinds) { rows, kinds -> rows.spendingByCardKind(kinds) }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     val monthTotal: StateFlow<Money> =
         _selectedMonth
             .flatMapLatest { month -> repository.observeMonth(month) }
@@ -445,7 +459,12 @@ class AddExpenseViewModel(
         // Off the main thread: the filing pass alone runs two thousand rows through
         // two hundred rules, and on Main it froze the first three seconds of every
         // launch - legend drawn, total stuck at 0.00, strip blank.
-        viewModelScope.launch(Dispatchers.Default) { maintenance() }
+        viewModelScope.launch(Dispatchers.Default) {
+            maintenance()
+            // After maintenance, not before: it purges bodies the gate now refuses
+            // and re-parses the rest, and this reads those bodies.
+            _cardKinds.value = repository.cardKinds()
+        }
     }
 
     fun refileEverything() {

@@ -123,6 +123,8 @@ fun AddExpenseScreen(
     val earliestMonth by viewModel.earliestMonth.collectAsStateWithLifecycle()
     val monthRows by viewModel.monthTransactions.collectAsStateWithLifecycle()
     val cardBanks by viewModel.cardBanks.collectAsStateWithLifecycle()
+    val cardKinds by viewModel.cardKinds.collectAsStateWithLifecycle()
+    val byCardKind by viewModel.monthByCardKind.collectAsStateWithLifecycle()
     val incomeMonths by viewModel.incomeByMonth.collectAsStateWithLifecycle()
     val incomeDeposits by viewModel.incomeDeposits.collectAsStateWithLifecycle()
     // Survives rotation and process death: coming back to a screen the user was not
@@ -405,6 +407,7 @@ fun AddExpenseScreen(
                     onPickMonth = { pickingMonth = true },
                     previousTotal = previousTotal,
                     invested = invested,
+                    byCardKind = byCardKind,
                     activeFilter = categoryFilter,
                     onToggleCategory = viewModel::toggleCategoryFilter,
                 )
@@ -530,6 +533,7 @@ fun AddExpenseScreen(
                         transaction = transaction,
                         currencyLabel = currency,
                         cardBanks = cardBanks,
+                        cardKinds = cardKinds,
                         salary = effectiveSalary,
                         onRefile = { refiling = transaction },
                     )

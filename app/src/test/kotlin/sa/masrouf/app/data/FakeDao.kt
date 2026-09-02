@@ -229,6 +229,12 @@ class FakeDao : TransactionDao {
 
     override suspend fun allWithBody(): List<TransactionEntity> = state.value.filter { it.rawText != null }
 
+    override suspend fun cardBodies(): List<CardBody> = state.value.mapNotNull { row ->
+        val last4 = row.accountLast4 ?: return@mapNotNull null
+        val body = row.rawText ?: return@mapNotNull null
+        CardBody(last4 = last4, body = body)
+    }
+
     override suspend fun withBodyOfType(spendingTypes: List<String>): List<TransactionEntity> =
         state.value.filter { it.rawText != null && it.type in spendingTypes }
 

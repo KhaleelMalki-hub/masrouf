@@ -4,6 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.map
@@ -17,6 +18,8 @@ import sa.masrouf.core.dedup.DuplicateDetector
 import sa.masrouf.core.dedup.EventSignature
 import sa.masrouf.core.dedup.Fingerprint
 import sa.masrouf.core.model.Category
+import sa.masrouf.core.model.CardKind
+import sa.masrouf.core.model.CardKinds
 import sa.masrouf.core.model.CategoryGuess
 import sa.masrouf.core.model.Direction
 import sa.masrouf.core.model.INCOME_CATEGORY_IDS
@@ -600,6 +603,22 @@ class TransactionRepository(
             .map { rows -> rows.associate { it.last4 to it.bankId } }
             .flowOn(computation)
 
+    /**
+     * What kind of card each one is, decided by its own bank's wording.
+     *
+     * Suspending and read once, not a flow: the verdict is a fact about the card
+     * rather than about the month, and it is settled by messages that have already
+     * arrived. See [CardKinds] for why the network is not evidence.
+     */
+    suspend fun cardKinds(): Map<String, CardKind> = withContext(computation) {
+        dao.cardBodies()
+            .groupBy(CardBody::last4)
+            .mapNotNull { (last4, rows) ->
+                CardKinds.verdict(rows.map(CardBody::body))?.let { last4 to it }
+            }
+            .toMap()
+    }
+
     fun observePending(): Flow<List<Transaction>> =
         dao.observePending()
             .map { rows -> rows.map(TransactionEntity::toModel) }
@@ -829,6 +848,22 @@ fun List<Transaction>.categoryShares(): List<Pair<Category?, Money>> =
  * type: an investment deposit reaches the bank as a card purchase and is not money
  * the user spent.
  */
+/**
+ * What the month spent on mada cards and what it put on credit.
+ *
+ * The owner asked for the split: a few shops still take mada and nothing else, and
+ * what he borrowed is a different question from what he spent. A card the messages
+ * never describe is left out entirely rather than counted under a guess, so these
+ * figures do not have to add up to the month's total and the panel says so.
+ */
+fun List<Transaction>.spendingByCardKind(kinds: Map<String, CardKind>): List<Pair<CardKind, Money>> =
+    filter { it.status == Status.CONFIRMED }
+        .filter { it.countsAsSpending }
+        .mapNotNull { row -> row.accountLast4?.let(kinds::get)?.let { it to row.amount } }
+        .groupBy({ it.first }, { it.second })
+        .map { (kind, amounts) -> kind to amounts.fold(Money.ZERO) { sum, a -> sum + a } }
+        .sortedByDescending { it.second.halalas }
+
 fun List<Transaction>.spendingTotal(): Money =
     filter { it.status == Status.CONFIRMED }
         .filter { it.countsAsSpending }

@@ -47,6 +47,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import sa.masrouf.app.R
+import sa.masrouf.core.model.CardKind
 import sa.masrouf.core.model.Category
 import sa.masrouf.core.model.Direction
 import sa.masrouf.core.model.MerchantNames
@@ -100,6 +101,7 @@ internal fun TransactionRow(
     modifier: Modifier = Modifier,
     currencyLabel: String,
     cardBanks: Map<String, String>,
+    cardKinds: Map<String, CardKind> = emptyMap(),
     salary: Money?,
     onRefile: () -> Unit,
 ) {
@@ -174,7 +176,11 @@ internal fun TransactionRow(
                     Spacer(Modifier.width(6.dp))
                 }
                 if (mark != null || transaction.accountLast4 != null) {
-                    CardMark(mark = mark, last4 = transaction.accountLast4)
+                    CardMark(
+                        mark = mark,
+                        last4 = transaction.accountLast4,
+                        kind = transaction.accountLast4?.let(cardKinds::get),
+                    )
                     Spacer(Modifier.width(8.dp))
                 }
                 Text(
@@ -379,14 +385,21 @@ internal fun RefileSheet(
  * ordinary case, and "الراجحي" alone cannot tell them apart.
  */
 @Composable
-internal fun CardMark(mark: BankMark?, last4: String?) {
+internal fun CardMark(mark: BankMark?, last4: String?, kind: CardKind? = null) {
     val colour = mark?.colour ?: MaterialTheme.colorScheme.onSurfaceVariant
     // Digits alone, with no leading dots to say "and four more". In a right-to-left
     // row the dots land on the wrong side of the number and read as part of it; the
     // chip is already unmistakably a tag, and does that work without them.
     val isArabic = LocalConfiguration.current.locales[0].language == "ar"
-    val text = listOfNotNull(mark?.let { if (isArabic) it.labelAr else it.labelEn }, last4)
-        .joinToString(" ")
+    // Bank, then kind, then digits: "الراجحي مدى 2383". The kind is here because a
+    // few shops take mada and nothing else, so which card a purchase went on is a
+    // fact the owner reads rows for - and it is only ever shown when the card's own
+    // messages said it. See CardKinds.
+    val text = listOfNotNull(
+        mark?.let { if (isArabic) it.labelAr else it.labelEn },
+        kind?.let { stringResource(it.shortLabelRes) },
+        last4,
+    ).joinToString(" ")
 
     Text(
         text = text,
@@ -411,3 +424,10 @@ internal fun CardMark(mark: BankMark?, last4: String?) {
 private fun MerchantNames.MerchantName.forLocale(): String =
     if (LocalConfiguration.current.locales[0].language == "ar") ar else en
 
+
+/** The short word for a kind of card, for the chip on a row. */
+internal val CardKind.shortLabelRes: Int
+    get() = when (this) {
+        CardKind.MADA -> R.string.card_kind_mada_short
+        CardKind.CREDIT -> R.string.card_kind_credit_short
+    }

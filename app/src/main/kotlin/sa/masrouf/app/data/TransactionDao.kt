@@ -323,6 +323,21 @@ interface TransactionDao {
     fun observeCardBanks(): Flow<List<CardBank>>
 
     /**
+     * Every stored body that names a card, for [sa.masrouf.core.model.CardKinds].
+     *
+     * Read once at launch rather than watched: what kind a card is does not change,
+     * and folding twenty-six thousand bodies on every database write would cost the
+     * dashboard its first frame - the lesson `MerchantMatch.Rules` already records.
+     */
+    @Query(
+        """
+        SELECT account_last4 AS last4, raw_text AS body FROM transactions
+        WHERE account_last4 IS NOT NULL AND raw_text IS NOT NULL
+        """
+    )
+    suspend fun cardBodies(): List<CardBody>
+
+    /**
      * Every confirmed debit with a merchant, oldest first, for the recurring
      * detector. The whole history rather than a window, because a yearly payment
      * needs years to be seen; twelve thousand small rows is a fraction of a second.

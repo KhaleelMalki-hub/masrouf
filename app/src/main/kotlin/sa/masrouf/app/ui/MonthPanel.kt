@@ -43,6 +43,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import sa.masrouf.app.R
+import sa.masrouf.core.model.CardKind
 import sa.masrouf.core.model.Category
 import sa.masrouf.core.model.Direction
 import sa.masrouf.core.model.SaudiCategories
@@ -73,6 +74,7 @@ internal fun MonthPanel(
     onPickMonth: () -> Unit,
     previousTotal: Money?,
     invested: Money?,
+    byCardKind: List<Pair<CardKind, Money>>,
     activeFilter: HistoryFilter?,
     onToggleCategory: (Category?) -> Unit,
 ) {
@@ -191,6 +193,7 @@ internal fun MonthPanel(
                     onClick = { onToggleCategory(SaudiCategories.INVESTMENT) },
                 )
             }
+            CardKindSplit(byCardKind = byCardKind, currencyLabel = currencyLabel)
             if (activeFilter == null) {
                 // The legend has been the filter since it was built, and it was not
                 // discovered: rows of a chart do not read as controls. One line
@@ -205,6 +208,54 @@ internal fun MonthPanel(
         }
     }
 }
+
+/**
+ * What the month put on mada and what it put on credit.
+ *
+ * The owner asked for it: a few shops still take mada and nothing else, and what
+ * he borrowed is a different question from what he spent. Deliberately NOT another
+ * band in the strip - the strip adds up to the total above it, and this is the same
+ * money counted a second way.
+ *
+ * Cards whose messages never say which kind they are are left out, so these two
+ * figures usually come to less than the month. Two plain lines rather than a
+ * second chart: it is a comparison of two numbers, and a chart of two numbers is
+ * decoration.
+ */
+@Composable
+private fun CardKindSplit(byCardKind: List<Pair<CardKind, Money>>, currencyLabel: String) {
+    if (byCardKind.isEmpty()) return
+
+    Column(
+        modifier = Modifier.padding(top = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        for ((kind, amount) in byCardKind) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = stringResource(kind.labelRes),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = amount.forDisplay(currencyLabel),
+                    style = MoneyStyle.merge(MaterialTheme.typography.bodySmall),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+/** The word for a kind of card, in the language the interface is being read in. */
+internal val CardKind.labelRes: Int
+    get() = when (this) {
+        CardKind.MADA -> R.string.card_kind_mada
+        CardKind.CREDIT -> R.string.card_kind_credit
+    }
 
 /**
  * Paging between months.
