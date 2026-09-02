@@ -79,7 +79,7 @@
     <string name="dismiss_title">تجاهل هذه العملية؟</string>
     <string name="dismiss_body">سيُحذف مبلغ %1$s بتاريخ %2$s مع نص رسالة البنك الأصلية. لا يمكن التراجع ولا استرجاع النص.</string>
     <string name="category_food">مطاعم وقهوة</string>
-    <string name="category_groceries">بقالة</string>
+    <string name="category_groceries">بقالة وأغذية</string>
     <string name="category_transport">مواصلات</string>
     <string name="category_bills">فواتير واشتراكات</string>
     <string name="category_health">صحة</string>

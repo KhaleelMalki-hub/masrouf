@@ -23,6 +23,38 @@ class CategoryCoverageTest {
 
     private val all = SaudiCategories.ALL
 
+    /**
+     * The name in `SaudiCategories` and the name on the screen are the same name.
+     *
+     * They are two sources of truth for one string and they drifted the day
+     * groceries was renamed: `labelAr` became "بقالة وأغذية", the screen kept
+     * saying "بقالة", and nothing failed - the interface reads the string
+     * RESOURCE, and `labelAr` is read by nothing at all. That is worse than a
+     * duplicate, because the copy that looks authoritative in the model is the one
+     * that renders nowhere.
+     *
+     * Parsing the XML rather than resolving R: these are plain JVM tests, and the
+     * file is the artefact that ships.
+     */
+    @Test
+    fun `the arabic name in the model is the arabic name on the screen`() {
+        val xml = java.io.File("src/main/res/values/strings.xml").readText()
+        val strings = Regex("""<string name="([^"]+)">([^<]*)</string>""")
+            .findAll(xml)
+            .associate { it.groupValues[1] to it.groupValues[2] }
+
+        val disagreeing = all.mapNotNull { category ->
+            val onScreen = strings["category_${category.id}"]
+            if (onScreen != null && onScreen != category.labelAr) {
+                "${category.id}: model='${category.labelAr}' screen='$onScreen'"
+            } else {
+                null
+            }
+        }
+
+        assertEquals(emptyList(), disagreeing, "the model and the screen disagree")
+    }
+
     @Test
     fun `every category has a band colour of its own, in both themes`() {
         for ((theme, bands) in BandsByTheme) assertDistinctColours(theme, bands)
