@@ -6,7 +6,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
 
 ## Where things stand
 
-- All tests green: **369** in `:core`, **174** in `:app`, **9** instrumented
+- All tests green: **378** in `:core`, **178** in `:app`, **9** instrumented
   (`:app:connectedDebugAndroidTest`).
 - **`connectedDebugAndroidTest` uninstalls the app and deletes its database.**
   It has already cost the owner's phone once. Use the `masrouf35` emulator, or
@@ -15,7 +15,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
   off adb often; check `adb devices` before installing.
 - Database schema version 6. One-off repairs are a set in `MasroufApp.Repair`,
   each stamped with the version that introduced it, taken as a union and run once
-  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **28**.
+  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **30**.
 - Real data on the phone: ~22,014 transactions, ~2,190 unfiled, and the owner's
   own learned merchant rules (34 and growing — he files one whenever a shop the
   shipped list cannot name comes up).
@@ -377,6 +377,41 @@ per session. Wave 1's four agents exhausted it and wave 2's first four returned
 nothing at all, while the main thread's own searches still worked. Launch two
 agents rather than four, cap them at two searches per key, and tell them to spend
 the budget on the largest SAR totals first.
+
+## Where the filing stands (end of 2026-09-02)
+
+Three research waves and three rounds of the owner's own naming, all installed and
+verified on the phone at maintenance **30**.
+
+| | start of day | now |
+|---|---|---|
+| unfiled debits | 2,063 | **806** |
+| of those, last 24 months | - | 273 (51,411 riyals) |
+| pending | 3,723 | 0 (he confirmed them) |
+| adverts stored as purchases | 20 | 0 |
+
+The research method and its yield, so nobody repeats the cheap part and skips the
+expensive one: **wave 1** searched the 160 largest strings, identified 64, and the
+owner confirmed 48. **Wave 2** did the next 160, identified 48, and he took all of
+them - correcting two, which is the entire argument for the confirmation gate:
+تكوة is a restaurant and the mall charge is parking, and the search had both as
+shops. **Wave 3** searched 90 and answered only 20, because what remains is
+establishments registered in a person's name. That is the floor: no search reaches
+"EST MUNIRAH SIDDIQUE", and no keyword list ever will.
+
+The 500-odd merchants left are his worksheet, one memory at a time:
+https://claude.ai/code/artifact/dadb7e59-dffd-46cb-8e82-803c3e895e86
+
+Still awaiting his review, and worth more than another wave: the wave-1 strings he
+marked as doubtful (CITY WINDOW at 15,309 riyals, PROFESSIO at 13,000, OBOUD BAH,
+AL MUASHA, AL RASHED and a few more). Those were searched and NOT confirmed; they
+need his memory, not another search.
+
+**A label that renders nowhere.** Renaming groceries to "بقالة وأغذية" changed
+`SaudiCategories.labelAr` and nothing else: the interface reads the string
+RESOURCE, and `labelAr` is read by nothing at all. The screen kept the old word and
+no test noticed. `CategoryCoverageTest` now parses `strings.xml` and asserts the
+two agree - the rule CLAUDE.md states for a month's total, applied to a name.
 
 ## Open items
 
