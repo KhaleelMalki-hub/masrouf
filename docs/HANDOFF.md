@@ -413,6 +413,14 @@ RESOURCE, and `labelAr` is read by nothing at all. The screen kept the old word 
 no test noticed. `CategoryCoverageTest` now parses `strings.xml` and asserts the
 two agree - the rule CLAUDE.md states for a month's total, applied to a name.
 
+**A flake, seen twice now.** `AddExpenseViewModelTest.selecting the uncategorised
+band shows only what is still to be filed` failed once on 2026-09-02 with a
+`CompletionHandlerException` out of a producer coroutine, and passed on an
+immediate re-run. Same shape as the `MonthNavigationTest` leak recorded earlier:
+a ViewModel test whose collector outlives its scope. Two tests now, so it is the
+harness rather than one test. Re-run before believing it; fix means giving those
+tests a controlled dispatcher and cancelling the scope.
+
 ## Open items
 
 0. **3,723 records are PENDING.** They are the recovered history and the owner

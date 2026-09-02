@@ -164,5 +164,10 @@ object ConfirmedMerchants20260902 {
         // "سيتي دبليو". A brand's own Arabic name is not always a transliteration
         // of the one the terminal sends.
         "CITY WINDOW" to SHOPPING,
+        // "TermAppISO DXB AR" - a terminal's own protocol string where a shop's
+        // name belongs, so it names nothing at all. What places it is the trip:
+        // 4,521.97 riyals in Dubai on 18 March 2016, and Saudia issuing his
+        // boarding pass DXB to JED two days later. Travel, confirmed by the owner.
+        "TERMAPP" to TRAVEL,
     )
 }
