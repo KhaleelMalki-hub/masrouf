@@ -1017,6 +1017,27 @@ Date: 09/07/2019 09:14"""
 الى: 3016
 في: 25-8-2 13:48"""
 
+    /** SNB, 2015: one line, the shop after فى (alef maksura) and before the date. */
+    const val SNB_APPROVED_2015 =
+        "تمت الموافقة لسحب مبلغ 7248.00 SAR من بطاقة 1004** فى JARIR BOOK STORE         MAKKAH       SA بتاريخ 2015/01/19 الساعة 18:02 حد الصرف المتبقي 40000.00 SAR"
+
+    /** SNB advert. Was stored as an 8,000-riyal purchase, twice. */
+    const val SNB_CASHBACK_ADVERT =
+        "استخدم بطاقة مدى من البنك الأهلي داخل أو خارج المملكة واسترجع حتى 8,000 ريال من قيمة مشترياتك. لابد أن يحالفك الحظ. تطبق الشروط والأحكام"
+
+    /** AlJazira instalment advert. Stored as a 1,000-riyal purchase seven times over. */
+    const val JAZIRA_INSTALMENT_ADVERT = """استخدم بطاقة بنك الجزيرة الائتمانية لدى ساكو أو عالم ساكو وقسط مشترياتك بسعر الكاش وبهامش ربح 0% مع برنامج لا تأجل عند الشراء بمبلغ 1000 ريال أو أكثر
+لمزيد من المعلومات
+www.baj.com.sa/epp"""
+
+    /** A genuine SNB refund that ends the way an advert might. Must NOT be refused. */
+    const val SNB_REFUND_WITH_FOOTER =
+        "تم استرجاع مبلغ 10288.75 لبطاقتك الإئتمانية **2754. للمزيد من المعلومات الرجاء زيارة الأهلي موبايل"
+
+    /** AlRajhi's loyalty ladder. Stored as a refund of 1,874 riyals. */
+    const val RAJHI_POINTS_ADVERT =
+        "متبقي لك 1874.12 ريال وتوصل للمستوى 4. استمر في استعمال بطاقتك الائتمانية لكسب نقاط مكافأة أكثر من الراجحي"
+
     // ---- Sender identities -------------------------------------------------
 
     /** SMS sender ids exactly as they appear on the device. */
@@ -1090,6 +1111,9 @@ Date: 09/07/2019 09:14"""
         Sample(SENDER_MEEM, MEEM_OFFER),
         Sample(SENDER_MEEM, MEEM_LOGIN_CODE),
         Sample(SENDER_MEEM, MEEM_FAILED_TRANSFER),
+        Sample(SENDER_SNB, SNB_CASHBACK_ADVERT),
+        Sample("AlJaziraSMS", JAZIRA_INSTALMENT_ADVERT),
+        Sample(SENDER_RAJHI, RAJHI_POINTS_ADVERT),
     )
 
     /** Every message that represents a real, completed movement of money. */

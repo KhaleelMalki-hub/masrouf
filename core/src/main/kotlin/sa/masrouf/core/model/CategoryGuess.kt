@@ -776,6 +776,8 @@ object CategoryGuess {
         // against the whole 22,000-record merchant column before being written -
         // "REEFI" once matched a restaurant called الساج الريفي and filed 29 meals
         // as shopping, so a word that is a word in ordinary use does not go here.
+    ) + MerchantNames20260902.ENTRIES + listOf(
+        // ---- Generic tail: a word that says what kind of place --------------
         "RESTAUR" to SaudiCategories.FOOD,
         "CATERING" to SaudiCategories.FOOD,
         "SWEETS" to SaudiCategories.FOOD,

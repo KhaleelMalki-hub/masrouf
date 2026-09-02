@@ -124,9 +124,10 @@ class MasroufApp : Application() {
          *
          * Raised to 26 for the gate's new marketing markers: four AlJazira adverts
          * ("قسط مشترياتك ... بمبلغ 1,499 ريال أو أكثر") were stored as purchases of
-         * 1,499 and 1,000 riyals.
+         * 1,499 and 1,000 riyals. Raised to 27 the same day for nine more found
+         * among the unfiled rows with no party, two of them at 8,000 riyals.
          */
-        PURGE_REJECTED(26),
+        PURGE_REJECTED(27),
 
         /** Amounts the extractor now reads differently. Before anything reads them. */
         REPAIR_AMOUNTS(10),
@@ -152,8 +153,11 @@ class MasroufApp : Application() {
          * line-anchored field pattern stopped matching at once and 588 records were
          * stored with no party at all - unfileable, since a category is learned
          * from a merchant. Measured at 337 recovered on the owner's history.
+         *
+         * Raised to 27 for SNB's 2014-2015 one-line template, whose shop sits
+         * after فى with an alef maksura: 30 records, 62,000 riyals, no party.
          */
-        REPARSE_BODIES(25),
+        REPARSE_BODIES(27),
 
         /** Salary deposits an older classifier read as transfers. */
         RETYPE_SALARY(3),
@@ -189,7 +193,7 @@ class MasroufApp : Application() {
         REREAD_WHOLE_INBOX(26),
 
         /** Last: filing reads the merchant and the type everything above corrects. */
-        REFILE_ALL(26),
+        REFILE_ALL(27),
     }
 
     /**

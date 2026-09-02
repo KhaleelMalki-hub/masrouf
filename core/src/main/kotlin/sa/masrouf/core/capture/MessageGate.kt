@@ -216,6 +216,24 @@ object MessageGate {
         // read, so the balance on the same line was stored as the purchase.
         "MERCHANTNAME",
         "CUSTOMERNAME",
+        // Found the same day among the unfiled purchases with no party: nine bank
+        // adverts stored as spending, two of them SNB's "استخدم بطاقة مدى ...
+        // واسترجع حتى 8,000 ريال" at eight thousand riyals each, and AlJazira's
+        // instalment offers ("قسط مشترياتك بسعر الكاش ... بمبلغ 1,000 ريال أو
+        // أكثر") seven times over. NOT "لمزيد من المعلومات": a genuine SNB refund
+        // ends with "للمزيد من المعلومات الرجاء زيارة الأهلي موبايل".
+        "قسط مشتريات",
+        "بسعر الكاش",
+        "واسترجع حتى",
+        "هامش ربح",
+        "لحاملي بطاقات",
+        "حصريا",
+        "التقسيط",
+        "الجمعة البيضاء",
+        "بخصم",
+        // "متبقي لك 1874.12 ريال وتوصل للمستوى 4" - a loyalty ladder, stored as a
+        // refund of 1,874 riyals.
+        "وتوصل للمستوى",
     )
 
     /** Phrases that mark a transaction as not completed. */

@@ -123,7 +123,17 @@ object SaudiBanks {
             // guard above refuses it - correctly, since the same shape is how an
             // account number appears - so the name is taken from after the digits
             // rather than by loosening a guard that 2,014 records paid for.
-            Regex("""(?m)^من\s+\d{3,7}\s+(?=\D)(.+)$"""),
+            // "من 27040ADDIDAS KIDS YASM": the same, with no space after the id.
+            Regex("""(?m)^من\s+\d{3,7}\s*(?=[A-Za-z])(.+)$"""),
+            // 2014-2015: "تمت الموافقة لسحب مبلغ 7248.00 SAR من بطاقة 1004** فى
+            // JARIR BOOK STORE         MAKKAH       SA بتاريخ 2015/01/19" - one
+            // line, the shop after فى (alef maksura, which nothing looked for)
+            // and before the date. 30 records, 62,000 riyals, no party at all.
+            //
+            // The padding after the shop is five spaces or more, which the
+            // normaliser turns into a line break, so the shop ends at the break or
+            // at the date - whichever comes first - and the city stays behind.
+            Regex("""من\s+بطاقة\s+\d{4}\*+\s+(?:فى|في)\s+(.+?)(?=\s*\n|\s+بتاريخ)"""),
         ),
         counterpartyPatterns = listOf(
             // The party by name, first, because the account it used is in the same
