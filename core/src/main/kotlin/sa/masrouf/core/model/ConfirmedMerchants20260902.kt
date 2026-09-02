@@ -51,5 +51,49 @@ object ConfirmedMerchants20260902 {
         "BEST SHIE" to TRANSPORT,
         "ERWAA" to CHARITY,
         "GAZ ALTAHASOSI" to BILLS,
+
+        // ---- The second wave, searched and then confirmed the same evening ----
+        //
+        // Same method and same gate: each string was looked up, and only what the
+        // owner recognised is here. Two of them he corrected outright, and those
+        // two are the reason the gate exists - the search had both wrong.
+
+        // Eating out
+        // Covers "SHRIMP ZO", "SHRIMP ZONE" and "SHRIMP AREA" (منطقة الجمبري),
+        // three spellings of the same kind of place.
+        "SHRIMP" to FOOD,
+        "ROKON ALJAMBARY" to FOOD,
+        "ALKOFEIA" to FOOD, "KAWKAB MUSATTAH" to FOOD, "OVER JAR" to FOOD,
+        "AGAVE" to FOOD, "ONS LOUNG" to FOOD, "BOCU" to FOOD, "C HUB" to FOOD,
+        "C HOUSE" to FOOD, "NEURON" to FOOD, "QAMREYA" to FOOD, "SIBLINGS" to FOOD,
+        "LOADED TRUE" to FOOD, "MAWRED ALBARAKA" to FOOD, "SSP ARABI" to FOOD,
+        // الاتحاد المبتكرة, an Alhokair company that runs restaurants. Only the
+        // full name: the bare "INNOVATIV" in this history could be anything.
+        "INNOVATIVE UNION" to FOOD, "INNOVATION UNION" to FOOD,
+        // مطعم تكوة - the owner's correction. The search had it as a shop.
+        "TAKWAH" to FOOD,
+
+        // Food to keep
+        "ALGHARBIS" to GROCERIES, "BAIDAALHIJAZ" to GROCERIES,
+        "TALAH AL JOOD" to GROCERIES, "NATWAN" to GROCERIES, "BAFAR" to GROCERIES,
+
+        // Giving
+        "JOODESKAN" to CHARITY, "BIR GHOMAIGAH" to CHARITY, "FURIJAT" to CHARITY,
+        "ABNAWUNA" to CHARITY, "IRQAHORG" to CHARITY,
+
+        // Shops
+        "ALRUGAI" to SHOPPING, "BAYTONIA" to SHOPPING, "DESARKSA" to SHOPPING,
+        "FG4 KIDS" to SHOPPING, "THEIDEALHAIR" to SHOPPING, "BARLLINA" to SHOPPING,
+        "TARHATI" to SHOPPING, "SHALFA" to SHOPPING, "ZMAKAN" to SHOPPING,
+        "NEO HAIRLOTION" to SHOPPING, "AL HIJAZ COMMERCIAL" to SHOPPING,
+        "RINA MALL" to SHOPPING, "RINA HAIFA" to SHOPPING,
+
+        // The rest
+        "RWAEA ALMARAH" to ENTERTAINMENT, "PRIMERA" to ENTERTAINMENT,
+        "KABLI" to TRANSPORT, "ONE STOP FM" to TRANSPORT,
+        // "شكلها رسوم مواقف المول" - the owner's reading of a charge billed by the
+        // mall itself, and the reason this is transport rather than the shopping
+        // the search assumed.
+        "MALL OF ARABIA" to TRANSPORT,
     )
 }
