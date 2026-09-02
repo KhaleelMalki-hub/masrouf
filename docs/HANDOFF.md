@@ -297,9 +297,10 @@ as OWN_TRANSFER because the owner's name sits under `من:` on the sender line.
    2026-09-02; AlJazira and SAIB 2026-09-01). Still unread: STC's `900` landline
    bills (217 - probably already captured from the paying bank's side, so adding
    them would double-count). Ask before parsing.
-0. **Cards the owner has not placed on the tiles**: urpay 4322, Vision Bank 2455
-   (in use, 2026), meem 5654/0891/0883 (last used 2024). Adding any to
-   `ActiveCards` + `CardIssuers` is one line each; only he can say which are open.
+0. **No tiles for urpay 4322, Vision Bank 2455 or meem 5654/0891/0883 - the
+   owner's decision, 2026-09-02** ("these cards no longer matter to me; what
+   matters is that their spending is recorded"). Do not re-ask. Their rows carry
+   `bank_id` and file like any other.
 0. **30 barq Western Union transfers (2025-2026, ~45,000 riyals of wages) are
    stored as OWN_TRANSFER.** barq writes the owner under `من:` as the SENDER and
    the worker under `الى:`; the self-transfer demotion strips only lines that say
