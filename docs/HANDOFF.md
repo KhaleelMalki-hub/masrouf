@@ -6,7 +6,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
 
 ## Where things stand
 
-- All tests green: **358** in `:core`, **174** in `:app`, **9** instrumented
+- All tests green: **369** in `:core`, **174** in `:app`, **9** instrumented
   (`:app:connectedDebugAndroidTest`).
 - **`connectedDebugAndroidTest` uninstalls the app and deletes its database.**
   It has already cost the owner's phone once. Use the `masrouf35` emulator, or
@@ -15,7 +15,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
   off adb often; check `adb devices` before installing.
 - Database schema version 6. One-off repairs are a set in `MasroufApp.Repair`,
   each stamped with the version that introduced it, taken as a union and run once
-  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **26**.
+  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **28**.
 - Real data on the phone: ~22,014 transactions, ~2,190 unfiled, and the owner's
   own learned merchant rules (34 and growing — he files one whenever a shop the
   shipped list cannot name comes up).
@@ -288,6 +288,56 @@ so. Rows from the new senders carry `bank_id` from the sender and get a chip
 
 **Found and left open** (see below): 30 barq Western Union wage transfers stored
 as OWN_TRANSFER because the owner's name sits under `من:` on the sender line.
+
+## The filing pass (2026-09-02, afternoon)
+
+The owner asked for every month to be filed, "بأعلى احترافية ممكنة ودقة". Three
+mechanisms, in the order they were used, because each reaches what the one before
+it cannot.
+
+1. **Named from the string.** 1,245 unfiled merchants carried 2,044 records and
+   580,669 riyals. About half say what they are - a chain, a brand, a word like
+   STATION or PHARMACY - and those are in `MerchantNames20260902`, whose header
+   says plainly that the owner confirmed none of them. Ordering inside that list
+   follows the first-match rule: STATIONERY before STATION, GAS before the perfume
+   house AL QURASHI, the gateway prefixes (MF, SP, Q, TAP) last.
+2. **Named by the owner.** Ten shops only he could name (لا كالي, كرز لنن, قطوف
+   وحلا, أجواد الكرم, الحكير, اطلبها, ميازو, دار زيد, آفاق إعمار, رداء المسك),
+   in `CategoryGuess`'s owner-named section beside the ones from 2026-09-01.
+3. **Identified by web search, then confirmed by him.** Four parallel agents took
+   the 160 largest remaining strings - registered company names, truncations,
+   gateway prefixes - and searched for each, returning a category only with a
+   source URL. 64 came back identified; the owner read the table and confirmed 48.
+   Those are `ConfirmedMerchants20260902`; the ones he doubted are NOT in the code.
+
+**His filing rule, given this session and now the app's:** food that goes home to
+be kept is groceries whatever shop sold it - honey, oats, nuts, boxed chocolate,
+dates, sweets. Patchi, Godiva, Bateel, Garrett, Jeff de Bruges and the candy shops
+moved out of eating out because of it, and the category is labelled **بقالة وأغذية**
+so the filing reads the way he means it.
+
+Reading the unfiled rows that named no party found two defects worth more than the
+filing did: **twenty bank adverts stored as purchases** (SNB's "واسترجع حتى 8,000
+ريال" twice at eight thousand riyals, AlJazira's instalment offers a dozen times),
+now refused by the gate - "لمزيد من المعلومات" is deliberately NOT a marker,
+because a genuine SNB refund closes with it - and **SNB's 2014-2015 one-line
+template**, whose shop sits after فى with an alef maksura that nothing looked for:
+30 records, 62,000 riyals, no party at all.
+
+Measured on the phone: unfiled debits **2,063 → 1,143**, of which only 322 are in
+the last 24 months. Maintenance is at **28**.
+
+**The worksheet.** The 651 merchants still unfiled are published as a private page
+the owner can work through on any device - search, sort, a category per row, saved
+in his browser and copied out as `merchant<TAB>category` lines:
+https://claude.ai/code/artifact/dadb7e59-dffd-46cb-8e82-803c3e895e86
+
+**Wave 2 was blocked, not finished.** Four more agents were launched on the next
+160 strings (35,719 riyals) and all four died: this session's WebSearch budget is
+capped at 200 calls and wave 1 had spent it. `CLAUDE_CODE_MAX_WEB_SEARCHES_PER_SESSION`
+is now set to 1500 in `~/.claude/settings.json`, which takes effect on the NEXT
+session. Re-run wave 2 there: the input files are `batch5.txt` … `batch8.txt` in
+this session's scratchpad, and rebuilding them is a query away.
 
 ## Open items
 
