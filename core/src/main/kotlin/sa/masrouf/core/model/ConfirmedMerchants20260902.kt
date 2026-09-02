@@ -152,5 +152,17 @@ object ConfirmedMerchants20260902 {
         "AL AHLIA" to FOOD,
         "AHMED ARA" to GROCERIES,
         "TAP TAIBA" to SHOPPING, "TAIBAHGIFTS" to SHOPPING,
+        // سيتي دبليو - furniture, and the owner named it before the inbox
+        // confirmed it three ways: a sender called "CityW" thanking him for
+        // choosing "شركة سيتي دبليو" and asking him to rate the DELIVERY, an
+        // AlJazira instalment offer that lists it beside المطلق, كرييتف هوم and
+        // روومز - furniture retailers all - and three purchases in Jeddah of
+        // 1,925, 3,654 and 9,730 riyals, which is what furniture costs.
+        //
+        // The earlier sweep of the inbox missed it: it searched for "سيتي ويندو",
+        // a transliteration of the English string, and the shop writes itself
+        // "سيتي دبليو". A brand's own Arabic name is not always a transliteration
+        // of the one the terminal sends.
+        "CITY WINDOW" to SHOPPING,
     )
 }

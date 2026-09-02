@@ -197,7 +197,8 @@ class MasroufApp : Application() {
         // 29: the ninety-odd merchants he named and confirmed on 2026-09-02.
         // 30: the third wave, twenty more.
         // 31: the names recovered from the one-time-password messages.
-        REFILE_ALL(31),
+        // 32: سيتي دبليو, named by the owner and confirmed by his own inbox.
+        REFILE_ALL(32),
     }
 
     /**

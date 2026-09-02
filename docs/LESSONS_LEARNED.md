@@ -500,3 +500,22 @@ finding is when you record it.
 **How to apply:** Any recovery of a truncated or abbreviated value from a second
 source.
 **Source:** session 2026-09-02, `CategoryGuess`, caught by `ConfirmedMerchants20260902Test`.
+
+### 2026-09-02 — A brand's Arabic name is not a transliteration of its terminal string
+**Mistake:** Swept the whole inbox for each unfiled merchant using the English
+string and a guessed Arabic transliteration - for "CITY WINDOW", `سيتي ويندو`. It
+found nothing, and the merchant was reported as unreachable. The shop writes itself
+`سيتي دبليو` ("City W"), has its own SMS sender in that same inbox, and appears in a
+bank's instalment offer beside three other furniture retailers. The owner named it
+from memory; the evidence was there all along under a name no transliteration of
+"CITY WINDOW" would ever produce.
+**Why:** A card terminal sends a registered or legacy name; the brand markets itself
+under another, and the Arabic form is a rendering of the BRAND, not of the string on
+the receipt. Searching for one spelling asks about one spelling.
+**Rule:** When sweeping a corpus for a merchant, search the distinctive TOKEN rather
+than the whole string, and search the sender list as well as message bodies - a shop
+that texts its customers is in the sender column under its own name. Treat a
+no-result sweep as "this spelling is absent", never as "this shop is absent".
+**How to apply:** Any corpus search for an entity that has both an English and an
+Arabic public name.
+**Source:** session 2026-09-02, سيتي دبليو / CITY WINDOW.
