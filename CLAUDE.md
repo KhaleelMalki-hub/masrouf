@@ -9,8 +9,8 @@ starting work.
 ## Commands
 
 ```bash
-./gradlew :core:test              # 377 tests, runs anywhere with a JDK
-./gradlew :app:testDebugUnitTest  # 177 tests, needs the Android SDK
+./gradlew :core:test              # 378 tests, runs anywhere with a JDK
+./gradlew :app:testDebugUnitTest  # 178 tests, needs the Android SDK
 ./gradlew :app:assembleDebug      # needs local.properties with sdk.dir
 # DANGER: uninstalls the app when it finishes, which DELETES its database.
 # Gradle does this unconditionally and there is no flag to stop it. On the
