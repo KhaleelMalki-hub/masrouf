@@ -465,3 +465,38 @@ suggestion, and put it on a screen before calling it a recommendation.
 **Rule:** Before extending a map or list, find the test that constrains it and read its doc comment - that is the contract, not the field name. A fact that is true but not the fact the list holds does not belong in it.
 **How to apply:** Any addition to `ActiveCards`, `CardIssuers`, `OWN_WALLETS` or another list whose membership carries a meaning beyond "known".
 **Source:** CreditCardLabelTest, session 2026-09-02.
+
+### 2026-09-02 — The name the app needs is in a message it must never store
+**Mistake:** Spent three waves of web searches on merchant strings the terminal had
+truncated to nine characters ("AL RASHED", "OBOUD BAH", "PROFESSIO"), and reported
+the remainder as unreachable. They were not unreachable: the ONE-TIME-PASSWORD
+message for the same purchase spells the merchant in full - "لدى:AL RASHED TIRES
+COMPANY LLC" against the confirmation's "لدى:AL RASHED" - and every one of those
+messages was sitting in the phone's inbox.
+**Why:** `MessageGate` refuses OTP bodies and `purgeRejectedBodies` deletes them,
+correctly, because they carry a credential. That made them invisible to every query
+over STORED data, and the search for a fuller name never looked outside the
+database. The same blind spot as "a sender with no parser produces no rows".
+**Rule:** When a stored field is truncated, look for the same event in the RAW
+inbox before concluding the information does not exist. Refusing to store a body is
+not a reason to refuse to read one: pair a purchase with its code message on
+amount, card and minute, and take the name - never the code.
+**How to apply:** Any time a merchant, party or reference is short, truncated or
+unreadable, and before commissioning research on what a string might mean.
+**Source:** session 2026-09-02, `AL RASHED TIRES COMPANY LLC`.
+
+### 2026-09-02 — A prefix is not an identification
+**Mistake:** Having found that trick, took every unfiled truncation and searched the
+inbox for a longer string starting with it. "Karam" turned up "KARAM BEIRUT", so a
+`"KARAM" to FOOD` keyword was written - and it claimed أجواد الكرم, a grocery, which
+the test caught. That purchase's own code message said SALLA APP.
+**Why:** Two ways of reading a full name out of the inbox, and they are not equally
+strong. Matching amount, card and minute identifies THAT purchase. Finding a longer
+string that begins with the same nine characters identifies nothing at all - it is a
+spelling coincidence, and in a corpus of 1,392 merchant strings there will be one.
+**Rule:** Evidence that identifies a specific transaction may be acted on. Evidence
+that merely resembles a string goes to the owner as a question. State which kind a
+finding is when you record it.
+**How to apply:** Any recovery of a truncated or abbreviated value from a second
+source.
+**Source:** session 2026-09-02, `CategoryGuess`, caught by `ConfirmedMerchants20260902Test`.

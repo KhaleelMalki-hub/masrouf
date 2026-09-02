@@ -10,6 +10,7 @@ import sa.masrouf.core.model.SaudiCategories.INVESTMENT
 import sa.masrouf.core.model.SaudiCategories.SERVICES
 import sa.masrouf.core.model.SaudiCategories.SHOPPING
 import sa.masrouf.core.model.SaudiCategories.TRANSPORT
+import sa.masrouf.core.model.SaudiCategories.TRAVEL
 
 /**
  * Merchants identified by web search on 2026-09-02 and CONFIRMED by the owner.
@@ -116,5 +117,40 @@ object ConfirmedMerchants20260902 {
         "HALA YALA" to ENTERTAINMENT, "KL TOWER" to ENTERTAINMENT,
         "RED SEA BEACH" to ENTERTAINMENT,
         "ALAIZDIHA" to SERVICES,
+
+        // ---- Recovered from the inbox, not from the web ----------------------
+        //
+        // The confirmation message truncates the merchant to nine or ten
+        // characters; the one-time-password message for the SAME purchase spells
+        // it out. The gate refuses those bodies and always will - they carry a
+        // credential - but the phone's inbox still holds them, and reading the
+        // NAME out of a message the app must never store costs nothing.
+        //
+        // "لدى:AL RASHED" in the confirmation, "لدى:AL RASHED TIRES COMPANY LLC"
+        // in the code message thirty seconds earlier. Same amount, same card, same
+        // minute. The owner guessed the tyre shop before this was found, and it
+        // agrees with him.
+        //
+        // Two ways of reading a full name out of the inbox, and they are not
+        // equally strong. Matching a code message to a purchase by AMOUNT, CARD
+        // and MINUTE identifies that purchase. Merely finding a longer string that
+        // starts with the truncation identifies nothing: "Karam" prefix-matched
+        // "KARAM BEIRUT" while its own code message said SALLA APP, and the
+        // keyword it would have justified claimed أجواد الكرم, a grocery. Only the
+        // matched kind is trusted below; the prefix kind was put to the owner.
+        "AL RASHED" to TRANSPORT,
+        // "TECHNICAL INDSPECTION" - the periodic vehicle inspection, spelled as
+        // the terminal spells it.
+        "TECHNICAL" to TRANSPORT,
+        // "Bader Ch.." is Bader CHARITY, not the chocolate factory a web search
+        // offered with low confidence. The corpus outranks the search.
+        "BADER CH" to CHARITY,
+        "SAUDI ARABIAN" to TRAVEL,
+        // "SAEED ALI MORSH" is the health endowment fund, which the code message
+        // names in full and the confirmation does not.
+        "SAEED ALI MORSH" to CHARITY,
+        "AL AHLIA" to FOOD,
+        "AHMED ARA" to GROCERIES,
+        "TAP TAIBA" to SHOPPING, "TAIBAHGIFTS" to SHOPPING,
     )
 }

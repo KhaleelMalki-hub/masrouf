@@ -93,4 +93,40 @@ class ConfirmedMerchants20260902Test {
             assertEquals(category, CategoryGuess.forMerchant(merchant), merchant)
         }
     }
+
+    /**
+     * Names read out of the one-time-password messages, which spell in full what
+     * the confirmation truncates - and which the app must never store.
+     */
+    @Test
+    fun `names recovered from the inbox file under what the full name says`() {
+        val expected = mapOf(
+            "AL RASHED" to SaudiCategories.TRANSPORT,
+            "TECHNICAL" to SaudiCategories.TRANSPORT,
+            "TECHNICAL INDSPECTION" to SaudiCategories.TRANSPORT,
+            "Bader Ch.." to SaudiCategories.CHARITY,
+            "Saudi Arabian" to SaudiCategories.TRAVEL,
+            "SAEED ALI MORSH" to SaudiCategories.CHARITY,
+            "AL Ahlia" to SaudiCategories.FOOD,
+            "Ahmed Ara" to SaudiCategories.GROCERIES,
+            "TAP TAIBA" to SaudiCategories.SHOPPING,
+        )
+        for ((merchant, category) in expected) {
+            assertEquals(category, CategoryGuess.forMerchant(merchant), merchant)
+        }
+    }
+
+    /**
+     * أجواد الكرم stays a grocery.
+     *
+     * A bare "KARAM" keyword would have claimed it. The keyword was nearly added
+     * because a longer string in the inbox began with the truncation "Karam" -
+     * but that purchase's own code message named SALLA APP, and a prefix is not
+     * an identification.
+     */
+    @Test
+    fun `the grocery named Karam is still a grocery`() {
+        assertEquals(SaudiCategories.GROCERIES, CategoryGuess.forMerchant("AJWAD AL KARAM CO"))
+        assertEquals(SaudiCategories.GROCERIES, CategoryGuess.forMerchant("AJWAD ALKRM COM"))
+    }
 }

@@ -196,7 +196,8 @@ class MasroufApp : Application() {
         // 28: chocolate, nuts and dates moved to groceries by the owner's rule.
         // 29: the ninety-odd merchants he named and confirmed on 2026-09-02.
         // 30: the third wave, twenty more.
-        REFILE_ALL(30),
+        // 31: the names recovered from the one-time-password messages.
+        REFILE_ALL(31),
     }
 
     /**
