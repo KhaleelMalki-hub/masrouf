@@ -121,8 +121,12 @@ class MasroufApp : Application() {
          * Raised to 15 for "رفض العملية" - the active voice of a refusal, which the
          * passive markers beside it never reached, so a purchase the bank declined
          * on a cancelled card was stored as money spent.
+         *
+         * Raised to 26 for the gate's new marketing markers: four AlJazira adverts
+         * ("قسط مشترياتك ... بمبلغ 1,499 ريال أو أكثر") were stored as purchases of
+         * 1,499 and 1,000 riyals.
          */
-        PURGE_REJECTED(23),
+        PURGE_REJECTED(26),
 
         /** Amounts the extractor now reads differently. Before anything reads them. */
         REPAIR_AMOUNTS(10),
@@ -160,8 +164,14 @@ class MasroufApp : Application() {
          * Raised to 18 when STC Pay was recognised as one of his own wallets: 670
          * top-ups of it, 650,280 riyals, were stored as purchases at a shop of that
          * name and counted as money spent.
+         *
+         * Raised to 26 for urpay, the same again at a smaller scale (26 top-ups),
+         * and for "حوالة بين حساباتك" - AlRajhi's and SNB's noun for a movement
+         * between the owner's own accounts, which the classifier knew only as
+         * تحويل: 220 rows counted as money leaving and 45 as money arriving. The
+         * pass now visits incoming transfers too, for exactly those 45.
          */
-        RETYPE_OWN_MONEY(24),
+        RETYPE_OWN_MONEY(26),
 
         /**
          * The whole inbox, re-read once, because the app can now understand a
@@ -172,11 +182,14 @@ class MasroufApp : Application() {
          * messages from 2019 onward that were passed over because no profile
          * claimed STC Pay - they are older than any tail. Deduplication is what
          * makes re-reading everything safe, and it is what it is for.
+         *
+         * Raised to 26 for urpay, Vision Bank and meem - 950 messages between them,
+         * 2015 to 2026, none ever claimed.
          */
-        REREAD_WHOLE_INBOX(23),
+        REREAD_WHOLE_INBOX(26),
 
         /** Last: filing reads the merchant and the type everything above corrects. */
-        REFILE_ALL(25),
+        REFILE_ALL(26),
     }
 
     /**

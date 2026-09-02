@@ -368,12 +368,18 @@ class TransactionRepository(
 
     suspend fun retypeOwnMoney(): Int {
         val spending = TransactionType.entries.filter { it.countsAsSpending }.map { it.name }
+        // Incoming transfers too, for the one verdict that can move them: "حوالة
+        // واردة بين حساباتك" was stored as money arriving 45 times before the
+        // classifier knew حوالة as well as تحويل. An incoming row is only ever
+        // retyped to OWN_TRANSFER here - anything else it might re-read as is
+        // another pass's question.
+        val scanned = spending + TransactionType.TRANSFER_IN.name
         val parsers = SaudiBanks.ALL.map(::BankMessageParser)
         var moved = 0
         // Batched for the same reason as reparseStoredBodies: one transaction over
         // the whole history holds the database long enough for the dashboard to
         // show an empty month as though it were true.
-        dao.withBodyOfType(spending).chunked(REPARSE_BATCH).forEach { batch ->
+        dao.withBodyOfType(scanned).chunked(REPARSE_BATCH).forEach { batch ->
             inTransaction {
                 batch.forEach { row ->
                     val body = row.rawText ?: return@forEach
@@ -401,6 +407,7 @@ class TransactionRepository(
                         return@forEach
                     }
                     if (type.countsAsSpending) return@forEach
+                    if (row.type == TransactionType.TRANSFER_IN.name && type != TransactionType.OWN_TRANSFER) return@forEach
                     if (dao.retype(row.id, type.name, CategoryGuess.forType(type)?.id) == 1) moved++
                 }
             }

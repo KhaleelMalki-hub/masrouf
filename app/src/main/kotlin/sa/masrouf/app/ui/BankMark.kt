@@ -9,7 +9,7 @@ import androidx.compose.ui.graphics.Color
  * How a bank is shown on a transaction row.
  *
  * Colours are chosen to be told apart at the size of a chip, not to reproduce a
- * brand exactly: eight marks a few millimetres tall on both a light and a dark
+ * brand exactly: eleven marks a few millimetres tall on both a light and a dark
  * background, which is a different problem from a logo on a billboard. They are
  * close to each bank's own colour where that survives the constraint.
  *
@@ -28,6 +28,9 @@ private val LightMarks: Map<String, Color> = mapOf(
     "aljazira" to Color(0xFF8A6A1F),
     "saib" to Color(0xFF2F5F3F),
     "stcpay" to Color(0xFF6E2C8F),
+    "urpay" to Color(0xFF1F6F8B),
+    "vision" to Color(0xFF3A5BA0),
+    "meem" to Color(0xFFB0532A),
 )
 
 private val DarkMarks: Map<String, Color> = mapOf(
@@ -39,6 +42,9 @@ private val DarkMarks: Map<String, Color> = mapOf(
     "aljazira" to Color(0xFFE0C07A),
     "saib" to Color(0xFF9FD6AF),
     "stcpay" to Color(0xFFD8A8F0),
+    "urpay" to Color(0xFF9BD3E6),
+    "vision" to Color(0xFFA9BEF0),
+    "meem" to Color(0xFFF2B294),
 )
 
 /**
@@ -58,6 +64,9 @@ private val Labels: Map<String, Pair<String, String>> = mapOf(
     "aljazira" to ("الجزيرة" to "AlJazira"),
     "saib" to ("السعودي للاستثمار" to "SAIB"),
     "stcpay" to ("stc" to "stc"),
+    "urpay" to ("urpay" to "urpay"),
+    "vision" to ("فيجن" to "Vision"),
+    "meem" to ("ميم" to "meem"),
 )
 
 @Composable

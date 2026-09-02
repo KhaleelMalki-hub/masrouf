@@ -1,4 +1,4 @@
-# Handoff — 2026-08-31
+# Handoff — 2026-09-02
 
 State of the app and what is still open, so a new session can continue without
 re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
@@ -6,8 +6,8 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
 
 ## Where things stand
 
-- `main` at 120 commits. All tests green: **324** in `:core`, **171** in `:app`,
-  **9** instrumented (`:app:connectedDebugAndroidTest`).
+- All tests green: **358** in `:core`, **174** in `:app`, **9** instrumented
+  (`:app:connectedDebugAndroidTest`).
 - **`connectedDebugAndroidTest` uninstalls the app and deletes its database.**
   It has already cost the owner's phone once. Use the `masrouf35` emulator, or
   back up first — the procedure is written beside the command in `CLAUDE.md`.
@@ -15,7 +15,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
   off adb often; check `adb devices` before installing.
 - Database schema version 6. One-off repairs are a set in `MasroufApp.Repair`,
   each stamped with the version that introduced it, taken as a union and run once
-  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **25**.
+  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **26**.
 - Real data on the phone: ~22,014 transactions, ~2,190 unfiled, and the owner's
   own learned merchant rules (34 and growing — he files one whenever a shop the
   shipped list cannot name comes up).
@@ -234,20 +234,86 @@ its EULA forbids redistribution and this repo is public - runtime load with a
 Plex fallback, Sans on the body roles, Serif Display considered for the two big
 headlines. No M3 impact beyond eyeballing Arabic line heights.
 
+## What this session did (2026-09-02)
+
+Read the three senders the owner had confirmed as his: **urpay** (179 messages,
+2022-2024, card 4322), **Vision Bank** (115, 2025-2026, card 2455, still in use)
+and **meem** / Gulf International Bank (659 under `MEEMSMS`, `meemKSA`, `meem`,
+`meemSecure`; 2015-2024; cards 5654 mada, 0891 and 0883 credit). Profiles in
+`SaudiBanks`, fixtures redacted into `RealMessages`, one test class each. Installed
+packages read off the phone: `com.urpay.consumer`, `com.veripark.GIB`. "Vision
+2030" is a marketing sender, so the id is `VISION BANK`, never bare `VISION`.
+
+Measured by running every message of the three senders through the new pipeline
+(the harness is a reflection runner over `core/build/classes`; not in the repo):
+
+| sender | captured | of which own money | gated | not a transaction |
+|---|---|---|---|---|
+| urpay | 61 | - | 72 | 46 |
+| Vision Bank | 20 | 6 | 24 | 71 |
+| meem (all ids) | 135 | 55 | 249 | 275 |
+
+Classifier rules added, each verified against ALL 25,813 stored rows by diffing
+old and new verdicts (see the lesson of the same date): `حوالة بين حساباتك` as own
+money - which turned out to be a latent bug at AlRajhi and SNB, **220 rows counted
+as spending and 45 as income** since 2020; `CREDIT`+`TRANSFER` as money arriving;
+`استلام حواله` / `استلمت حواله` / `جتك حواله` / `وصلتك حواله` as money arriving
+(phrases, not token pairs - the pair version flipped 81 outgoing Western Union
+transfers); `دفع`+`بيع` and `عملية ناجحة`+`بطاق` as purchases; `خصم من المحفظة`
+as a bill; `نقاط مكافأة` as money back; `ايداع`+`ATM` as a deposit; `اكتمل تحويل
+الأموال` as own money (Vision's savings accounts 5001/4002, read off its own
+notices). `urpay` joined `OWN_WALLETS`: 26 bank-side top-ups stop being spending.
+
+Gate: five OTP wordings (`PINCODE`, `YOUR CODE IS/FOR`, `الرمز السري المؤقت`,
+`الرمز المؤقت`), one decline (`الحالة: فاشلة`), and the marketing phrases that had
+produced figures (`سيتم تحديث`, `سيتم تخفيض`, `شروط واحكام`, `تطبق الشروط`, `بدون
+رسوم`, `عرض رائع`, `حابين`/`حبينا`, and the bank's unfilled placeholders
+`@MerchantName`/`@CustomerName`). Four AlJazira adverts stored as purchases of
+1,499 and 1,000 riyals are purged by the same markers.
+
+`retypeOwnMoney` now also visits incoming transfers, for the one verdict that can
+move them (OWN_TRANSFER), so the 45 SNB rows above are corrected. Maintenance
+**26** = purge + retype own money + whole-inbox re-read + refile.
+
+**Installed on the phone and launched at 08:22; the phone dropped off adb before
+the stamp could be read.** Expected after maintenance 26: ~216 new records from
+the three senders (all PENDING), ~265 rows retyped to own money, 4 adverts gone.
+Verify with the query in "Where things stand" and
+`SELECT bank_id, COUNT(*) FROM transactions GROUP BY 1`.
+
+`CardIssuers` deliberately does NOT list 4322/2455/5654/0891/0883: that map is for
+cards the owner says are open (`CreditCardLabelTest` holds it) and he has not said
+so. Rows from the new senders carry `bank_id` from the sender and get a chip
+(`BankMark` has the three labels); tiles wait on him.
+
+**Found and left open** (see below): 30 barq Western Union wage transfers stored
+as OWN_TRANSFER because the owner's name sits under `من:` on the sender line.
+
 ## Open items
 
 0. **3,723 records are PENDING.** They are the recovered history and the owner
    has not seen them; the app has a confirm-all action for exactly this.
-0. **Accounts the owner has confirmed are his, used rarely**: urpay, meem,
-   Vision Bank. (AlJazira and SAIB were added 2026-09-01 - cards 3761 and 9097,
-   profiles + tiles + history re-read at maintenance 23.) STC's `900` landline
-   bills are probably already captured from the paying bank's side, so adding
-   them would double-count.
-0. **Senders still unread, and it is not known whether they are his**: urpay (70
-   transaction-like messages), SAIB (73), meem (85), Vision Bank (16), AlJazira
-   (25), STC's `900` landline bills (217 - probably already captured from the
-   paying bank's side, so adding them would double-count). Ask before parsing any
-   of them.
+0. **Every confirmed sender now has a profile** (urpay, meem, Vision Bank added
+   2026-09-02; AlJazira and SAIB 2026-09-01). Still unread: STC's `900` landline
+   bills (217 - probably already captured from the paying bank's side, so adding
+   them would double-count). Ask before parsing.
+0. **Cards the owner has not placed on the tiles**: urpay 4322, Vision Bank 2455
+   (in use, 2026), meem 5654/0891/0883 (last used 2024). Adding any to
+   `ActiveCards` + `CardIssuers` is one line each; only he can say which are open.
+0. **30 barq Western Union transfers (2025-2026, ~45,000 riyals of wages) are
+   stored as OWN_TRANSFER.** barq writes the owner under `من:` as the SENDER and
+   the worker under `الى:`; the self-transfer demotion strips only lines that say
+   مرسل/From, so it sees his name and calls the wage his own money. Fix belongs in
+   `IntentClassifier.withoutSenderLines` (drop a `من:` line when an `الى:` line
+   names someone else) plus a RETYPE pass. Not done: it changes a rule shared by
+   every bank and needs its own corpus diff.
+0. **Vision Bank credit transfers from himself** (4 rows, 4,195 riyals, `Sender:`
+   is his own name) are TRANSFER_IN. Filing his own name as a transfer rule
+   handles it in the app; a TRANSFER_IN demotion by sender line would be the code
+   fix.
+0. Two meem purchases from January 2016 are lost on purpose: the bank sent its
+   template unfilled (`@MerchantName`, amount to three decimals) and the extractor
+   read the balance; the gate now refuses them.
 0. **2,198 records are still unfiled** - 529 of them in the last 24 months
    (139,077 riyals), the rest older. They are spread over ~1,150 merchants at
    about two records each, almost all local shops registered in their owner's

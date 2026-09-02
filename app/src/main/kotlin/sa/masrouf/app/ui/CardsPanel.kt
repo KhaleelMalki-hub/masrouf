@@ -339,6 +339,10 @@ object CardIssuers {
         "7285" to "barq",
         "2166" to "barq",
         "9941" to "barq",
+        // Not here: urpay's 4322, Vision Bank's 2455 and meem's 5654/0891/0883,
+        // read off those senders' templates on 2026-09-02. This list is for cards
+        // the owner says are OPEN (CreditCardLabelTest holds that), and he has not
+        // said so; their rows carry a bank_id from the sender regardless.
     )
 }
 

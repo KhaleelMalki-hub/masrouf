@@ -55,6 +55,13 @@ class ObservedBankPackagesTest {
         assertIs<CaptureRecorder.Decision.Store>(decision)
     }
 
+    /** Read from `pm list packages` on 2026-09-02, like the two above. */
+    @Test
+    fun `the installed urpay and meem apps are claimed by their parsers`() {
+        assertEquals("urpay", parserIdFor("com.urpay.consumer", RealMessages.URPAY_ONLINE_PURCHASE))
+        assertEquals("meem", parserIdFor("com.veripark.GIB", RealMessages.MEEM_POS_PURCHASE))
+    }
+
     @Test
     fun `no parser claims a non-bank package`() {
         assertEquals(null, parserIdFor("com.example.shopping", RealMessages.RAJHI_POS_SHORT))

@@ -140,6 +140,30 @@ class OwnMoneyRetypeTest {
         assertEquals(TransactionType.TRANSFER_OUT.name, typeOf(row.id))
     }
 
+    /**
+     * "حوالة واردة بين حساباتك" was stored as money arriving 45 times before the
+     * classifier knew the noun. The pass visits incoming transfers for this one
+     * verdict.
+     */
+    @Test
+    fun `an incoming transfer between his own accounts stops counting as income`() = runTest {
+        val row = stored(RealMessages.SNB_INCOMING_OWN_ACCOUNTS, TransactionType.TRANSFER_IN, categoryId = null)
+        dao.replaceAll(listOf(row))
+
+        assertEquals(1, repository.retypeOwnMoney())
+        assertEquals(TransactionType.OWN_TRANSFER.name, typeOf(row.id))
+    }
+
+    /** An incoming transfer from someone else is not this pass's business. */
+    @Test
+    fun `an ordinary incoming transfer is left alone`() = runTest {
+        val row = stored(RealMessages.SNB_TRANSFER_IN, TransactionType.TRANSFER_IN, categoryId = null)
+        dao.replaceAll(listOf(row))
+
+        assertEquals(0, repository.retypeOwnMoney())
+        assertEquals(TransactionType.TRANSFER_IN.name, typeOf(row.id))
+    }
+
     @Test
     fun `a genuine utility bill is left alone`() = runTest {
         val row = stored(RealMessages.SNB_SADAD_ELECTRICITY, TransactionType.BILL_PAYMENT)

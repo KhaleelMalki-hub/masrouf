@@ -19,7 +19,12 @@ object SaudiBanks {
     // 650,280 riyals were stored as purchases "لدى STC Pay" and counted as money
     // spent - they are top-ups of his own wallet, and what he actually bought with
     // them was reported by the wallet itself, to a sender no parser had ever read.
-    val OWN_WALLETS = setOf("barq", "Tiqmo", "STC Pay", "stc pay", "STCPAY")
+    //
+    // urpay on 2026-09-02, for the same reason: 26 bank-side top-ups "لدى URPAY"
+    // stood as purchases while the wallet's own sender - 179 messages, 49 of
+    // them transactions - had never been read. Compared through
+    // [ArabicText.normalizeMerchant], which uppercases, so one spelling is enough.
+    val OWN_WALLETS = setOf("barq", "Tiqmo", "STC Pay", "stc pay", "STCPAY", "urpay")
 
     /**
      * AlRajhi. The terse sender: labels are glued to values ("بـSR 8.28",
@@ -361,8 +366,127 @@ object SaudiBanks {
         ownWalletMerchants = OWN_WALLETS,
     )
 
+    /**
+     * urpay, the AlRajhi-group wallet. Card 4322. Used 2022-2024, then left; the
+     * owner confirmed the account is his on 2026-09-01.
+     *
+     * Two template generations. The older writes the card as "بطاقة:  urpay بطاقة
+     * ***4322" or "4322***;urpay بطاقة" and the merchant under "لدى:"; the newer
+     * writes "بطاقة:4322" with the merchant under "من:" - the same word the wallet
+     * never uses for a card here, so no asterisk guard is doing real work, but it
+     * is kept for the day a template puts one there.
+     *
+     * Phone credit ("خصم من المحفظة لـ (شحن خطوط الاتصال)") names no shop, only the
+     * operator, which is the party that matters for filing it.
+     */
+    val URPAY = BankProfile(
+        id = "urpay",
+        // "urpay" the SMS sender and "com.urpay.consumer" the installed package,
+        // read off the phone on 2026-09-02.
+        senderIds = setOf("URPAY"),
+        merchantPatterns = listOf(
+            Regex("""(?m)^لدى\s*:?\s*(.+)$"""),
+            Regex("""(?m)^من\s*+:?+\s*+(?!\**\d)(?!X{2,}\d)(.+)$"""),
+        ),
+        counterpartyPatterns = listOf(
+            // "مزوّد الخدمة: STC" (with a shadda the normaliser keeps) and, in the
+            // newer template, "شركة:STC".
+            Regex("""(?m)^(?:مزو\S*د الخدمة|شركة)\s*:?\s*(.+)$"""),
+        ),
+        cardPatterns = listOf(
+            // "بطاقة:4322", "بطاقة:***4322", "بطاقة:  urpay بطاقة ***4322" and
+            // "بطاقة: 4322***;urpay بطاقة" - all four read by one pattern, because
+            // the digits are the first thing after the optional wallet name.
+            Regex("""بطاقة\s*:?\s*(?:urpay\s*بطاقة\s*)?\**\s*(\d{4})""", RegexOption.IGNORE_CASE),
+        ),
+    )
+
+    /**
+     * Vision Bank, the digital bank he opened in 2025. Card 2455, mada, in
+     * occasional use since.
+     *
+     * Every field is "Label: value" in English, with an Arabic twin. The card and
+     * the account both carry a mask, so the card pattern names its label outright
+     * rather than reading the first four digits after an asterisk run - which
+     * would as happily return the account.
+     *
+     * A "Local Credit Transfer" is money ARRIVING; "Sender:" names who sent it,
+     * "From:" only the bank it came through.
+     */
+    val VISION_BANK = BankProfile(
+        id = "vision",
+        // Not a bare "VISION": the inbox also holds a marketing sender called
+        // "Vision 2030".
+        senderIds = setOf("VISION BANK", "VISIONBANK"),
+        merchantPatterns = listOf(
+            // Possessive, as at D360: with a plain `\s*` the engine hands back the
+            // space so the guard looks at " ***5001" instead of "***5001", passes,
+            // and the account is captured with the space in front of it.
+            Regex("""(?m)^From\s*+:\s*+(?!\**\d)(?!X{2,}\d)(.+)$""", RegexOption.IGNORE_CASE),
+            Regex("""(?m)^من\s*+:?+\s*+(?!\**\d)(?!X{2,}\d)(.+)$"""),
+        ),
+        counterpartyPatterns = listOf(
+            Regex("""(?m)^Sender\s*+:\s*+(.+)$""", RegexOption.IGNORE_CASE),
+            Regex("""(?m)^From\s*+:\s*+(?!\**\d)(?!X{2,}\d)(.+)$""", RegexOption.IGNORE_CASE),
+        ),
+        cardPatterns = listOf(
+            // "Card Number: ****2455", never "Account Number: ****6000".
+            Regex("""Card\s*Number\s*:\s*\**\s*(\d{4})""", RegexOption.IGNORE_CASE),
+            // "رقم البطاقة: ****2455", never "رقم حساب البطاقة:  ****6000".
+            Regex("""رقم البطاقة\s*:?\s*\**\s*(\d{4})"""),
+        ),
+    )
+
+    /**
+     * meem, Gulf International Bank's retail brand. Three senders over the years
+     * ("MEEMSMS" 2015-2018, "meemKSA" 2018-2024, "meem"/"meemSecure" for notices
+     * and codes) and one installed package, "com.veripark.GIB". Credit cards 0891
+     * and 0883, mada 5654. The owner confirmed the account is his; the bank's last
+     * transaction in his inbox is from November 2024.
+     *
+     * The oldest templates are prose ("هلا ميمر! تمت عملية ناجحة بمبلغ: SAR 400
+     * من: Nesma على بطاقتك الإئتمانية"), so one merchant pattern reads inline
+     * between the amount and the words that always follow the shop. The credit
+     * card is written in full around an X-run - "4399XXXXXXXX0891" - and the first
+     * four digits are the BIN, not the card.
+     */
+    val MEEM = BankProfile(
+        id = "meem",
+        senderIds = setOf("MEEM", "VERIPARK GIB"),
+        merchantPatterns = listOf(
+            Regex("""(?m)^لدى\s*:?\s*(.+)$"""),
+            // "من:Al Amteaz Center   Bakery, MAKKAH, SA" on a line of its own;
+            // "من: ***2207" is the account and the guard refuses it.
+            Regex("""(?m)^من\s*+:?+\s*+(?!\**\d)(?!X{2,}\d)(.+)$"""),
+            // Inline, in the 2015-2019 prose: "بمبلغ: SAR 400 من: Nesma على بطاقتك"
+            // and "بمبلغ 9.00 SAR من DUNKIN DONUTS 20059, MAKKAH, SA في 14/01/2019".
+            // The shop ends where على or في begins, which is the only thing that
+            // always follows it.
+            Regex(
+                """(?m)بمبلغ\s*:?\s*(?:SAR\s*)?[\d.,]+\s*(?:SAR)?\s+من\s*+:?+\s*+(?!\**\d)""" +
+                    """(.+?)(?=\s+(?:على|في)\s|$)"""
+            ),
+        ),
+        counterpartyPatterns = listOf(
+            Regex("""(?m)^(?:اسم المستفيد|Beneficiary Name)\s*+:?+\s*+(.+)$""", RegexOption.IGNORE_CASE),
+            Regex("""(?m)^(?:اسم المرسل|Sender Name)\s*+:?+\s*+(.+)$""", RegexOption.IGNORE_CASE),
+            // "عبر: NATIONAL COMMERCIAL BANK, THE" - the bank an incoming transfer
+            // came through, and the only handle those templates give. Not a
+            // person, but enough to file every transfer from that account at once.
+            Regex("""(?m)^(?:عبر|Via)\s*:\s*(.+)$""", RegexOption.IGNORE_CASE),
+        ),
+        cardPatterns = listOf(
+            // "4399XXXXXXXX0891": the last four, not the BIN in front of the mask.
+            Regex("""\d{4}X{4,}(\d{4})"""),
+            // "بطاقة: ***5654; مدى" and "بطاقة:***5654;mada".
+            Regex("""بطاقة\s*:?\s*\**\s*(\d{4})"""),
+        ),
+        ownWalletMerchants = OWN_WALLETS,
+    )
+
     val ALL: List<BankProfile> = listOf(
         AL_RAJHI, SNB, D360, BARQ, EMIRATES_NBD, STC_PAY, SNB_CAPITAL, AL_JAZIRA, SAIB,
+        URPAY, VISION_BANK, MEEM,
     )
 
     /** A registry covering every sender the app understands. */

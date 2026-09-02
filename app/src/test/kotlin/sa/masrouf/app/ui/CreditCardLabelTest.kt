@@ -72,7 +72,7 @@ class CreditCardLabelTest {
 
     @Test
     fun `no card is given an issuer the app cannot label`() {
-        val labelled = setOf("alrajhi", "snb", "barq", "d360", "enbd", "aljazira", "saib")
+        val labelled = setOf("alrajhi", "snb", "barq", "d360", "enbd", "aljazira", "saib", "urpay", "vision", "meem")
 
         assertEquals(emptySet(), CardIssuers.BANK_ID.values.toSet() - labelled)
     }

@@ -72,6 +72,15 @@ object IntentClassifier {
         // Between the user's own accounts. Must come first - it is a transfer by
         // every other rule's standard, but it is not spending.
         Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, listOf("تحويل", "بين", "حساباتك")),
+        // meem's noun for the same movement: "حوالة واردة: بين حساباتك" and
+        // "حوالة صادرة: بين حساباتك". Before the واردة/صادرة rules, which would
+        // read the pair as income and spending.
+        Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, listOf("حوال", "بين", "حساباتك")),
+        // Vision Bank: "اكتمل تحويل الأموال / From: ***6000 / To: ***5001". Read off
+        // the templates, not confirmed by the owner: 5001 and 4002 are the savings
+        // accounts the same sender announced creating ("لقد تم إنشاء حساب التوفير
+        // ***5001"), and a transfer to anyone else arrives as "حوالة صادرة محلية".
+        Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, listOf("اكتمل تحويل الاموال")),
 
         // English wording for the same thing, and it has to precede the generic
         // transfer rules below: every one of these messages also says "Transfer".
@@ -82,6 +91,10 @@ object IntentClassifier {
         // the balance were already counted when they happened, and counting the
         // payment too charges the same riyals twice.
         Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, listOf("CREDIT", "CARD", "PAYMENT")),
+
+        // "مشكور استلمنا مبلغ 450.07 SAR لبطاقتك الإئتمانية رقم" - meem's thanks
+        // for a card payment, without the word سداد the rule below relies on.
+        Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, listOf("استلمنا", "بطاق", "ائتمان")),
 
         Rule(TransactionType.REFUND, Direction.CREDIT, listOf("استرداد")),
         Rule(TransactionType.REFUND, Direction.CREDIT, listOf("REFUND")),
@@ -222,7 +235,31 @@ object IntentClassifier {
         // money arriving in his own wallet. Never spending and never income, and
         // both directions of the same movement say so.
         Rule(TransactionType.OWN_TRANSFER, Direction.CREDIT, listOf("تغذي", "محفظ")),
+        // "اضافة اموال عن طريق نقاط مكافأة" - reward points paid out into the
+        // wallet. Money that came back, not money he moved, so before the top-up
+        // rule below, whose tokens this message also carries.
+        Rule(TransactionType.REFUND, Direction.CREDIT, listOf("نقاط مكافا")),
         Rule(TransactionType.OWN_TRANSFER, Direction.CREDIT, listOf("اضاف", "اموال")),
+
+        // "خصم من المحفظة لـ (شحن خطوط الاتصال)" - phone credit bought from the
+        // wallet. Nothing else in it says what happened.
+        Rule(TransactionType.BILL_PAYMENT, Direction.DEBIT, listOf("خصم من المحفظ")),
+
+        // Money arriving, in the words meem and urpay use for it: "تم إستلام حوالة
+        // داخلية", "لقد استلمت حواله محلية", "جتك حواله داخليه", "وصلتك حوالة".
+        // None says وارد, so the bare حوال rule at the end read every one as
+        // money leaving.
+        //
+        // Phrases, not token pairs. {استلام, حوال} as two tokens claimed 81 stored
+        // OUTGOING transfers: every Western Union body says "طريقة الاستلام" or
+        // "حساب المستلم: استلام عبر ويسترين يونيون", and barq's "تم استلام حوالتك
+        // الدولية" is the recipient's receipt of money HE sent. The verb has to sit
+        // directly against the noun, and the noun has to be حوالة itself - folded
+        // to حواله - not حوالتك.
+        Rule(TransactionType.TRANSFER_IN, Direction.CREDIT, listOf("استلام حواله")),
+        Rule(TransactionType.TRANSFER_IN, Direction.CREDIT, listOf("استلمت حواله")),
+        Rule(TransactionType.TRANSFER_IN, Direction.CREDIT, listOf("جتك حواله")),
+        Rule(TransactionType.TRANSFER_IN, Direction.CREDIT, listOf("وصلتك حواله")),
 
         // Transfer wording, as stems. Banks insert words into the middle of their
         // own phrases ("حوالة صادرة محلية", "حوالة محلية صادرة", "حوالات فورية
@@ -235,6 +272,10 @@ object IntentClassifier {
 
         // barq writes in English.
         Rule(TransactionType.BILL_PAYMENT, Direction.DEBIT, listOf("BILL", "PAYMENT")),
+        // "Local Credit Transfer" (Vision Bank) and "Credit transfer: Local"
+        // (meem): a credit TO the account. Before LOCAL+TRANSFER, which is the
+        // outgoing kind and would claim these.
+        Rule(TransactionType.TRANSFER_IN, Direction.CREDIT, listOf("CREDIT", "TRANSFER")),
         Rule(TransactionType.TRANSFER_OUT, Direction.DEBIT, listOf("LOCAL", "TRANSFER")),
 
         Rule(TransactionType.TRANSFER_IN, Direction.CREDIT, listOf("MONEY", "ADDED")),
@@ -253,6 +294,14 @@ object IntentClassifier {
         // whole word, so it cannot fire inside another word.
         Rule(TransactionType.PURCHASE, Direction.DEBIT, listOf("POS")),
         Rule(TransactionType.PURCHASE, Direction.DEBIT, listOf("CARD", "TRANSACTION")),
+        // meem, 2015-2019: "تمت عملية دفع عبر نقاط بيع من حسابك" and "تمت عملية
+        // ناجحة بمبلغ: SAR 400 من: Nesma على بطاقتك الإئتمانية". Neither says
+        // شراء.
+        Rule(TransactionType.PURCHASE, Direction.DEBIT, listOf("دفع", "بيع")),
+        Rule(TransactionType.PURCHASE, Direction.DEBIT, listOf("عملية ناجحة", "بطاق")),
+        // "تم إيداع كاش في حسابك 207*** بمبلغ SAR 500 من ATM" - the machine named
+        // in English, which the ايداع+صراف rule above cannot see.
+        Rule(TransactionType.ATM_DEPOSIT, Direction.CREDIT, listOf("ايداع", "ATM")),
 
         // AlAhli also writes the account inline, with no word for it at all:
         // "سحب من 010*104مبلغSAR1500". Last-resort forms, reached only after every

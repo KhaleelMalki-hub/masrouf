@@ -797,6 +797,226 @@ Ref: 0B00000000000000"""
 من: SENDER NAME XXX2001 
 في: 12-30 19:25"""
 
+    // ---- urpay, Vision Bank and meem, added 2026-09-02 -----------------------
+    //
+    // Three senders the owner confirmed as his on 2026-09-01, none of which any
+    // profile had claimed: urpay (179 messages, 2022-2024), Vision Bank (115,
+    // 2025-2026) and meem under three sender ids (659, 2015-2024). Names replaced,
+    // references and phone numbers zeroed to their length, balances invented,
+    // structure exact.
+
+    /** urpay, newer template: the card bare, the merchant under "من:". */
+    const val URPAY_ONLINE_PURCHASE = """شراء إنترنت
+بطاقة:4322
+مبلغ:SAR 61
+من:NETFLIX...
+في:1-11-2023 15:59"""
+
+    /** urpay, older template: the wallet's name inside the card field, the merchant under "لدى:". */
+    const val URPAY_ONLINE_PURCHASE_OLD = """شراء إنترنت
+بطاقة:  urpay بطاقة ***4322 
+مبلغ: SAR 76.61
+لدى: ALNAHDI MEDICAL CO
+رصيد: 40.00
+في: 09-10-2022 12:28"""
+
+    /** The card written digits-first: "4322***;urpay بطاقة". */
+    const val URPAY_POS_PURCHASE = """شراء عبر نقاط البيع
+بطاقة: 4322***;urpay بطاقة
+مبلغ: SAR 90.0
+لدى: SASCO ELZAIDI STATION
+في: 30-12-2022 21:10
+رصيدك الحالي: 50"""
+
+    /** Phone credit bought from the wallet. No shop; the operator is the party. */
+    const val URPAY_PHONE_CREDIT = """خصم من المحفظة لـ (شحن خطوط الاتصال)
+
+المبلغ: 115 ريال
+مزوّد الخدمة: STC
+رقم الجوال: +966500000000
+
+الرصيد الحالي: 60.00 ريال"""
+
+    /** Reward points paid out into the wallet. Money back, not money moved. */
+    const val URPAY_REWARD_POINTS = """اضافة اموال عن طريق نقاط مكافأة
+المبلغ: 342.5 ريال
+التاريخ: 20-04-2023 03:07"""
+
+    const val URPAY_CASHBACK = """استرداد نقدي
+بطاقة:  4322***;urpay بطاقة
+مبلغ: SAR 3.88
+في: 06-08-2022 16:31"""
+
+    /** Money arriving from another wallet. "وصلتك" is the only word that says so. */
+    const val URPAY_WALLET_TRANSFER_IN = """مرحبًا OWNER
+وصلتك حوالة عن طريق محفظة أخرى بقيمة 85.0 ريال إلى حسابك في 23-02-2023 14:53
+رقم العملية 000000000
+
+حدك الشهري المتبقي هو 15000.0 ريال."""
+
+    /** An advert with a riyal figure in it. Was captured as a 15-riyal transfer. */
+    const val URPAY_FEE_FREE_ADVERT = """حول لأي دولة في العالم بدون رسوم تحويل ولك حتى 15 ريال كاش باك عن طريق محفظة urpay
+
+لمعلومات أكثر:
+www.urpay.sa/ar/rewards"""
+
+    /** The bank's side of a wallet top-up: a "purchase" at a shop called URPAY. */
+    const val SNB_URPAY_TOPUP = """شراء إنترنت 
+مبلغ 125.23 SAR
+بطاقة ائتمانية ***0926 
+من URPAY
+التاريخ 16/04/24 04:59
+الصرف المتبقي 1496.38 SAR"""
+
+    /** Vision Bank: the card and the account both masked, under labels that name them. */
+    const val VISION_POS_PURCHASE = """POS Local Purchase
+From: MGHASL ZKIEAH ALGHAMDI
+Amount: 12.00 SAR
+Card Type: mada
+Card Number: ****2455
+Account Number: ****6000
+30/05/2025 20:04:34
+MAKKAH, SAU"""
+
+    const val VISION_POS_PURCHASE_AR = """شراء عبر نقاط البيع (محلي - دولي) - أثير
+من: MGHASL ZKIEAH ALGHAMDI
+بمبلغ: 12.00 SAR
+نوع البطاقة: مدى
+رقم البطاقة: ****2455
+رقم حساب البطاقة:  ****6000
+التاريخ: 02/04/2026 19:10:21
+الموقع: SAU, MAKKAH"""
+
+    /** Money arriving. "Sender:" names the person, "From:" only the bank it came through. */
+    const val VISION_CREDIT_TRANSFER = """Local Credit Transfer:
+Reference:000000
+Amount:160.00SAR
+To Account Number:*6000
+From:ARAB NATIONAL BANK
+Sender:SENDER NAME
+Account Number:*0018
+25-05-2025 18:20"""
+
+    /** Between his own Vision accounts; 5001 is the savings account the same sender announced. */
+    const val VISION_OWN_ACCOUNTS = """اكتمل تحويل الأموال
+From: ***6000
+To: ***5001
+Amount: SAR 10.00
+Date: 13.03.2025 01:38"""
+
+    const val VISION_PINCODE = "Your Pincode is 000000"
+
+    /** meem, labelled template: the card under بطاقة, the account under من, the shop under لدى. */
+    const val MEEM_POS_PURCHASE = """شراء عبر نقاط البيع
+بطاقة: ***5654; مدى
+من: ***2207
+مبلغ: SAR 38.50
+لدى: Express Food Company WM 9, MAKKAH, SA
+في: 15/11/2019 13:27"""
+
+    /** meem, 2017 prose: the shop sits between the amount and "على بطاقتك". */
+    const val MEEM_PROSE_PURCHASE = """مرحبا،
+
+تمت عملية شراء من نقطة بيع بمبلغ: SAR 400 من: Nesma على بطاقتك الإئتمانية المنتهية برقم: 4399XXXXXXXX0891 في: 21:02:14 15/02/2017. رصيدك المتوفر هو: 600 ريال سعودي"""
+
+    /** meem, 2019 prose: "دفع عبر نقاط البيع", no word for شراء, the shop before "في". */
+    const val MEEM_POS_PAYMENT = """عزيزي العميل،
+تمت عملية دفع عبر نقاط البيع من حسابك المنتهي برقم: 209  بمبلغ 9.00 SAR من DUNKIN DONUTS 20059, MAKKAH, SA في 14/01/2019 07:15:49"""
+
+    /** Money arriving, and nothing in it says وارد. */
+    const val MEEM_INCOMING_INTERNAL = """عزيزي العميل،
+
+تم إستلام حوالة داخلية بمبلغ 10,000.00 SAR على حسابك  بتاريخ 17/07/18 الساعة 09:04"""
+
+    /** Money arriving, with only the bank it came through for a party. */
+    const val MEEM_INCOMING_LOCAL = """حوالة واردة: محلية
+عبر: NATIONAL COMMERCIAL BANK, THE
+مبلغ: SAR 1,000.00
+إلى: ***2207
+في: 30/05/2019 10:22"""
+
+    const val MEEM_CREDIT_TRANSFER_EN = """Credit transfer: Local
+Via: NATIONAL COMMERCIAL BANK, THE
+Amount: SAR 1,000.00
+To: ***2207
+Date: 09/07/2019 09:14"""
+
+    /** Between his own meem accounts, with the noun حوالة rather than تحويل. */
+    const val MEEM_OWN_ACCOUNTS_IN = """حوالة واردة: بين حساباتك
+إلى: ***2209
+مبلغ: SAR 1.00
+من: ***2207
+في: 13/05/2019 00:03"""
+
+    /** The credit card thanking him for a payment, without the word سداد. */
+    const val MEEM_CARD_PAYMENT_RECEIVED = """هلا ميمير،
+مشكور استلمنا مبلغ 450.07 SAR  في 03/03/2016  لبطاقتك الإئتمانية رقم 4399XXXXXXXX0883 رصيدك الحالي هو 900.
+معوض إن شاء الله"""
+
+    /** The card written in full around an X-run: the last four are the card, the first four the BIN. */
+    const val MEEM_CARD_SETTLEMENT = """بطاقة إئتمانية: تأكيد السداد
+بطاقة: 4399XXXXXXXX0891; إئتمانية
+مبلغ: SAR 287.5
+رصيد: SAR 700
+في: 29/12/2020 20:37:05"""
+
+    const val MEEM_ATM_DEPOSIT =
+        "هلا ميمر..   تم إيداع كاش في حسابك 207*** بمبلغ SAR 500 من ATM  في 05-JAN-16 21:17:20.. تتهنى فيها إن شاء الله"
+
+    /** An outgoing transfer whose beneficiary is the owner. */
+    const val MEEM_OUTGOING_TO_SELF = """حوالة صادرة محلية
+مبلغ: SAR 30,005.75
+اسم المستفيد: OWNER NAME
+رقم حساب المستفيد: SA0000000000000000000000 
+الرسوم  SAR 5.75
+في: 03/03/2021 21:52"""
+
+    /** A fee notice. Was captured as a refund of 2.25 riyals. */
+    const val MEEM_FEE_NOTICE = """عزيزي العميل،
+
+سيتم تحديث رسوم الصرف الدولي لبطاقات الصرف الآلي من 2.25% إلى 2.75% 
+ابتداءً من تاريخ (8/12/2023) و سوف ينعكس ذلك أيضًا على الشروط والأحكام."""
+
+    /** A template the bank sent unfilled, with an amount written to three decimals. */
+    const val MEEM_PLACEHOLDER_TEMPLATE =
+        "هلا ميمر! تمت عملية ناجحة بمبلغ: SAR 00000371.530 من: @MerchantName على بطاقتك الإئتمانية اللي تنتهي بـ: 4399XXXXXXXX0891 في: 22:17:28 23/01/2016. رصيدك الباقي هو : +00000500.00. معوض إن شاءالله."
+
+    /** An offer. Was captured as ten thousand riyals of income. */
+    const val MEEM_OFFER = """هلا OWNER
+ 
+جبنا لك اليوم عرض رائع من عروض م
+ 
+الكل يقدر يستمتع بأفضل نسبة ربح كل يوم مع وديعة المرابحة من م
+بشكل يومي راح نراقب نسب السوق المصرفي علشان نضمن لك أفضل نسبة ربح. علشان تستفيد من العرض كل اللي عليك تسويه هو إنك تكمل اجراءات فتح حسابك في م بزيارة أحد مراكزنا.
+وتودع مبلغ مايقل عن 10,000 ريال سعودي في وديعة المرابحة،
+هذا العرض متاح لفترة محدودة فقط*"""
+
+    const val MEEM_LOGIN_CODE = "الرمز السري المؤقت لتسجيل الدخول: 000000"
+
+    const val MEEM_FAILED_TRANSFER = """عملية تحويل: حوالة محلية
+الحالة: فاشلة
+التاريخ: 09/03/2022 06:47:55"""
+
+    /**
+     * barq telling him the RECIPIENT has received a transfer he sent. Money
+     * leaving, though it says استلام: the phrase rules must not read "استلام
+     * حوالتك" as "استلام حوالة".
+     */
+    const val BARQ_TRANSFER_RECEIVED_ABROAD =
+        "عزيزي العميل، تم استلام حوالتك الدولية بمبلغ 900 SAR. رقم المعاملة RMT000000-000000000."
+
+    /** SNB, 2020: between his own accounts, with the noun حوالة. Stored 45 times as income. */
+    const val SNB_INCOMING_OWN_ACCOUNTS = """حوالة واردة بين حساباتك
+مبلغ 100SAR 
+حساب205*880
+في27/01/2021 08:21"""
+
+    /** AlRajhi: the same movement, stored 53 times as money leaving. */
+    const val RAJHI_OWN_ACCOUNTS = """حوالة بين حساباتك
+مبلغ: SAR 5000
+الى: 3016
+في: 25-8-2 13:48"""
+
     // ---- Sender identities -------------------------------------------------
 
     /** SMS sender ids exactly as they appear on the device. */
@@ -805,6 +1025,9 @@ Ref: 0B00000000000000"""
     const val SENDER_D360 = "D360 Bank"
     const val SENDER_BARQ = "barq app"
     const val SENDER_STC_PAY = "STCPAY"
+    const val SENDER_URPAY = "urpay"
+    const val SENDER_VISION = "Vision Bank"
+    const val SENDER_MEEM = "meemKSA"
 
     data class Sample(val sender: String, val body: String)
 
@@ -830,6 +1053,24 @@ Ref: 0B00000000000000"""
         Sample(SENDER_STC_PAY, STC_POS_PURCHASE),
         Sample(SENDER_STC_PAY, STC_CARD_PURCHASE),
         Sample(SENDER_STC_PAY, STC_WESTERN_UNION),
+        Sample(SENDER_URPAY, URPAY_ONLINE_PURCHASE),
+        Sample(SENDER_URPAY, URPAY_ONLINE_PURCHASE_OLD),
+        Sample(SENDER_URPAY, URPAY_POS_PURCHASE),
+        Sample(SENDER_URPAY, URPAY_PHONE_CREDIT),
+        Sample(SENDER_URPAY, URPAY_WALLET_TRANSFER_IN),
+        Sample(SENDER_VISION, VISION_POS_PURCHASE),
+        Sample(SENDER_VISION, VISION_POS_PURCHASE_AR),
+        Sample(SENDER_VISION, VISION_CREDIT_TRANSFER),
+        Sample(SENDER_VISION, VISION_OWN_ACCOUNTS),
+        Sample(SENDER_MEEM, MEEM_POS_PURCHASE),
+        Sample(SENDER_MEEM, MEEM_PROSE_PURCHASE),
+        Sample(SENDER_MEEM, MEEM_POS_PAYMENT),
+        Sample(SENDER_MEEM, MEEM_INCOMING_INTERNAL),
+        Sample(SENDER_MEEM, MEEM_INCOMING_LOCAL),
+        Sample(SENDER_MEEM, MEEM_CREDIT_TRANSFER_EN),
+        Sample(SENDER_MEEM, MEEM_OWN_ACCOUNTS_IN),
+        Sample(SENDER_MEEM, MEEM_CARD_SETTLEMENT),
+        Sample(SENDER_MEEM, MEEM_ATM_DEPOSIT),
     )
 
     /** Rejectable messages paired with their sender. */
@@ -842,6 +1083,13 @@ Ref: 0B00000000000000"""
         Sample(SENDER_STC_PAY, STC_SECURITY_CODE),
         Sample(SENDER_STC_PAY, STC_DECLINED),
         Sample(SENDER_BARQ, BARQ_DECLINED),
+        Sample(SENDER_URPAY, URPAY_FEE_FREE_ADVERT),
+        Sample(SENDER_VISION, VISION_PINCODE),
+        Sample(SENDER_MEEM, MEEM_FEE_NOTICE),
+        Sample(SENDER_MEEM, MEEM_PLACEHOLDER_TEMPLATE),
+        Sample(SENDER_MEEM, MEEM_OFFER),
+        Sample(SENDER_MEEM, MEEM_LOGIN_CODE),
+        Sample(SENDER_MEEM, MEEM_FAILED_TRANSFER),
     )
 
     /** Every message that represents a real, completed movement of money. */

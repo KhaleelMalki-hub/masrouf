@@ -114,6 +114,17 @@ object MessageGate {
         // imagined.
         "SECURE CODE",
         "VERIFICATION CODE",
+        // The three senders read on 2026-09-02, each with a wording of its own:
+        // Vision Bank's "Your Pincode is 0000", meem's "Your Code for this
+        // transaction is 0000" and "Your code is: 0000 to authenticate your credit
+        // card transaction online", and meem's Arabic "الرمز السري المؤقت
+        // لتسجيل الدخول: 0000" / "الرمز المؤقت لتسجيل الدخول". None carried an
+        // amount, so none was ever stored - luck again, not a control.
+        "PINCODE",
+        "YOUR CODE IS",
+        "YOUR CODE FOR",
+        "الرمز السري المؤقت",
+        "الرمز المؤقت",
         "ONE TIME PASSWORD",
         "ONE-TIME PASSWORD",
         "DO NOT SHARE",
@@ -184,6 +195,27 @@ object MessageGate {
         // payment is LATE, which the سداد rules would otherwise read as a payment
         // made.
         "تجاوزت موعد",
+        // Read on 2026-09-02 from the three senders added that day, each one a
+        // notice the extractor found a figure in: "سيتم تحديث رسوم الصرف الدولي
+        // من 2.25%" became a refund of 2.25, "سيتم تخفيض رسوم الحوالات الدولية من
+        // 50 ر.س" a 50-riyal transfer, "تحديث شروط وأحكام برنامج الإحالة ... 5,000
+        // ريال" five thousand riyals of income, "بدون رسوم تحويل ولك حتى 15 ريال
+        // كاش باك" a transfer, and meem's "حابين نبلغك" / "جبنا لك اليوم عرض رائع
+        // من عروض م" ten thousand riyals in, twice.
+        "سيتم تحديث",
+        "سيتم تخفيض",
+        "شروط واحكام",
+        "شروط والاحكام",
+        "تطبق الشروط",
+        "بدون رسوم",
+        "عرض رائع",
+        "حابين",
+        "حبينا",
+        // A bank's own template placeholders, sent unfilled: "من: @MerchantName على
+        // بطاقتك" with the amount written to three decimals the extractor cannot
+        // read, so the balance on the same line was stored as the purchase.
+        "MERCHANTNAME",
+        "CUSTOMERNAME",
     )
 
     /** Phrases that mark a transaction as not completed. */
@@ -199,6 +231,8 @@ object MessageGate {
         "غير كافي",
         "فشلت العملية",
         "لم تتم العملية",
+        // meem: "عملية تحويل: حوالة محلية / الحالة: فاشلة".
+        "الحالة: فاشلة",
         "DECLINED",
         "INSUFFICIENT",
         "FAILED",

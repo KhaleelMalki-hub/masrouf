@@ -444,3 +444,24 @@ suggestion, and put it on a screen before calling it a recommendation.
 **Rule:** Before steering a scroll position, reproduce the misplacement from a FRESH state (clear data or first install). A position restored from state is evidence about the past container, not about the current code — and a default that is already correct needs no help.
 **How to apply:** Any scroll-position "fix" in an RTL app; any behaviour that only appears after an upgrade.
 **Source:** CardsPanel.kt, three commits in one day.
+
+### 2026-09-02 — A token pair is tested on the messages it was written for and paid for on the rest
+**Mistake:** `{استلام, حوال}` → money arriving was written for meem's "تم إستلام حوالة داخلية" and passed every fixture. Run over the stored history it flipped 81 OUTGOING transfers to incoming: every Western Union body says "طريقة الاستلام" or "حساب المستلم: استلام عبر ويسترين يونيون", and barq's "تم استلام حوالتك" is the recipient's receipt of money the owner SENT.
+**Why:** A token set has no adjacency. Two stems that mean one thing side by side mean nothing in particular three fields apart, and the first-match list guarantees the loose rule wins somewhere.
+**Rule:** Prefer a contiguous phrase to a token pair when the meaning lives in the adjacency ("استلام حواله", not `{استلام, حوال}`), and re-run the whole stored corpus through the new rule set before committing: group rows by (bank, old verdict, new verdict) and read a body from every group. The diff is the review; fixtures cannot see cross-sender collisions.
+**How to apply:** Every addition to `IntentClassifier.RULES` and every new `MessageGate` marker. The harness is a reflection runner over `core/build/classes` and a TSV export of `transactions`; it took ten minutes and found two regressions, one latent bug (265 "حوالة بين حساباتك" rows counted as spending or income), and four stored adverts.
+**Source:** session 2026-09-02, urpay/Vision Bank/meem profiles.
+
+### 2026-09-02 — The D360 possessive lesson has to be re-applied to every new guard
+**Mistake:** Wrote Vision Bank's `^From\s*:\s*(?!\**\d)(.+)$`. On "From: ***5001" the engine gave back the space so the lookahead saw " ***5001", passed, and the party field read "5001". The file already records this defect at D360, with the fix (`\s*+`), two hundred lines up.
+**Why:** The guard reads as present. Nothing fails; a number appears where a name should be, and only a corpus run over the new sender showed it.
+**Rule:** Any `\s*` or `:?` between a label and a negative lookahead is possessive (`\s*+`, `:?+`), no exceptions, and a new profile is checked against the corpus for parties that are all digits or asterisks before it ships.
+**How to apply:** Every new `BankProfile` pattern with a guard.
+**Source:** SaudiBanks.VISION_BANK, caught by the corpus run.
+
+### 2026-09-02 — "Confirmed as his" and "named as open" are two different facts
+**Mistake:** Added urpay's, Vision Bank's and meem's cards to `CardIssuers` because each sender's own template named them. `CreditCardLabelTest` failed: that map is for cards the owner has said are OPEN, and he has not.
+**Why:** The issuer was read off a message and is true; the map's contract is narrower than its name. The test that holds the contract was the only place it was written.
+**Rule:** Before extending a map or list, find the test that constrains it and read its doc comment - that is the contract, not the field name. A fact that is true but not the fact the list holds does not belong in it.
+**How to apply:** Any addition to `ActiveCards`, `CardIssuers`, `OWN_WALLETS` or another list whose membership carries a meaning beyond "known".
+**Source:** CreditCardLabelTest, session 2026-09-02.
