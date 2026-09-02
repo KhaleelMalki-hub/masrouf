@@ -781,7 +781,7 @@ object CategoryGuess {
         // against the whole 22,000-record merchant column before being written -
         // "REEFI" once matched a restaurant called الساج الريفي and filed 29 meals
         // as shopping, so a word that is a word in ordinary use does not go here.
-    ) + MerchantNames20260902.ENTRIES + listOf(
+    ) + ConfirmedMerchants20260902.ENTRIES + MerchantNames20260902.ENTRIES + listOf(
         // ---- Generic tail: a word that says what kind of place --------------
         "RESTAUR" to SaudiCategories.FOOD,
         "CATERING" to SaudiCategories.FOOD,
@@ -834,6 +834,32 @@ object CategoryGuess {
         // المطلق للأثاث والمفروشات. A family name as well as a shop, so if a
         // different Almutlaq ever appears the owner's own rule overrides this.
         "ALMUTLAQ" to SaudiCategories.SHOPPING,
+        // Named by the owner on 2026-09-02, off the filing worksheet.
+        // لا كالي, a restaurant.
+        "LA CALLE" to SaudiCategories.FOOD,
+        // كرز لنن - bed linen, towels, things for the bedroom.
+        "KARAZ LIN" to SaudiCategories.SHOPPING,
+        // قطوف وحلا, boxed chocolate - groceries by his rule. Three spellings:
+        // "QUTOUF AND HALA", "QOTOF AND HALA", "QUTOOF HALA EST".
+        "AND HALA" to SaudiCategories.GROCERIES,
+        "QUTOOF HALA" to SaudiCategories.GROCERIES,
+        // أجواد الكرم, a grocery. 67 records; arrives as "AJWAD AL KARAM CO",
+        // "AJWAD ALK", "AJWAD ALKRM COM".
+        "AJWAD AL" to SaudiCategories.GROCERIES,
+        // الحكير - the children's amusement arcades. "ABDULMOHSEN AL HOKAIR" and,
+        // truncated, "ABDULMOHS". Named before "HOKAIR TIME", the watch shop of the
+        // same group, so the group name alone never files as shopping.
+        "ABDULMOHSEN AL HOKAIR" to SaudiCategories.ENTERTAINMENT,
+        "ABDULMOHS" to SaudiCategories.ENTERTAINMENT,
+        // اطلبها - car parts and accessories, app and site.
+        "ATLOBHA" to SaudiCategories.TRANSPORT,
+        // ميازو and دار زيد, restaurants.
+        "MYAZU" to SaudiCategories.FOOD,
+        "DAR ZIED" to SaudiCategories.FOOD,
+        // آفاق إعمار - plumbing and home fittings, bought online.
+        "AFAQEMAAR" to SaudiCategories.SHOPPING,
+        // رداء المسك - the same men's tailor as SINDI, under its registered name.
+        "RIDAA ALM" to SaudiCategories.SHOPPING,
         // هوم بوكس, furniture and bedrooms. The terminal appends a branch number.
         "HOMEBOX" to SaudiCategories.SHOPPING,
         "HOME BOX" to SaudiCategories.SHOPPING,

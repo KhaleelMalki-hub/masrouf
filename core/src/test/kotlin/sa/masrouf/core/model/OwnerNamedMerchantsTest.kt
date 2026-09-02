@@ -45,6 +45,22 @@ class OwnerNamedMerchantsTest {
             // Named on 2026-09-01, off the list left unfiled after the party fix.
             // المطلق للأثاث والمفروشات - furniture, and a family name besides.
             "ALMUTLAQ" to SaudiCategories.SHOPPING,
+            // Named on 2026-09-02, off the filing worksheet.
+            "LA CALLE" to SaudiCategories.FOOD,
+            "KARAZ LIN" to SaudiCategories.SHOPPING,
+            "QUTOUF AND HALA MAKKAH" to SaudiCategories.GROCERIES,
+            "QOTOF AND HALA" to SaudiCategories.GROCERIES,
+            "QUTOOF HALA EST" to SaudiCategories.GROCERIES,
+            "AJWAD AL KARAM CO MAKKAH" to SaudiCategories.GROCERIES,
+            "AJWAD ALKRM COM" to SaudiCategories.GROCERIES,
+            "ABDULMOHSEN AL HOKAIR" to SaudiCategories.ENTERTAINMENT,
+            "ABDULMOHS" to SaudiCategories.ENTERTAINMENT,
+            "ATLOBHA" to SaudiCategories.TRANSPORT,
+            "MYAZU" to SaudiCategories.FOOD,
+            "DAR ZIED" to SaudiCategories.FOOD,
+            "AFAQEMAAR" to SaudiCategories.SHOPPING,
+            "RIDAA ALMISK CO" to SaudiCategories.SHOPPING,
+            "RIDAA ALM" to SaudiCategories.SHOPPING,
             // هوم بوكس. The branch number the terminal appends must not hide it.
             "HOMEBOX 2" to SaudiCategories.SHOPPING,
             // كورو, Japanese, in Jeddah. The city is glued to the name.

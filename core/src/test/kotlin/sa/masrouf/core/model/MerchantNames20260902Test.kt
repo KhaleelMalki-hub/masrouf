@@ -74,6 +74,5 @@ class MerchantNames20260902Test {
     fun `a personal name is not filed`() {
         assertNull(cat("OBOUD BAH"))
         assertNull(cat("MOHAMMED"))
-        assertNull(cat("AJWAD AL KARAM CO"))
     }
 }
