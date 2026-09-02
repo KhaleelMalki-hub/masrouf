@@ -339,6 +339,45 @@ is now set to 1500 in `~/.claude/settings.json`, which takes effect on the NEXT
 session. Re-run wave 2 there: the input files are `batch5.txt` … `batch8.txt` in
 this session's scratchpad, and rebuilding them is a query away.
 
+## Mada or credit (2026-09-02, evening)
+
+The owner asked for two things and got both: which card a purchase went on, shown
+on the row, and what a month put on credit against what it took straight out of an
+account, shown under the bands.
+
+The rule is in `core/model/CardKind.kt` and it is narrow on purpose. **The network
+is not evidence** - "فيزا" and "ماستر" say which rails the money travelled, not
+whether the card borrows, and his 7536 is a MasterCard drawn on the SNB account
+(the same lesson `CardIssuers` already carries). So credit is the word for credit,
+folded so ائتمانية and إئتمانية both reach it; mada is مدى or the Latin spelling;
+and a body naming BOTH decides nothing, which matters because every settlement
+message names the card being paid and the card paying it. A card whose messages
+never said is left unlabelled, and left out of the month split - so the two figures
+come to less than the total by design.
+
+Decided once per launch (`TransactionRepository.cardKinds()`, after maintenance so
+it reads corrected bodies), not watched: it is a fact about the card, not the
+month, and folding 26,000 bodies on every write would cost the dashboard its first
+frame - the lesson `MerchantMatch.Rules` records.
+
+**Built and committed but NOT yet installed**: the phone was off adb all evening.
+`app/build/outputs/apk/debug/app-debug.apk` is the build to push when it returns.
+
+## The merchant research, wave 2 (2026-09-02)
+
+Wave 1 identified 64 of 160 strings and the owner confirmed 48 of those. Wave 2
+covered the next 160 and identified 48 more - **they are researched but NOT in the
+code**: the owner had not gone through the table when the session ended. The two
+tables are in the scratchpad as `research_w2a.tsv` and `research_w2b.tsv`, each
+line `KEY  category  confidence  what it is  source URL`. Nothing enters
+`ConfirmedMerchants20260902` until he says so; that is the whole point of the file.
+
+A note for whoever runs wave 3: the WebSearch budget is **per subagent pool**, not
+per session. Wave 1's four agents exhausted it and wave 2's first four returned
+nothing at all, while the main thread's own searches still worked. Launch two
+agents rather than four, cap them at two searches per key, and tell them to spend
+the budget on the largest SAR totals first.
+
 ## Open items
 
 0. **3,723 records are PENDING.** They are the recovered history and the owner
