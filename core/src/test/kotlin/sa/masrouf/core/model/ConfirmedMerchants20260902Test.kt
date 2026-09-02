@@ -68,4 +68,29 @@ class ConfirmedMerchants20260902Test {
             assertEquals(category, CategoryGuess.forMerchant(merchant), merchant)
         }
     }
+
+    /** The third wave: twenty answers out of ninety strings. */
+    @Test
+    fun `the third wave files under what the owner agreed`() {
+        val expected = mapOf(
+            "ADDIDAS KIDS YASM" to SaudiCategories.SHOPPING,
+            "DEER FOOT" to SaudiCategories.SHOPPING,
+            // Chocolate and wedding carts; his record is a cart.
+            "LAZWARD EST" to SaudiCategories.SHOPPING,
+            "SPEED TRACK3" to SaudiCategories.TRANSPORT,
+            "ROUTE" to SaudiCategories.FOOD,
+            "ALZAWAQA" to SaudiCategories.FOOD,
+            "BONON COM" to SaudiCategories.FOOD,
+            "MEDIUM WE" to SaudiCategories.FOOD,
+            "TAKKA EXPRESS" to SaudiCategories.FOOD,
+            "SANAR" to SaudiCategories.HEALTH,
+            "HALA YALA LOCAL" to SaudiCategories.ENTERTAINMENT,
+            "KL TOWER" to SaudiCategories.ENTERTAINMENT,
+            "RED SEA BEACH" to SaudiCategories.ENTERTAINMENT,
+            "ALAIZDIHA" to SaudiCategories.SERVICES,
+        )
+        for ((merchant, category) in expected) {
+            assertEquals(category, CategoryGuess.forMerchant(merchant), merchant)
+        }
+    }
 }

@@ -195,7 +195,8 @@ class MasroufApp : Application() {
         /** Last: filing reads the merchant and the type everything above corrects. */
         // 28: chocolate, nuts and dates moved to groceries by the owner's rule.
         // 29: the ninety-odd merchants he named and confirmed on 2026-09-02.
-        REFILE_ALL(29),
+        // 30: the third wave, twenty more.
+        REFILE_ALL(30),
     }
 
     /**

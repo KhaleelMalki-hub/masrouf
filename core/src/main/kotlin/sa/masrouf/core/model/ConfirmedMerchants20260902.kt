@@ -7,6 +7,7 @@ import sa.masrouf.core.model.SaudiCategories.FOOD
 import sa.masrouf.core.model.SaudiCategories.GROCERIES
 import sa.masrouf.core.model.SaudiCategories.HEALTH
 import sa.masrouf.core.model.SaudiCategories.INVESTMENT
+import sa.masrouf.core.model.SaudiCategories.SERVICES
 import sa.masrouf.core.model.SaudiCategories.SHOPPING
 import sa.masrouf.core.model.SaudiCategories.TRANSPORT
 
@@ -95,5 +96,25 @@ object ConfirmedMerchants20260902 {
         // mall itself, and the reason this is transport rather than the shopping
         // the search assumed.
         "MALL OF ARABIA" to TRANSPORT,
+
+        // ---- The third wave -------------------------------------------------
+        //
+        // Ninety strings searched, twenty answered: what is left in this history
+        // is establishments registered in a person's name, and no search reaches
+        // those. The owner took everything the search was confident about.
+        "ADDIDAS" to SHOPPING, "ADIDAS" to SHOPPING, "DEER FOOT" to SHOPPING,
+        // لازورد on Sitteen Street: chocolate, and the wedding carts an engagement
+        // is announced with. His single record is 5,600 riyals - a cart, not a box
+        // - so it files as shopping rather than under the groceries rule that
+        // covers boxed chocolate. One shop, one category, and this is the purchase
+        // the history actually holds.
+        "LAZWARD" to SHOPPING,
+        "SPEED TRACK" to TRANSPORT,
+        "ROUTE" to FOOD, "ALZAWAQA" to FOOD, "BONON" to FOOD, "MEDIUM WE" to FOOD,
+        "TAKKA EXPRESS" to FOOD, "DAMMAH" to FOOD, "THE CODE" to FOOD,
+        "SANAR" to HEALTH,
+        "HALA YALA" to ENTERTAINMENT, "KL TOWER" to ENTERTAINMENT,
+        "RED SEA BEACH" to ENTERTAINMENT,
+        "ALAIZDIHA" to SERVICES,
     )
 }
