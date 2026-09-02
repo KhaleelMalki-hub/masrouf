@@ -444,6 +444,10 @@ object CategoryGuess {
         // averaging 1,059 riyals - the shape of clothes bought rarely and well,
         // which no keyword in a shipped list would ever have guessed.
         "SINDI" to SaudiCategories.SHOPPING,
+        // النقلي, a nuts-and-chocolate shop: groceries by the owner's rule that food
+        // you keep is groceries. Named by him on 2026-09-02; three spellings arrive.
+        "NUKLY" to SaudiCategories.GROCERIES,
+        "NUKALY" to SaudiCategories.GROCERIES,
 
         // مطعم بوقا, named by the user. Eight visits averaging 88 riyals.
         "BOGA" to SaudiCategories.FOOD,
@@ -614,7 +618,8 @@ object CategoryGuess {
         "CHEESE CAKE" to SaudiCategories.FOOD,
         "URTH CAFF" to SaudiCategories.FOOD,
         "STEAK HOUSE" to SaudiCategories.FOOD,
-        "GODIVA" to SaudiCategories.FOOD,
+        // Boxed chocolate is food to keep: groceries, by the owner's rule of 2026-09-02.
+        "GODIVA" to SaudiCategories.GROCERIES,
         "DUTCH ICE" to SaudiCategories.FOOD,
         "WRAPS ARABIA" to SaudiCategories.FOOD,
         "NUTRITIONAL FOOD" to SaudiCategories.FOOD,

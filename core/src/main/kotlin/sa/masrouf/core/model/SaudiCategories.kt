@@ -17,7 +17,10 @@ package sa.masrouf.core.model
 object SaudiCategories {
 
     val FOOD = Category(id = "food", labelAr = "مطاعم وقهوة", labelEn = "Eating out")
-    val GROCERIES = Category(id = "groceries", labelAr = "بقالة", labelEn = "Groceries")
+    // "بقالة وأغذية", not "بقالة": the owner's rule is that food you keep - honey,
+    // oats, nuts, boxed chocolate, dates - is groceries whatever shop sold it, and
+    // he asked on 2026-09-02 for a label that says so.
+    val GROCERIES = Category(id = "groceries", labelAr = "بقالة وأغذية", labelEn = "Groceries")
     val TRANSPORT = Category(id = "transport", labelAr = "مواصلات", labelEn = "Transport")
     val BILLS = Category(id = "bills", labelAr = "فواتير واشتراكات", labelEn = "Bills")
     val HEALTH = Category(id = "health", labelAr = "صحة", labelEn = "Health")

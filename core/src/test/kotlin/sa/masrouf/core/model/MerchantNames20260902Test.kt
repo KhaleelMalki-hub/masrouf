@@ -15,7 +15,9 @@ class MerchantNames20260902Test {
     @Test
     fun `chains and brands are filed from the string alone`() {
         assertEquals(SaudiCategories.FOOD, cat("TEXAS ROA"))
-        assertEquals(SaudiCategories.FOOD, cat("PATCHI"))
+        // Boxed chocolate is food to keep - groceries, by the owner's rule.
+        assertEquals(SaudiCategories.GROCERIES, cat("PATCHI"))
+        assertEquals(SaudiCategories.GROCERIES, cat("AL NUKLY"))
         assertEquals(SaudiCategories.SHOPPING, cat("COLE HAAN JEDDAH PARK"))
         assertEquals(SaudiCategories.SHOPPING, cat("FOOT LOCK"))
         assertEquals(SaudiCategories.BILLS, cat("ANTHROPIC"))

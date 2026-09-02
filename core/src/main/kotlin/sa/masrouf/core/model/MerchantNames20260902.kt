@@ -40,8 +40,7 @@ object MerchantNames20260902 {
 
     val ENTRIES: List<Pair<String, Category>> = listOf(
         // ---- Eating out: chains and cafés ---------------------------------
-        "PATCHI" to FOOD,
-        "TEXAS ROAD" to FOOD, "TEXAS RD" to FOOD, "TEXAS ROA" to FOOD, "TEXAS ZAIDI" to FOOD,
+                "TEXAS ROAD" to FOOD, "TEXAS RD" to FOOD, "TEXAS ROA" to FOOD, "TEXAS ZAIDI" to FOOD,
         "FUDDRUCKERS" to FOOD, "FRIDAYS" to FOOD, "FRIDAYES" to FOOD,
         "P F CHANG" to FOOD, "CHILIS" to FOOD, "SHAKE SHACK" to FOOD, "NANDOS" to FOOD,
         "ENTRECOTE" to FOOD, "GABBIA" to FOOD, "CICCHET" to FOOD, "KOSEBASI" to FOOD,
@@ -58,10 +57,8 @@ object MerchantNames20260902 {
         "JOHNNY ROCKETS" to FOOD, "HARDEES" to FOOD, "POPEYES" to FOOD, "MCDONALS" to FOOD,
         "MCD" to FOOD, "KRISPY" to FOOD, "TIM HOTONS" to FOOD, "DAIRY QUEEN" to FOOD,
         "PHD" to FOOD, "MAESTRO P" to FOOD, "UPPER BUR" to FOOD, "PATTY MORE" to FOOD,
-        "CINNAMOOD" to FOOD, "AMORINO" to FOOD, "GARRETT" to FOOD, "JEFF DE BRUGES" to FOOD,
-        "BATEEL" to FOOD, "GANACHE" to FOOD, "BRIOCHE" to FOOD, "PATISSERIE" to FOOD,
-        "LE GOURMET" to FOOD, "LE CONCHEUR" to FOOD, "GINGERSNAPS" to FOOD, "ANOOSH" to FOOD,
-        "SNOWFLAKE" to FOOD, "SUKKAR" to FOOD, "SPOON AND GLAZE" to FOOD, "MADO" to FOOD,
+        "CINNAMOOD" to FOOD, "AMORINO" to FOOD,         "GANACHE" to FOOD, "BRIOCHE" to FOOD, "PATISSERIE" to FOOD,
+        "LE GOURMET" to FOOD, "LE CONCHEUR" to FOOD, "GINGERSNAPS" to FOOD,         "SNOWFLAKE" to FOOD, "SUKKAR" to FOOD, "SPOON AND GLAZE" to FOOD, "MADO" to FOOD,
         "CRIBS OF RIBS" to FOOD, "PRIME CUT" to FOOD, "GOLD SUSH" to FOOD, "MAKI HOUSE" to FOOD,
         "WOK TO WA" to FOOD, "NOODLEZ" to FOOD, "MANGIA" to FOOD, "VAPIANO" to FOOD,
         "LA TERRASSE" to FOOD, "ALDENTE" to FOOD, "ITALIAN CUISINE" to FOOD, "LA FAMILIA" to FOOD,
@@ -71,8 +68,7 @@ object MerchantNames20260902 {
         "CRAVE" to FOOD, "MUNCH" to FOOD, "KNEAD" to FOOD, "FRIES" to FOOD, "DIP N DIP" to FOOD,
         "RUDE SHAKE" to FOOD, "RUDESHAKE" to FOOD, "SLUSHY" to FOOD, "JUICE" to FOOD,
         "ALASEER" to FOOD, "NECTAR" to FOOD, "FROZEN YO" to FOOD, "PINK BERR" to FOOD,
-        "YOGORINO" to FOOD, "CONE ZONE" to FOOD, "KWALITY" to FOOD, "CANDY" to FOOD,
-        "CHOCOLAT" to FOOD, "TOLL HOUSE" to FOOD, "COOKIES" to FOOD, "SWEET BREAD" to FOOD,
+        "YOGORINO" to FOOD, "CONE ZONE" to FOOD, "KWALITY" to FOOD,         "TOLL HOUSE" to FOOD, "COOKIES" to FOOD, "SWEET BREAD" to FOOD,
         "PANCAKE" to FOOD, "WAFFLE" to FOOD, "CREPE" to FOOD, "FIRE GRIL" to FOOD,
         "MOROCCAN TASTE" to FOOD, "المذاق المغربي" to FOOD, "DIWANIYAH TASTE" to FOOD,
         "TASTY BITE" to FOOD, "DISCOVERED INDIA" to FOOD, "BIGCHIFS" to FOOD, "CANTON" to FOOD,
@@ -88,6 +84,11 @@ object MerchantNames20260902 {
         "ZED" to FOOD, "GAT" to FOOD,
 
         // ---- Groceries -----------------------------------------------------
+        // Food you keep is groceries whatever sold it - the owner's rule, given on
+        // 2026-09-02 when asked about honey, oats, nuts and boxed chocolate.
+        "PATCHI" to GROCERIES, "BATEEL" to GROCERIES, "GARRETT" to GROCERIES,
+        "JEFF DE BRUGES" to GROCERIES, "ANOOSH" to GROCERIES, "CANDY" to GROCERIES,
+        "CHOCOLAT" to GROCERIES,
         "اسواق" to GROCERIES,
         "ALMUSTAHL" to GROCERIES, "AMTIAZ ALMUSTAHLIK" to GROCERIES,
         "NAQI" to GROCERIES, "TMRAL" to GROCERIES, "ATARAT" to GROCERIES, "MALHAMT" to GROCERIES,

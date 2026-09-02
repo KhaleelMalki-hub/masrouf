@@ -193,7 +193,8 @@ class MasroufApp : Application() {
         REREAD_WHOLE_INBOX(26),
 
         /** Last: filing reads the merchant and the type everything above corrects. */
-        REFILE_ALL(27),
+        // 28: chocolate, nuts and dates moved to groceries by the owner's rule.
+        REFILE_ALL(28),
     }
 
     /**
