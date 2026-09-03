@@ -106,7 +106,6 @@ fun AddExpenseScreen(
     val monthTotal by viewModel.monthTotal.collectAsStateWithLifecycle()
     val invested by viewModel.monthInvested.collectAsStateWithLifecycle()
     val cardBalances by viewModel.cardBalances.collectAsStateWithLifecycle()
-    val recurring by viewModel.recurring.collectAsStateWithLifecycle()
     val detectedSalary by viewModel.detectedSalary.collectAsStateWithLifecycle()
     // What the user typed wins; otherwise what the bank last announced.
     val effectiveSalary = salary ?: detectedSalary
@@ -428,13 +427,6 @@ fun AddExpenseScreen(
                         onToggleCategory = viewModel::toggleCategoryFilter,
                     )
                 }
-                item {
-                    RecurringPanel(
-                        recurring = recurring,
-                        currencyLabel = currency,
-                    )
-                }
-
                 if (pending.isNotEmpty()) {
                     item {
                         Column {

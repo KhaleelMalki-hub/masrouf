@@ -24,7 +24,6 @@ import sa.masrouf.core.model.CategoryGuess
 import sa.masrouf.core.model.Direction
 import sa.masrouf.core.model.INCOME_CATEGORY_IDS
 import sa.masrouf.core.model.countsAsSpending
-import sa.masrouf.core.model.RecurringDetector
 import sa.masrouf.core.model.SaudiCategories
 import sa.masrouf.core.model.Source
 import sa.masrouf.core.model.Status
@@ -67,8 +66,11 @@ class TransactionRepository(
      *
      * Every observing flow here maps every row of a growing table, and the map runs
      * where the flow is COLLECTED - the main thread, under `stateIn`. Twelve
-     * thousand rows through the recurring detector there froze the launch: no
-     * total, no strip, touches ignored.
+     * thousand rows through a whole-history scan there froze the launch: no total,
+     * no strip, touches ignored. (That scan was the recurring detector, since
+     * removed; the mechanism it exposed belongs to every flow in this file, and
+     * `observePending` in particular is unbounded and re-emits on every write
+     * during a 22,000-message backfill.)
      *
      * Injected rather than hardcoded so a test can pass its own scheduler. With
      * `Dispatchers.Default` fixed in place, `advanceUntilIdle()` returns before a
@@ -455,23 +457,6 @@ class TransactionRepository(
             // SUM in its header, so the header says 45,000 and the list adds to
             // 30,000 with no error anywhere.
             .map { rows -> rows.map(TransactionEntity::toModel) }
-            .flowOn(computation)
-
-    /** The merchants the user pays on a rhythm, largest first. See [RecurringDetector]. */
-    fun observeRecurring(now: () -> Instant): Flow<List<RecurringDetector.Recurring>> =
-        dao.observeConfirmedDebits()
-            .map { rows ->
-                RecurringDetector.detect(rows.mapNotNull { runCatching { it.toModel() }.getOrNull() }, now())
-            }
-            // The map runs where the flow is collected, which is the main thread
-            // under stateIn. Twelve thousand rows through the detector there froze
-            // the screen at launch: no total, no strip, touches ignored.
-            //
-            // Every mapping flow in this file carries this now, not only the one
-            // that was measured. They all map every row of a growing table on each
-            // emission, and `observePending` in particular is unbounded and
-            // re-emits on every write during a 22,000-message backfill - the same
-            // mechanism, one incident away from being noticed.
             .flowOn(computation)
 
     /**

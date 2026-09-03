@@ -153,21 +153,6 @@
         <item quantity="one">1 transaction to file</item>
         <item quantity="other">%1$s transactions to file</item>
     </plurals>
-    <string name="recurring_title">Recurring payments</string>
-    <string name="recurring_summary">%1$s · about %2$s a month</string>
-    <string name="recurring_next">next %1$s</string>
-    <string name="recurring_about">about %1$s</string>
-    <string name="recurring_range">%1$s – %2$s</string>
-    <string name="cadence_daily">daily</string>
-    <string name="cadence_weekly">weekly</string>
-    <string name="cadence_fortnightly">every two weeks</string>
-    <string name="cadence_monthly">monthly</string>
-    <string name="cadence_quarterly">quarterly</string>
-    <string name="cadence_yearly">yearly</string>
-    <plurals name="recurring_count">
-        <item quantity="one">1 recurring payment</item>
-        <item quantity="other">%1$s recurring payments</item>
-    </plurals>
     <string name="refile_scope_one">This one</string>
     <string name="refile_scope_bank">Via %1$s</string>
     <string name="refile_scope_all">Whole merchant</string>

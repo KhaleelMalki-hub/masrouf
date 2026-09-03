@@ -75,7 +75,6 @@ class ConcurrentCaptureTest {
         override fun observeCardBalances(): Flow<List<CardBalance>> = MutableStateFlow(emptyList())
         override suspend fun withoutBalance() = emptyList<TransactionEntity>()
         override suspend fun withMissingParty() = emptyList<TransactionEntity>()
-        override fun observeConfirmedDebits(): Flow<List<TransactionEntity>> = MutableStateFlow(emptyList())
         override suspend fun retypeSalaryDeposits() = 0
         override suspend fun latestSmsMillis(): Long? = null
         override fun observeLatestSalary(): Flow<Long?> = MutableStateFlow(null)

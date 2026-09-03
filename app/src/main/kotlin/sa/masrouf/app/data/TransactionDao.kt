@@ -337,20 +337,6 @@ interface TransactionDao {
     )
     suspend fun cardBodies(): List<CardBody>
 
-    /**
-     * Every confirmed debit with a merchant, oldest first, for the recurring
-     * detector. The whole history rather than a window, because a yearly payment
-     * needs years to be seen; twelve thousand small rows is a fraction of a second.
-     */
-    @Query(
-        """
-        SELECT * FROM transactions
-        WHERE status = 'CONFIRMED' AND direction = 'DEBIT' AND merchant_key IS NOT NULL
-        ORDER BY occurred_at_millis
-        """
-    )
-    fun observeConfirmedDebits(): Flow<List<TransactionEntity>>
-
     /** Stored bodies whose merchant or card was never read. For a one-off re-parse. */
     @Query(
         """

@@ -26,7 +26,6 @@ import sa.masrouf.app.data.spendingTotal
 import sa.masrouf.core.model.CardKind
 import sa.masrouf.core.model.Category
 import sa.masrouf.core.model.Direction
-import sa.masrouf.core.model.RecurringDetector
 import sa.masrouf.core.model.SaudiCategories
 import sa.masrouf.core.model.Status
 import sa.masrouf.core.model.Transaction
@@ -197,17 +196,6 @@ class AddExpenseViewModel(
     val detectedSalary: StateFlow<Money?> =
         repository.observeLatestSalary()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
-
-    /**
-     * What the user pays on a rhythm, inferred from the history and nothing else.
-     *
-     * The one place the app infers rather than reads, so the detector is
-     * conservative and every row it produces names its evidence: how many times,
-     * how often, how much.
-     */
-    val recurring: StateFlow<List<RecurringDetector.Recurring>> =
-        repository.observeRecurring { Instant.now(clock) }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     /**
      * Which bank each card belongs to.

@@ -157,11 +157,6 @@ class FakeDao : TransactionDao {
         rows.filter { it.type == "SALARY" && it.direction == "CREDIT" }.maxByOrNull { it.occurredAtMillis }?.amountHalalas
     }
 
-    override fun observeConfirmedDebits(): Flow<List<TransactionEntity>> = state.map { rows ->
-        rows.filter { it.status == "CONFIRMED" && it.direction == "DEBIT" && it.merchantKey != null }
-            .sortedBy { it.occurredAtMillis }
-    }
-
     override suspend fun withMissingParty(): List<TransactionEntity> =
         state.value.filter { it.rawText != null && (it.merchantKey == null || it.accountLast4 == null) }
 
