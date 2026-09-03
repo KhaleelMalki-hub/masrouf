@@ -125,6 +125,7 @@ fun AddExpenseScreen(
     val monthRows by viewModel.monthTransactions.collectAsStateWithLifecycle()
     val cardBanks by viewModel.cardBanks.collectAsStateWithLifecycle()
     val cardKinds by viewModel.cardKinds.collectAsStateWithLifecycle()
+    val monthLoaded by viewModel.monthLoaded.collectAsStateWithLifecycle()
     val byCardKind by viewModel.monthByCardKind.collectAsStateWithLifecycle()
     val incomeMonths by viewModel.incomeByMonth.collectAsStateWithLifecycle()
     val incomeDeposits by viewModel.incomeDeposits.collectAsStateWithLifecycle()
@@ -390,13 +391,15 @@ fun AddExpenseScreen(
                 // already pads for a bar that is always there, so the two together
                 // left eighty dead points below the last transaction.
                 contentPadding = PaddingValues(bottom = FAB_CLEARANCE),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                // One rhythm for the whole column. The sections used to add their
+                // own top and bottom padding on top of this, so the gaps went 36,
+                // 24 and 12 points with nothing deciding which was which.
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 item {
                     CardsPanel(
                         cards = cardBalances,
                         currencyLabel = currency,
-                        modifier = Modifier.padding(bottom = 16.dp),
                     )
                 }
                 item {
@@ -424,7 +427,6 @@ fun AddExpenseScreen(
                     RecurringPanel(
                         recurring = recurring,
                         currencyLabel = currency,
-                        modifier = Modifier.padding(top = 12.dp),
                     )
                 }
 
@@ -543,16 +545,23 @@ fun AddExpenseScreen(
 
                 if (monthRows.isEmpty()) {
                     item {
-                        Text(
-                            text = stringResource(
-                                if (query.isNotBlank() || categoryFilter != null) {
-                                    R.string.results_none
-                                } else {
-                                    R.string.month_empty
-                                }
-                            ),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                        // Nothing at all until the month has actually been read.
+                        // Saying "no spending recorded this month yet" while the
+                        // database is still being opened is a statement the screen
+                        // cannot support, and over this history it was on screen
+                        // for long enough to read.
+                        if (monthLoaded) {
+                            Text(
+                                text = stringResource(
+                                    if (query.isNotBlank() || categoryFilter != null) {
+                                        R.string.results_none
+                                    } else {
+                                        R.string.month_empty
+                                    }
+                                ),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                 } else {
                     items(monthRows, key = { it.id }) { transaction ->

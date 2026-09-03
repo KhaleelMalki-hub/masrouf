@@ -94,7 +94,6 @@ internal fun MonthPanel(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 8.dp)
             .clip(MaterialTheme.shapes.large)
             .background(MaterialTheme.colorScheme.surfaceContainer)
             .padding(20.dp),

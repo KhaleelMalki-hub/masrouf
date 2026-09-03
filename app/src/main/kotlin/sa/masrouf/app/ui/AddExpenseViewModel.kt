@@ -349,6 +349,22 @@ class AddExpenseViewModel(
      * Derived from the same flow as [monthTotal] rather than a second query, so the
      * strip cannot be showing one month while the number above it shows another.
      */
+    /**
+     * Whether the month has been read from the database yet.
+     *
+     * Every flow on this screen starts at its empty value, so for the first frames
+     * over a 26,000-record history the screen said the month came to 0.00 and that
+     * there was nothing in it - the same words it uses for a month that really is
+     * empty - and then everything appeared at once. "I have not looked yet" and
+     * "there is nothing" are different sentences, and the screen was only able to
+     * say the second.
+     */
+    val monthLoaded: StateFlow<Boolean> =
+        _selectedMonth
+            .flatMapLatest { month -> repository.observeMonth(month) }
+            .map { true }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+
     val monthShares: StateFlow<List<Pair<Category?, Money>>> =
         _selectedMonth
             .flatMapLatest { month -> repository.observeMonth(month) }
