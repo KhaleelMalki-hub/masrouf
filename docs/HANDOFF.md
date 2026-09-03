@@ -486,6 +486,62 @@ the two legs into one row - the app prevents double-counting precisely because
 each bank tells its own side, and merging them trades a visible nuisance for a
 silent risk.
 
+## The interface review (2026-09-03)
+
+Four parallel read-only reviews against `DESIGN.md` and Material 3 - components
+and colour, motion, RTL/typography/accessibility, layout and state - then every
+finding verified in the live tree before it was touched. 54 findings; the ones
+that shipped are below, and the reasoning for what was NOT taken matters as much.
+
+**The heaviest was invisible.** `:core` is a plain Kotlin/JVM module and carries
+no Compose compiler, so every model it exports reached `:app` as an unstable type
+and no transaction row could ever skip recomposition - the whole history rebuilt
+itself whenever any state on the screen changed. `app/compose_stability.conf`
+declares what is already true of those types. Its comment syntax is `//`, not `#`.
+
+**The most visible was a white flash.** The window theme was pinned to
+`android:Theme.Material.Light`, so a phone in dark mode painted white for a frame
+or two on every cold start. It is now a colour resource with a `values-night`
+twin. (`Theme.DeviceDefault.DayNight.NoActionBar` does not exist on this
+compileSdk - AAPT rejects it.)
+
+**The one on the daily path was the amount field.** Digits carry no direction, so
+in Arabic the paragraph resolved right-to-left and the halala point - typed on the
+way to 45.50 - landed to the LEFT of the digits: the user saw ".45" and the caret
+jumped. Pinned `TextDirection.Ltr`.
+
+Then: a fade-through between the two destinations, which had been a hard cut; the
+pending queue capped at 30 slips with the rest counted (a backfill lands thousands
+and each slip is tall); a month total that slid backwards whenever it changed in
+place; a strip that re-wove from zero on every scroll and every figure; legend
+rows keyed so a fill never animates across category identities; `imePadding` on
+the entry sheet; the month arrows turned from bare quotation glyphs into named,
+auto-mirrored icon buttons; the ripple restored on two rows whose background was
+painted over it; and the loading state separated from the empty state.
+
+**What the phone showed that no review did.** In the history's supporting line the
+card chip was the only unweighted child, so it was measured first with whatever it
+asked for: "الراجحي ائتمانية 2383" took the row and the date and category
+ellipsised to "فوات." beside visibly empty space. The first fix made it worse -
+weighting both split the row evenly and cut "تحويلات" to "تحو..." - and the phone
+showed that too. The weight belongs on the chip alone. **Screenshot the running
+app; three careful code reviews did not catch either state.**
+
+**Not taken, deliberately.** The colour review called `primary` and `tertiary` as
+text on `surface` a contrast failure. That is the pairing M3's own TextButton
+uses, and the accent roles sit at tone 40 against a tone-98 surface. A reviewer's
+confidence is not a resolver.
+
+**Still open, in the order they will be felt:** the legend has no ceiling and this
+history can put sixteen categories in one month; several fixed `height` values
+around text break at 200% font scale (`MonthStrip.ROW_HEIGHT`, the income month
+label's `width(108.dp)`, the card tile's `width(168.dp)`); `MonthStrip` is
+invisible to TalkBack and the amount field has no accessible name; `YearChip` is a
+hand-rolled `FilterChip`; the two destinations still differ in how they inset
+(`Modifier.padding` against `contentPadding`); `MonthPicker` cells derive their
+height from `aspectRatio`; and `RecurringPanel`'s expander has no state
+description.
+
 ## Open items
 
 0. **3,723 records are PENDING.** They are the recovered history and the owner

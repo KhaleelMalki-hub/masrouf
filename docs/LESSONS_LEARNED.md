@@ -555,3 +555,24 @@ re-running is triage, not diagnosis.
 **How to apply:** Any intermittent failure in a test that touches a ViewModel, a
 repository, or anything with an `init` that launches.
 **Source:** session 2026-09-03, `AddExpenseViewModel.background`.
+
+### 2026-09-03 — Three code reviews did not see what one screenshot did
+**Mistake:** Ran four parallel reviews over the whole interface, fixed what they
+found, and reported the pass as done. Installing the build and looking at the
+running app showed, in one glance, that the history's supporting line had been
+ellipsising the date and category to "فوات." beside visibly empty space - because
+the card chip was the row's only unweighted child and was measured first with
+whatever width it asked for. No review caught it; it is a measurement outcome, not
+a code shape.
+**Why:** Compose layout bugs live in the interaction between siblings and the data
+they happen to hold. A reviewer reads one modifier chain at a time and cannot see
+what the measure pass gives to whom. The first fix - weighting both children -
+looked correct in the diff and was worse on the phone, cutting "تحويلات" to
+"تحو..." beside a chip reading only "الراجحي".
+**Rule:** A UI change is not verified until the built app has been looked at with
+REAL data. Install, screenshot, read the screenshot. Then fix, install and look
+again - the second look is what catches a fix that traded one clipping for
+another. CLAUDE.md rule 11 already says a screen that compiles is not a screen
+that fits; this extends it to a screen that reviews cleanly.
+**How to apply:** Every layout, weight, or overflow change in Compose.
+**Source:** session 2026-09-03, `HistoryList.CardMark`.
