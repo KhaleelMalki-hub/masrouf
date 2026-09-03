@@ -6,7 +6,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
 
 ## Where things stand
 
-- All tests green: **378** in `:core`, **178** in `:app`, **9** instrumented
+- All tests green: **383** in `:core`, **178** in `:app`, **9** instrumented
   (`:app:connectedDebugAndroidTest`).
 - **`connectedDebugAndroidTest` uninstalls the app and deletes its database.**
   It has already cost the owner's phone once. Use the `masrouf35` emulator, or
@@ -15,7 +15,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
   off adb often; check `adb devices` before installing.
 - Database schema version 6. One-off repairs are a set in `MasroufApp.Repair`,
   each stamped with the version that introduced it, taken as a union and run once
-  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **30**.
+  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **40**.
 - Real data on the phone: ~22,014 transactions, ~2,190 unfiled, and the owner's
   own learned merchant rules (34 and growing — he files one whenever a shop the
   shipped list cannot name comes up).
@@ -420,6 +420,69 @@ immediate re-run. Same shape as the `MonthNavigationTest` leak recorded earlier:
 a ViewModel test whose collector outlives its scope. Two tests now, so it is the
 harness rather than one test. Re-run before believing it; fix means giving those
 tests a controlled dispatcher and cancelling the scope.
+
+## The corpus answers what the web cannot (2026-09-03)
+
+The third day of filing found four ways to name a merchant that no search reaches,
+and one that looks like a way and is not. Written down because each cost a session
+to find and each will be wanted again.
+
+1. **The code message carries the full name.** The confirmation truncates the shop
+   to nine characters; the one-time-password message for the same purchase spells
+   it out - "لدى:AL RASHED" against "لدى:AL RASHED TIRES COMPANY LLC". The gate
+   refuses those bodies and always will, so no query over STORED data can see
+   them - but the phone's inbox still holds them. Match on amount, card and
+   minute; take the name, never the code. Also gave Ashley Furniture, LAABIS, a
+   dates shop, carboost, Taibahgifts and the health endowment fund.
+2. **The shop's own SMS.** 534 senders write to this phone and 500 are not banks;
+   some are the shops. Fold every sender against the unfiled keys, then keep only
+   the ones whose message lands on the SAME DAY as the purchase. Gave GoldenScent,
+   المسلم للتمور, and hnak - whose message named the PRODUCT ("عبوة ماء زمزم 5
+   لتر"), which is why it files as groceries rather than as the general store.
+3. **One shop, two names, both in his history.** He bought at OUNASS in 2018-2020
+   and 2024-2026 and at NIBRAS ALARABIA CO in the gaps - a brand and a legal name
+   that never overlap in time are the same shop, and DHL delivering "from NIBRAS
+   ARABIA" five days after one purchase settled it. The same logic separated
+   الخزائن المبتكرة (Creative, `Maan Hama` + `International Creative`) from
+   الخزائن الاحترافية (`PROFESSIO`): two closet makers, two English names, two
+   different years, and the owner had used both.
+4. **The context around the purchase.** "TermAppISO DXB AR" is a terminal's
+   protocol string where a name belongs. What placed it was the trip: Dubai on 18
+   March 2016, and Saudia issuing his boarding pass DXB to JED two days later.
+5. **A prefix is NOT an identification.** Searching the inbox for any longer string
+   starting with a truncation found "KARAM BEIRUT" for "Karam" - whose own code
+   message says SALLA APP, and the keyword it justified claimed أجواد الكرم, a
+   grocery. The test caught it. Evidence that identifies a TRANSACTION may be
+   acted on; evidence that resembles a STRING goes to the owner as a question.
+
+**PROFESSIO, the largest unfiled merchant in the history, closed on memory.** 13,000
+riyals over three August-2024 payments that no search, sender, shipment or code
+message ever named. Laying out the shape - a deposit and two instalments, in
+person, in the same weeks as the kitchen and the appliances - was what let the
+owner remember الخزائن الاحترافية in Al Rawdah.
+
+**Where the filing ended:** 728 unfiled debits, 129,868 riyals, across 466
+merchants; 245 of those records (32,580 riyals) are in the last 24 months. It began
+the day at 2,063 records and 580,669 riyals. Maintenance is at **40**, nothing is
+pending, and the tests stand at 383 in `:core` and 178 in `:app`.
+
+**A bug found in a screenshot he sent.** The home screen said he pays 102,890
+riyals a month across 14 recurring payments. `RecurringDetector` filtered on
+direction and status and never asked whether the debit was money LEAVING, so his
+186 transfers to his own AlRajhi account read as a standing order. It asks
+`countsAsSpending` now.
+
+**Deferred, by his decision: a switch to hide his own money moving.** He tops up
+barq from a mada card (no fee now), spends from it, and moves the rest to his
+AlRajhi account - so ONE movement of 5,000 riyals writes four rows in 95 seconds,
+two banks each reporting both legs. The totals are right: all four are transfers
+and none reaches spending or income. But 1,310 of his last 3,379 records are money
+moving rather than money spent, and the history reads as noise. The design he
+approved and deferred: one switch above the list, "أخفِ حركة أموالي", hiding what
+is neither spending nor income, remembered in `Preferences`. **Do not** collapse
+the two legs into one row - the app prevents double-counting precisely because
+each bank tells its own side, and merging them trades a visible nuisance for a
+silent risk.
 
 ## Open items
 
