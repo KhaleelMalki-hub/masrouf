@@ -127,6 +127,18 @@ class ConfirmedMerchants20260902Test {
             "FUTURE WO" to SaudiCategories.FEES,
             "INTERNATIONAL CREATIVE" to SaudiCategories.SHOPPING,
             "Internation01 Creative Jeddah" to SaudiCategories.SHOPPING,
+            // Ounass under its legal name, which his own history carries beside
+            // the brand.
+            "NIBRAS ALARABIA CO" to SaudiCategories.SHOPPING,
+            "SAUDI BATAL DESIGN CO" to SaudiCategories.SHOPPING,
+            "ALATLAL T" to SaudiCategories.SHOPPING,
+            "ALMOTABOULI UNITED CO MAKKAH" to SaudiCategories.SHOPPING,
+            "ALSHAREEF CORNER EST" to SaudiCategories.SHOPPING,
+            "LAMAR ALSAUDIA EST" to SaudiCategories.TRAVEL,
+            "SAUDI ADNAN ABLISHMENT" to SaudiCategories.GROCERIES,
+            "ALSOUKYA" to SaudiCategories.GROCERIES,
+            "ORIANA" to SaudiCategories.SERVICES,
+            "CLEAN LIFE CO" to SaudiCategories.SERVICES,
         )
         for ((merchant, category) in expected) {
             assertEquals(category, CategoryGuess.forMerchant(merchant), merchant)

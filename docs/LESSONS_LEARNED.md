@@ -519,3 +519,20 @@ no-result sweep as "this spelling is absent", never as "this shop is absent".
 **How to apply:** Any corpus search for an entity that has both an English and an
 Arabic public name.
 **Source:** session 2026-09-02, سيتي دبليو / CITY WINDOW.
+
+### 2026-09-03 — One shop, two names, both in the same person's history
+**Mistake:** Sent a web search to find out what "NIBRAS ALARABIA CO" sells, got
+"trades as Ounass" from a privacy policy, and offered the owner an answer he
+rightly doubted - a legal name proves nothing about what HE bought.
+**Why:** The corpus already held the answer twice over. He has purchases under
+`OUNASS` in 2018, 2019, 2020, 2024 and 2026 and under `NIBRAS ALARABIA CO` in
+2020 and 2022 - same channel, same kind of amount, interleaved years - and DHL
+delivered a shipment "from NIBRAS ARABIA" five days after one of them. A card
+terminal receives whichever name the merchant registered that year, so one shop
+appears under both.
+**Rule:** Before asking the web what a merchant is, ask the history whether the
+same buyer used another name for it: group by amount pattern, channel and period,
+and look for a second string that fills the gaps in the first one's timeline. A
+brand and a legal name that never overlap in time are usually the same shop.
+**How to apply:** Any unidentified merchant that appears in bursts with gaps.
+**Source:** session 2026-09-03, NIBRAS ALARABIA CO / OUNASS.

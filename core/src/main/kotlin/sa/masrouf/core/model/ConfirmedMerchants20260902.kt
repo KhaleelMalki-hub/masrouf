@@ -213,5 +213,28 @@ object ConfirmedMerchants20260902 {
         // 2019 are the same fitted-cabinet maker under its older name.
         "INTERNATIONAL CREATIVE" to SHOPPING,
         "INTERNATION01 CREATIVE" to SHOPPING,
+
+        // ---- The doubtful list, settled ---------------------------------------
+        //
+        // نبراس العربية is Ounass, and the proof is in his own history rather than
+        // on the web: he bought from OUNASS by that name in 2018, 2019, 2020,
+        // 2024 and 2026, and from NIBRAS ALARABIA CO in between - same channel,
+        // same kind of amount, overlapping years - while DHL delivered a shipment
+        // "from NIBRAS ARABIA" five days after one of them. A shop's legal name
+        // and its brand both reach the terminal; when both appear in one person's
+        // corpus, the corpus settles it.
+        "NIBRAS" to SHOPPING,
+        // The rest of the researched list, confirmed by the owner.
+        "SAUDI BATAL" to SHOPPING,      // Batal Design, furniture
+        "ALATLAL" to SHOPPING,          // الأطلال للاتصالات, phones
+        "ALMOTABOULI" to SHOPPING,      // United Matbouli, Samsung
+        "ALSHAREEF CORNER" to SHOPPING, // ركن الشريف, electronics - Aramex twice
+        "ANWAR ALKHALEJ" to SHOPPING,   // أنوار الخليج, furniture
+        "LAMAR ALSAUDIA" to TRAVEL,     // Umrah services and transport
+        "SAUDI ADNAN" to GROCERIES,     // wholesale food
+        "ALSOUKYA" to GROCERIES,        // Nespresso Saudi - capsules
+        "ORIANA" to SERVICES,           // ladies salon and spa
+        "CLEAN LIFE" to SERVICES,
+        "RETAJ" to FOOD,
     )
 }
