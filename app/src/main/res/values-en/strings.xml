@@ -9,7 +9,7 @@
     <string name="type_label">Type</string>
     <string name="save">Save</string>
 
-    <string name="currency_sar">SAR</string>
+    <string name="currency_sar">\u20C1</string>
 
     <string name="type_purchase">Purchase</string>
     <string name="type_transfer_out">Transfer out</string>

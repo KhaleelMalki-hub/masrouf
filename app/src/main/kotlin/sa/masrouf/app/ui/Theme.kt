@@ -105,49 +105,57 @@ private val DarkScheme = darkColorScheme(
 )
 
 /**
- * IBM Plex Sans Arabic, bundled.
+ * IBM Plex Sans Arabic, bundled - with one glyph of our own.
  *
  * The system Arabic face is a Naskh, and it is what makes an Android app look like
  * an Android app rather than like itself. Plex Arabic is drawn on the same
  * skeleton as its Latin, so the Arabic labels and the Western numerals this app
  * insists on sit together instead of looking like two typefaces sharing a line.
  * SIL OFL, so bundling it is fine.
+ *
+ * Bundled as "Masrouf Arabic" rather than as Plex, because it is no longer Plex:
+ * the Saudi riyal sign (U+20C1) is drawn into all four weights from the central
+ * bank's own outline. Plex 1.005 has no glyph for it, no Noto build checked in
+ * September 2026 had one either, and a currency this app prints on every screen
+ * cannot be a box on a phone whose system font has not caught up yet. The OFL's
+ * reserved-name clause is why the family is renamed; `tools/add_riyal_glyph.py`
+ * does both and is the only way these files should ever be regenerated.
  */
-private val PlexArabic = FontFamily(
-    Font(R.font.plex_arabic_regular, FontWeight.Normal),
-    Font(R.font.plex_arabic_medium, FontWeight.Medium),
-    Font(R.font.plex_arabic_semibold, FontWeight.SemiBold),
-    Font(R.font.plex_arabic_bold, FontWeight.Bold),
+private val MasroufArabic = FontFamily(
+    Font(R.font.masrouf_arabic_regular, FontWeight.Normal),
+    Font(R.font.masrouf_arabic_medium, FontWeight.Medium),
+    Font(R.font.masrouf_arabic_semibold, FontWeight.SemiBold),
+    Font(R.font.masrouf_arabic_bold, FontWeight.Bold),
 )
 
-/** The M3 scale, with every role set in Plex Arabic so nothing falls back. */
+/** The M3 scale, with every role set in Masrouf Arabic so nothing falls back. */
 private val MasroufTypography = Typography().run {
     copy(
-        displayLarge = displayLarge.copy(fontFamily = PlexArabic),
+        displayLarge = displayLarge.copy(fontFamily = MasroufArabic),
         displayMedium = displayMedium.copy(
-            fontFamily = PlexArabic, fontWeight = FontWeight.Bold, letterSpacing = (-1.5).sp,
+            fontFamily = MasroufArabic, fontWeight = FontWeight.Bold, letterSpacing = (-1.5).sp,
         ),
-        displaySmall = displaySmall.copy(fontFamily = PlexArabic, fontWeight = FontWeight.Bold),
-        headlineLarge = headlineLarge.copy(fontFamily = PlexArabic),
-        headlineMedium = headlineMedium.copy(fontFamily = PlexArabic, fontWeight = FontWeight.SemiBold),
-        headlineSmall = headlineSmall.copy(fontFamily = PlexArabic, fontWeight = FontWeight.SemiBold),
-        titleLarge = titleLarge.copy(fontFamily = PlexArabic, fontWeight = FontWeight.SemiBold),
-        titleMedium = titleMedium.copy(fontFamily = PlexArabic, fontWeight = FontWeight.Medium),
-        titleSmall = titleSmall.copy(fontFamily = PlexArabic, fontWeight = FontWeight.Medium),
-        bodyLarge = bodyLarge.copy(fontFamily = PlexArabic),
-        bodyMedium = bodyMedium.copy(fontFamily = PlexArabic),
-        bodySmall = bodySmall.copy(fontFamily = PlexArabic),
-        labelLarge = labelLarge.copy(fontFamily = PlexArabic, fontWeight = FontWeight.Medium),
+        displaySmall = displaySmall.copy(fontFamily = MasroufArabic, fontWeight = FontWeight.Bold),
+        headlineLarge = headlineLarge.copy(fontFamily = MasroufArabic),
+        headlineMedium = headlineMedium.copy(fontFamily = MasroufArabic, fontWeight = FontWeight.SemiBold),
+        headlineSmall = headlineSmall.copy(fontFamily = MasroufArabic, fontWeight = FontWeight.SemiBold),
+        titleLarge = titleLarge.copy(fontFamily = MasroufArabic, fontWeight = FontWeight.SemiBold),
+        titleMedium = titleMedium.copy(fontFamily = MasroufArabic, fontWeight = FontWeight.Medium),
+        titleSmall = titleSmall.copy(fontFamily = MasroufArabic, fontWeight = FontWeight.Medium),
+        bodyLarge = bodyLarge.copy(fontFamily = MasroufArabic),
+        bodyMedium = bodyMedium.copy(fontFamily = MasroufArabic),
+        bodySmall = bodySmall.copy(fontFamily = MasroufArabic),
+        labelLarge = labelLarge.copy(fontFamily = MasroufArabic, fontWeight = FontWeight.Medium),
         labelMedium = labelMedium.copy(
-            fontFamily = PlexArabic, fontWeight = FontWeight.Medium, letterSpacing = 0.8.sp,
+            fontFamily = MasroufArabic, fontWeight = FontWeight.Medium, letterSpacing = 0.8.sp,
         ),
-        labelSmall = labelSmall.copy(fontFamily = PlexArabic, fontWeight = FontWeight.Medium),
+        labelSmall = labelSmall.copy(fontFamily = MasroufArabic, fontWeight = FontWeight.Medium),
     )
 }
 
 /** The amount, wherever it appears. Tracking tightened so figures read as one object. */
 val MoneyStyle: TextStyle = TextStyle(
-    fontFamily = PlexArabic,
+    fontFamily = MasroufArabic,
     fontWeight = FontWeight.SemiBold,
     letterSpacing = (-0.3).sp,
 )

@@ -14,7 +14,7 @@
     <string name="type_label">النوع</string>
     <string name="save">حفظ</string>
 
-    <string name="currency_sar">ر.س</string>
+    <string name="currency_sar">\u20C1</string>
 
     <string name="type_purchase">شراء</string>
     <string name="type_transfer_out">تحويل صادر</string>

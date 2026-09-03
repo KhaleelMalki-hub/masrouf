@@ -555,6 +555,27 @@ open; and the spending list moved its side inset from a modifier into
 `contentPadding`, so both destinations inset the same way and the overscroll
 stretch reaches the screen edge on both.
 
+## The currency is the new riyal sign
+
+`ر.س` became **U+20C1**, the sign the central bank published in February 2025 and
+Unicode encoded in 17.0 in September 2025. One string does it, because every
+figure in the app is built by `Money.forDisplay`.
+
+The glyph is the work. IBM Plex Sans Arabic 1.005 - the family this app bundles -
+has no U+20C1, and neither did any Noto build checked in September 2026: the sign
+is younger than the fonts. A missing glyph is not a fallback, it is a box, on a
+currency printed on every screen. So it is drawn into all four weights from
+SAMA's own published outline by `tools/add_riyal_glyph.py`, scaled to the height
+of the font's own digits so it sits beside them as a currency mark rather than as
+a pasted icon. The upstream files moved to `tools/upstream/` so the APK ships one
+family; the OFL's reserved-name clause is why the bundled family is renamed to
+Masrouf Arabic. Re-run the tool after any font upgrade.
+
+**Known, not fixed:** a screen reader used to say "ر.س" and now meets a character
+it may not name. Every money figure is a plain `String` from one formatter, so
+there is no single place to attach a spoken label - it would be one per call site.
+Worth doing if he uses TalkBack.
+
 ## Open items
 
 0. **Every confirmed sender now has a profile** (urpay, meem, Vision Bank added
