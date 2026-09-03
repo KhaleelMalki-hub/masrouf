@@ -236,5 +236,10 @@ object ConfirmedMerchants20260902 {
         "ORIANA" to SERVICES,           // ladies salon and spa
         "CLEAN LIFE" to SERVICES,
         "RETAJ" to FOOD,
+        // محل الدهام للساعات, named by the owner. 7,430 riyals in December 2019,
+        // and فوزيه سامى مالكى transferred him exactly 7,430 the same evening -
+        // he bought it for her and was repaid to the halala, which is why that
+        // day's spending nets to nothing however this row is filed.
+        "DAHAM COMPANY" to SHOPPING,
     )
 }
