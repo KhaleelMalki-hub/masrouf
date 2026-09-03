@@ -85,6 +85,15 @@ object RecurringDetector {
     private const val MIN_OCCURRENCES = 4
 
     /**
+     * How many occurrences a yearly rhythm needs.
+     *
+     * Four points give three gaps, and `MIN_REGULARITY` passes on two of them.
+     * Two coincidences are not a year. Five points give four gaps and require
+     * three, which is a claim the data can actually carry.
+     */
+    private const val MIN_YEARLY_OCCURRENCES = 5
+
+    /**
      * Only the latest events are judged. A subscription is what someone pays NOW;
      * judged over twelve years, YouTube Premium failed because 2022 had a gap in
      * it, and the question was never whether it was always regular.
@@ -152,6 +161,18 @@ object RecurringDetector {
         return amountClusters(rows)
             .filter { it.size >= MIN_OCCURRENCES }
             .mapNotNull { recurringOrNull(key, it, now) }
+            // A cluster is a subset CHOSEN for having similar amounts, so any
+            // rhythm found inside it is a weaker claim than one found in the whole
+            // run - and the longer the period, the weaker. A yearly claim rests on
+            // three gaps out of four points, two of which have to match; pick any
+            // four transfers of about ten thousand riyals from three years of
+            // them and two gaps will land near a year by chance. That is exactly
+            // what put a name the owner transfers to irregularly at the top of his
+            // recurring payments, at ten thousand riyals a year.
+            //
+            // The whole run may still claim a yearly rhythm. A subset of it may
+            // not.
+            .filter { it.cadence != Cadence.YEARLY }
     }
 
     /** Greedy clusters of amounts within a fifth of their seed, seed taken from the sorted list. */
@@ -185,6 +206,8 @@ object RecurringDetector {
         }
         val medianGap = gapsDays.sorted().let { it[it.size / 2] }
         val cadence = Cadence.entries.firstOrNull { it.accepts(medianGap) } ?: return null
+        // A year needs more than four points to claim. See MIN_YEARLY_OCCURRENCES.
+        if (cadence == Cadence.YEARLY && rows.size < MIN_YEARLY_OCCURRENCES) return null
 
         val regular = gapsDays.count { abs(it - cadence.days) <= cadence.tolerance }
         if (regular.toDouble() / gapsDays.size < MIN_REGULARITY) return null

@@ -87,6 +87,43 @@ class RecurringDetectorTest {
         assertTrue(RecurringDetector.detect(rows, now).isEmpty())
     }
 
+    /**
+     * The defect the owner spotted on his own home screen: a person he transfers
+     * to irregularly stood at the top of his recurring payments, claimed as a
+     * yearly commitment.
+     *
+     * The shape, not his figures - CLAUDE.md forbids a real person's amounts in
+     * tracked source. What matters is that the run is irregular in both timing
+     * and size, while four of its members happen to be about the same amount and
+     * two of the three gaps between THOSE land near a year. The whole run is not
+     * a rhythm; the amount-cluster fallback found one anyway.
+     */
+    @Test
+    fun `four transfers of a similar size are not a yearly commitment`() {
+        val rows = listOf(
+            tx("A PERSON", 1100, "1000.00"), tx("A PERSON", 1093, "2500.00"),
+            tx("A PERSON", 1009, "400.00"), tx("A PERSON", 960, "2500.00"),
+            tx("A PERSON", 954, "1000.00"), tx("A PERSON", 766, "400.00"),
+            tx("A PERSON", 702, "6000.00"), tx("A PERSON", 624, "1900.00"),
+            tx("A PERSON", 603, "300.00"), tx("A PERSON", 590, "1700.00"),
+            tx("A PERSON", 574, "980.00"), tx("A PERSON", 538, "2500.00"),
+            tx("A PERSON", 500, "700.00"), tx("A PERSON", 309, "3000.00"),
+            tx("A PERSON", 218, "1000.00"),
+        )
+
+        assertTrue(RecurringDetector.detect(rows, now).isEmpty())
+    }
+
+    /** A yearly rhythm the WHOLE run carries is still a rhythm. */
+    @Test
+    fun `five yearly renewals are a commitment`() {
+        val rows = listOf(0L, 365, 730, 1095, 1460).map { tx("DOMAIN RENEWAL", it, "220.00") }
+
+        val found = RecurringDetector.detect(rows, now)
+
+        assertEquals(RecurringDetector.Cadence.YEARLY, found.single().cadence)
+    }
+
     /** "NETFLIX COM" for eighteen months, then "NETFLIX": one subscription. */
     @Test
     fun `a merchant whose descriptor changes is judged as one merchant`() {
