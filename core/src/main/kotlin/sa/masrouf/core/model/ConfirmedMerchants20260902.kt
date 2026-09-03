@@ -169,5 +169,21 @@ object ConfirmedMerchants20260902 {
         // 4,521.97 riyals in Dubai on 18 March 2016, and Saudia issuing his
         // boarding pass DXB to JED two days later. Travel, confirmed by the owner.
         "TERMAPP" to TRAVEL,
+
+        // ---- More names, once the code-message reader was fixed --------------
+        //
+        // The first pass required "لدى" to START a line and missed every message
+        // that ran the fields together. Read anywhere in the body, four more
+        // purchases named themselves - and all four are behind "fatoora", a
+        // payment gateway that sends the shop's INITIAL and nothing else, which
+        // is why "fatoora*A" and "fatoora*C" are different shops.
+        "FATOORA A" to SHOPPING,      // Ashley Fu[rniture]
+        "FATOORA L" to SHOPPING,      // LAABIS, clothing
+        "FATOORA D" to GROCERIES,     // Dates Nag - dates
+        "FATOORA C" to TRANSPORT,     // carboost - car care
+        "CARBOOST" to TRANSPORT,
+        // "NAWAL MELEH TO DECORAT[ION]" - the string says it, once it is read to
+        // the end rather than to the ninth character.
+        "MELEH TO DECORAT" to SHOPPING,
     )
 }

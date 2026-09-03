@@ -112,6 +112,14 @@ class ConfirmedMerchants20260902Test {
             "TAP TAIBA" to SaudiCategories.SHOPPING,
             "CITY WINDOW" to SaudiCategories.SHOPPING,
             "TermAppISO" to SaudiCategories.TRAVEL,
+            // Named by their own code messages; "fatoora" is a gateway that sends
+            // only the shop's initial, so each letter is a different shop.
+            "fatoora*A" to SaudiCategories.SHOPPING,
+            "fatoora*L" to SaudiCategories.SHOPPING,
+            "fatoora*D" to SaudiCategories.GROCERIES,
+            "fatoora*C" to SaudiCategories.TRANSPORT,
+            "MF CARBOOST" to SaudiCategories.TRANSPORT,
+            "NAWAL MELEH TO DECORAT" to SaudiCategories.SHOPPING,
         )
         for ((merchant, category) in expected) {
             assertEquals(category, CategoryGuess.forMerchant(merchant), merchant)
