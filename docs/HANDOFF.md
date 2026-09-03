@@ -584,11 +584,20 @@ stretch reaches the screen edge on both.
    about two records each, almost all local shops registered in their owner's
    name, so no keyword list reaches them: they need his memory, one at a time,
    and filing one files every record from it. 120 still carry no party at all.
-1. **Five merchants he has not placed**, all on the cancelled 7404, all one-off
-   except OBOUD BAH: `AL NOUJAI` (23,240), `OBOUD BAH` (6,175 over 7 visits),
-   `AL MUASHA` (4,672), `ALATLAL T` (3,950), `AL RASHED` (3,114). Nothing in the
-   messages narrows them further — the full text carries no city, branch or
-   reference. They need his memory.
+1. **One merchant he has not placed**: `AL MUASHA`, 4,672.45 riyals, one visit,
+   5 October 2025 at 18:10 on the cancelled 7404 through Google Pay. The other
+   four on this list were resolved before it was written and the list was never
+   corrected - `AL NOUJAI` is Chanel (23,240, he named it), `ALATLAL T` is الأطلال
+   للاتصالات, `OBOUD BAH` is العامودي for Nissan and Haval parts, and `AL RASHED`
+   is proven twice: he placed it, and the card's own OTP thirty-eight seconds
+   before the purchase reads `AL RASHED TIRES COMPANY LLC`.
+
+   For AL MUASHA every channel on the phone is exhausted. It paid through a wallet,
+   so no OTP carries its full name; no shop message names it or its amount anywhere
+   in the message store; and a search across 967 merchant-naming OTPs against every
+   unfiled purchase returns nothing for it. What is left is the context: he refuelled
+   at Aldrees half an hour before, bought 157.95 from Amazon six minutes before, and
+   paid 4,672.45 in one tap. It needs his memory.
 2. **107 rows still carry an account number as their party.** Down from 2,014;
    what remains uses templates none of the four bank profiles reads.
 3. **One transaction of 37,000 (8 June 2026)** looks like a card settlement with
