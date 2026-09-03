@@ -185,5 +185,22 @@ object ConfirmedMerchants20260902 {
         // "NAWAL MELEH TO DECORAT[ION]" - the string says it, once it is read to
         // the end rather than to the ninth character.
         "MELEH TO DECORAT" to SHOPPING,
+
+        // ---- Named by the shop's own SMS, on the day of the purchase ---------
+        //
+        // 534 senders write to this phone and 500 of them are not banks. Folding
+        // each against the unfiled merchant keys found eighteen candidates; the
+        // three below are the ones whose message lands on the SAME DAY as the
+        // purchase, which is what separates a shop that texted him from a shop
+        // whose name merely resembles a truncation.
+        //
+        // GoldenScent confirmed and shipped order 206919878 on the day of the
+        // 323-riyal purchase. المسلم للتمور الفاخرة sent its code that morning and
+        // its dispatch two days later. hnak.com confirmed "عبوة ماء زمزم - 5 لتر"
+        // the same day - water, which is why it files as groceries rather than as
+        // the general store hnak also is.
+        "GOLDEN SC" to SHOPPING, "GOLDENSCENT" to SHOPPING,
+        "ALMUSALLM" to GROCERIES,
+        "HNAK" to GROCERIES,
     )
 }

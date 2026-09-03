@@ -120,6 +120,10 @@ class ConfirmedMerchants20260902Test {
             "fatoora*C" to SaudiCategories.TRANSPORT,
             "MF CARBOOST" to SaudiCategories.TRANSPORT,
             "NAWAL MELEH TO DECORAT" to SaudiCategories.SHOPPING,
+            // Named by the shop's own SMS on the day of the purchase.
+            "Golden Sc" to SaudiCategories.SHOPPING,
+            "ALMUSALLM" to SaudiCategories.GROCERIES,
+            "HNAK" to SaudiCategories.GROCERIES,
         )
         for ((merchant, category) in expected) {
             assertEquals(category, CategoryGuess.forMerchant(merchant), merchant)
