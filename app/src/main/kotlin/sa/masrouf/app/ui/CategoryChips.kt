@@ -64,6 +64,13 @@ fun CategoryChips(
                     // event as seeing it in the strip.
                     selectedContainerColor = bandColour(category),
                     selectedLabelColor = MaterialTheme.colorScheme.surface,
+                    // The icon takes the label's colour. Left to the default it
+                    // was `onSecondaryContainer` - a scheme tone with no
+                    // relationship to the band it sits on, so the glyph and the
+                    // word beside it were two different colours on one dye, and
+                    // under a dynamic palette the glyph could land on its own
+                    // background.
+                    selectedLeadingIconColor = MaterialTheme.colorScheme.surface,
                 ),
                 modifier = Modifier.heightIn(min = 48.dp),
             )

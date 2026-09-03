@@ -236,11 +236,14 @@ private fun BandRow(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
+            .clip(MaterialTheme.shapes.small)
             // The legend already names every category, so it is also the filter.
             // A separate filter menu would be the same list printed twice.
-            .clickable(onClick = onClick)
-            .background(highlight),
+            //
+            // Background BEFORE clickable: the other order paints the fill over the
+            // ripple, and the row gave no press feedback at all.
+            .background(highlight)
+            .clickable(onClick = onClick),
     ) {
         // The proportion, drawn behind the text rather than beside it. A swatch
         // tells you which colour a category is; this tells you how big it is

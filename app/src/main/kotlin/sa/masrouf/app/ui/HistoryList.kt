@@ -178,10 +178,21 @@ internal fun TransactionRow(
                     Spacer(Modifier.width(6.dp))
                 }
                 if (mark != null || transaction.accountLast4 != null) {
+                    // The chip is the only weighted child in this row, and that
+                    // is the whole trick. An unweighted child is measured first
+                    // with whatever width it asks for: while the chip was
+                    // unweighted, "الراجحي ائتمانية 2383" took the row and the
+                    // date and category ellipsised to "فوات." and "بقالة وأ..."
+                    // beside empty space. Weighting BOTH was worse - they then
+                    // split the row evenly and "تحويلات" was cut to "تحو..."
+                    // next to a chip reading only "الراجحي". So the date and
+                    // category are measured first, and the chip takes what is
+                    // left and ellipsises if it must.
                     CardMark(
                         mark = mark,
                         last4 = transaction.accountLast4,
                         kind = transaction.accountLast4?.let(cardKinds::get),
+                        modifier = Modifier.weight(1f, fill = false),
                     )
                     Spacer(Modifier.width(8.dp))
                 }
@@ -195,11 +206,6 @@ internal fun TransactionRow(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    // Last in the row and the first to give way. Without a weight
-                    // the badge and the card chip are measured first and this
-                    // collapsed to an ellipsis - the date and category, which are
-                    // what the line is for.
-                    modifier = Modifier.weight(1f, fill = false),
                 )
             }
         },
@@ -392,7 +398,12 @@ internal fun RefileSheet(
  * ordinary case, and "الراجحي" alone cannot tell them apart.
  */
 @Composable
-internal fun CardMark(mark: BankMark?, last4: String?, kind: CardKind? = null) {
+internal fun CardMark(
+    mark: BankMark?,
+    last4: String?,
+    kind: CardKind? = null,
+    modifier: Modifier = Modifier,
+) {
     val colour = mark?.colour ?: MaterialTheme.colorScheme.onSurfaceVariant
     // Digits alone, with no leading dots to say "and four more". In a right-to-left
     // row the dots land on the wrong side of the number and read as part of it; the
@@ -420,8 +431,8 @@ internal fun CardMark(mark: BankMark?, last4: String?, kind: CardKind? = null) {
         color = colour,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
-        modifier = Modifier
-            .clip(RoundedCornerShape(4.dp))
+        modifier = modifier
+            .clip(MaterialTheme.shapes.extraSmall)
             .background(colour.copy(alpha = 0.14f))
             .padding(horizontal = 6.dp, vertical = 1.dp),
     )

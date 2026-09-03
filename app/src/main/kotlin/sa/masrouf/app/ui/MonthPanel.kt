@@ -390,8 +390,8 @@ private fun OutsideTotalRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .clickable(onClick = onClick)
+            .clip(MaterialTheme.shapes.small)
+            // Background before clickable, or the fill covers the ripple.
             .then(
                 if (selected) {
                     Modifier.background(MaterialTheme.colorScheme.surfaceContainerHighest)
@@ -399,6 +399,10 @@ private fun OutsideTotalRow(
                     Modifier
                 }
             )
+            .clickable(onClick = onClick)
+            // A row that filters the month is a control, and a control is at least
+            // 48dp tall however little text it holds.
+            .heightIn(min = 48.dp)
             .padding(horizontal = 12.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
