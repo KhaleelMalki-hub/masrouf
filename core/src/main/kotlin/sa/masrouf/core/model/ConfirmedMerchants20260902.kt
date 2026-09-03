@@ -251,5 +251,15 @@ object ConfirmedMerchants20260902 {
         // He already had Haval parts filed under Time-race; this is the shop that
         // sells them.
         "OBOUD BAH" to TRANSPORT,
+        // الخزائن الاحترافية, Al Rawdah in Jeddah - a fitted wardrobe for the
+        // bedroom, remembered by the owner after the pattern was laid out for
+        // him. Three payments in August 2024 that read as a deposit and two
+        // instalments: 1,000 on the 2nd, 6,000 on the 10th, 6,000 on the 25th,
+        // all in person at the terminal, in the same weeks as the kitchen from
+        // Kitchen Trends and the appliances from eXtra.
+        //
+        // No search would ever have reached it: the terminal sends nine
+        // characters of an English word that thousands of businesses use.
+        "PROFESSIO" to SHOPPING,
     )
 }

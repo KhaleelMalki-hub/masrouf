@@ -141,6 +141,7 @@ class ConfirmedMerchants20260902Test {
             "CLEAN LIFE CO" to SaudiCategories.SERVICES,
             "Daham company and its" to SaudiCategories.SHOPPING,
             "OBOUD BAH" to SaudiCategories.TRANSPORT,
+            "PROFESSIO" to SaudiCategories.SHOPPING,
         )
         for ((merchant, category) in expected) {
             assertEquals(category, CategoryGuess.forMerchant(merchant), merchant)
