@@ -557,8 +557,6 @@ stretch reaches the screen edge on both.
 
 ## Open items
 
-0. **3,723 records are PENDING.** They are the recovered history and the owner
-   has not seen them; the app has a confirm-all action for exactly this.
 0. **Every confirmed sender now has a profile** (urpay, meem, Vision Bank added
    2026-09-02; AlJazira and SAIB 2026-09-01). Still unread: STC's `900` landline
    bills (217 - probably already captured from the paying bank's side, so adding
