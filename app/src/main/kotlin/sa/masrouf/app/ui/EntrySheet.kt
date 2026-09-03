@@ -42,6 +42,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import sa.masrouf.app.R
 import sa.masrouf.core.model.Category
@@ -194,6 +196,7 @@ internal fun AmountHero(
     focusRequester: FocusRequester,
     onValueChange: (String) -> Unit,
 ) {
+    val amountName = stringResource(R.string.amount_label)
     Column {
         Row(verticalAlignment = Alignment.Bottom) {
             BasicTextField(
@@ -222,7 +225,11 @@ internal fun AmountHero(
                 ),
                 modifier = Modifier
                     .weight(1f)
-                    .focusRequester(focusRequester),
+                    .focusRequester(focusRequester)
+                    // A BasicTextField has no label slot, so the app's one required
+                    // field announced itself as an edit box with no name. The hint
+                    // is "0.00", which names nothing.
+                    .semantics { contentDescription = amountName },
                 decorationBox = { inner ->
                     if (value.isEmpty()) {
                         Text(

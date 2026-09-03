@@ -6,7 +6,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
 
 ## Where things stand
 
-- All tests green: **383** in `:core`, **178** in `:app`, **9** instrumented
+- All tests green: **385** in `:core`, **184** in `:app`, **9** instrumented
   (`:app:connectedDebugAndroidTest`).
 - **`connectedDebugAndroidTest` uninstalls the app and deletes its database.**
   It has already cost the owner's phone once. Use the `masrouf35` emulator, or
@@ -466,7 +466,7 @@ owner remember الخزائن الاحترافية in Al Rawdah.
 **Where the filing ended:** 728 unfiled debits, 129,868 riyals, across 466
 merchants; 245 of those records (32,580 riyals) are in the last 24 months. It began
 the day at 2,063 records and 580,669 riyals. Maintenance is at **40**, nothing is
-pending, and the tests stand at 383 in `:core` and 178 in `:app`.
+pending, and the tests stand at 385 in `:core` and 184 in `:app`.
 
 **A bug found in a screenshot he sent.** The home screen said he pays 102,890
 riyals a month across 14 recurring payments. `RecurringDetector` filtered on
@@ -532,15 +532,28 @@ text on `surface` a contrast failure. That is the pairing M3's own TextButton
 uses, and the accent roles sit at tone 40 against a tone-98 surface. A reviewer's
 confidence is not a resolver.
 
-**Still open, in the order they will be felt:** the legend has no ceiling and this
-history can put sixteen categories in one month; several fixed `height` values
-around text break at 200% font scale (`MonthStrip.ROW_HEIGHT`, the income month
-label's `width(108.dp)`, the card tile's `width(168.dp)`); `MonthStrip` is
-invisible to TalkBack and the amount field has no accessible name; `YearChip` is a
-hand-rolled `FilterChip`; the two destinations still differ in how they inset
-(`Modifier.padding` against `contentPadding`); `MonthPicker` cells derive their
-height from `aspectRatio`; and `RecurringPanel`'s expander has no state
-description.
+**All of that list is now closed (2026-09-03).** The legend stops at six rows and
+offers the rest on a tap, except when the active filter is one of the rows the
+ceiling would hide - hiding it would narrow the history below with nothing on
+screen saying what by, so that case opens the whole legend instead. The decision
+is a pure `legendRows`, tested; the composable only remembers whether the user
+asked for all of it.
+
+Every size that fenced text in became a floor: `heightIn` on the legend row with
+its fill sized by `matchParentSize` rather than to the same constant, `widthIn` on
+the income month label and the card tile, and the month-picker cell traded
+`aspectRatio` - a height computed from a width, which has no relation to the text
+inside it - for a minimum height with the row on `IntrinsicSize.Min`, so a name
+that wraps lifts its whole row instead of overflowing its cell.
+
+The rest: the strip now carries the headline a glance at it gives (largest
+category and its share) for a screen reader, the legend below already being read
+row by row; the amount field takes its name from the label a `BasicTextField` has
+no slot for; `YearChip` is M3's `FilterChip`, which carries selection to a screen
+reader that a painted `Box` never did; the recurring header states whether it is
+open; and the spending list moved its side inset from a modifier into
+`contentPadding`, so both destinations inset the same way and the overscroll
+stretch reaches the screen edge on both.
 
 ## Open items
 

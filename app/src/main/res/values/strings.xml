@@ -211,4 +211,7 @@
         <item quantity="many">%1$s شهراً</item>
         <item quantity="other">%1$s شهر</item>
     </plurals>
+    <string name="month_strip_description">توزيع الإنفاق، أكبر فئة %1$s بنسبة %2$s بالمئة</string>
+    <string name="legend_show_all">عرض كل الفئات (%1$s أخرى)</string>
+    <string name="legend_show_less">عرض أقل</string>
 </resources>

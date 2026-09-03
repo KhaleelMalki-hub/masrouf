@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -291,7 +292,9 @@ private fun MonthRow(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
-            modifier = Modifier.width(108.dp),
+            // A minimum, not a width: at a large font scale a fixed 108 points
+            // truncated "September" to an ellipsis on one line.
+            modifier = Modifier.widthIn(min = 108.dp),
         )
         // Two segments of one bar rather than two bars: the month's total is what
         // arrived, and the split is how it arrived. A bonus month reads as a longer

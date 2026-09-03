@@ -167,7 +167,22 @@ internal fun MonthPanel(
             }
         }
 
-        MonthStrip(bands = bands)
+        // A screen reader gets the same headline a glance at the strip gives: the
+        // biggest category and how much of the month it took. The legend below is
+        // already read row by row, so repeating all of it here would be the same
+        // list twice.
+        val strongest = bands.maxByOrNull { it.amount.halalas }
+        val share = strongest
+            ?.takeIf { totalMoney.halalas > 0L }
+            ?.let { it.amount.halalas * 100 / totalMoney.halalas }
+        MonthStrip(
+            bands = bands,
+            description = if (strongest != null && share != null) {
+                stringResource(R.string.month_strip_description, strongest.label, share.toString())
+            } else {
+                ""
+            },
+        )
 
         if (bands.isEmpty()) {
             Text(

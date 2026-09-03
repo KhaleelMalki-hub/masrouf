@@ -5,7 +5,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -13,6 +15,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -93,35 +96,26 @@ fun MonthPicker(
     }
 }
 
+/**
+ * M3's own selectable chip rather than a box painted to look like one. The
+ * hand-rolled version carried no selected state to a screen reader, took the
+ * ripple of a plain clickable instead of a chip's, and had to be re-tuned by hand
+ * every time the theme moved.
+ */
 @Composable
 private fun YearChip(year: Int, selected: Boolean, onClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(10.dp))
-            .background(
-                if (selected) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.surfaceContainerHigh
-                }
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = {
+            Text(
+                // toString, not a formatter: a localised one renders 2026 as ٢٠٢٦ in
+                // Arabic, and every other number in this app is Western.
+                text = year.toString(),
+                style = MaterialTheme.typography.titleMedium,
             )
-            .clickable(onClick = onClick)
-            .heightIn(min = 48.dp)
-            .padding(horizontal = 18.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            // toString, not a formatter: a localised one renders 2026 as ٢٠٢٦ in
-            // Arabic, and every other number in this app is Western.
-            text = year.toString(),
-            style = MaterialTheme.typography.titleMedium,
-            color = if (selected) {
-                MaterialTheme.colorScheme.onPrimary
-            } else {
-                MaterialTheme.colorScheme.onSurface
-            },
-        )
-    }
+        },
+    )
 }
 
 @Composable
@@ -136,9 +130,12 @@ private fun MonthGrid(
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         (0 until 4).forEach { row ->
             androidx.compose.foundation.layout.Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                // The three cells of a row take the height of the tallest, so a
+                // month whose name wraps at a large font scale lifts its whole row
+                // instead of overflowing its own cell.
                 (1..3).forEach { column ->
                     val month = row * 3 + column
                     val date = LocalDate.of(year, month, 1)
@@ -166,7 +163,11 @@ private fun MonthCell(
 ) {
     Box(
         modifier = modifier
-            .aspectRatio(1.9f)
+            // A minimum with room to grow, not a ratio. A cell whose height was
+            // computed from its width had no relation to the size of the text
+            // inside it, and clipped the name at a large font scale.
+            .fillMaxHeight()
+            .heightIn(min = CELL_HEIGHT)
             .clip(RoundedCornerShape(12.dp))
             .background(
                 when {
@@ -191,3 +192,6 @@ private fun MonthCell(
         )
     }
 }
+
+/** A month cell's floor: M3's minimum touch target with room for the label. */
+private val CELL_HEIGHT = 52.dp

@@ -184,4 +184,7 @@
         <item quantity="one">%1$s month</item>
         <item quantity="other">%1$s months</item>
     </plurals>
+    <string name="month_strip_description">Spending breakdown, largest category %1$s at %2$s percent</string>
+    <string name="legend_show_all">Show all categories (%1$s more)</string>
+    <string name="legend_show_less">Show fewer</string>
 </resources>

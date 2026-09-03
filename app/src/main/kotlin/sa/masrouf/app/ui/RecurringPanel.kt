@@ -36,6 +36,10 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import sa.masrouf.app.R
 import sa.masrouf.core.model.MerchantNames
@@ -72,6 +76,8 @@ fun RecurringPanel(
         label = "chevron",
     )
     val monthly = RecurringDetector.monthlyCost(recurring)
+    val expandedLabel = stringResource(R.string.state_expanded)
+    val collapsedLabel = stringResource(R.string.state_collapsed)
 
     Column(
         modifier = modifier
@@ -84,6 +90,13 @@ fun RecurringPanel(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { open = !open }
+                // The chevron is the only sign of the state, and it is decorative
+                // to a screen reader. Without this the header read the same open
+                // as shut.
+                .semantics {
+                    role = Role.Button
+                    stateDescription = if (open) expandedLabel else collapsedLabel
+                }
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {

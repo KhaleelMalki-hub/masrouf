@@ -377,8 +377,7 @@ fun AddExpenseScreen(
                 state = listState,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding)
-                    .padding(horizontal = 16.dp),
+                    .padding(padding),
                 // The Scaffold's PaddingValues covers the bars and never the floating
                 // button, so the last rows sat under it - and this app's rows end in a
                 // money value, which was being clipped to "12.25" and ".00". Padding
@@ -390,7 +389,13 @@ fun AddExpenseScreen(
                 // but it does not, and DESIGN.md says so deliberately. The Scaffold
                 // already pads for a bar that is always there, so the two together
                 // left eighty dead points below the last transaction.
-                contentPadding = PaddingValues(bottom = FAB_CLEARANCE),
+                //
+                // The side inset belongs here too, and not on the column itself.
+                // As a modifier it shrinks the scrolling viewport, so the list's
+                // stretch at the end of a scroll stopped short of the screen edge
+                // on the spending screen while reaching it on the income screen -
+                // the same list, insetting itself two different ways.
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = FAB_CLEARANCE),
                 // One rhythm for the whole column. The sections used to add their
                 // own top and bottom padding on top of this, so the gaps went 36,
                 // 24 and 12 points with nothing deciding which was which.
