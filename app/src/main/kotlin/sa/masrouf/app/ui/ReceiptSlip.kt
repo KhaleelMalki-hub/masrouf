@@ -25,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -81,8 +82,17 @@ fun ReceiptSlip(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Top,
         ) {
-            Column(modifier = Modifier.padding(end = 12.dp)) {
-                Text(text = merchant, style = MaterialTheme.typography.titleMedium)
+            // Weighted, and the amount is not: in a SpaceBetween row an unweighted
+            // column takes everything it asks for, and a long Arabic merchant name
+            // wraps until the figure the user is being asked to confirm has no
+            // width left. The name gives way; the money does not.
+            Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                Text(
+                    text = merchant,
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
                 Text(
                     text = "${transaction.dayLabel()} · ${stringResource(transaction.source.slipLabel)}",
                     style = MaterialTheme.typography.labelSmall,

@@ -151,6 +151,9 @@
     <string name="nav_spending">المصروف</string>
     <string name="nav_income">الدخل</string>
     <string name="cards_title">بطاقاتك</string>
+    <string name="pending_more">وفي الانتظار %1$s عملية أخرى</string>
+    <string name="month_previous">الشهر السابق</string>
+    <string name="month_next">الشهر التالي</string>
     <string name="card_kind_mada">على بطاقات مدى</string>
     <string name="card_kind_credit">على البطاقات الائتمانية</string>
     <string name="card_kind_mada_short">مدى</string>

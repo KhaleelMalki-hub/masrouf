@@ -10,6 +10,7 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.Icons
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -353,197 +354,227 @@ fun AddExpenseScreen(
             }
         },
     ) { padding ->
-        if (destination == Destination.INCOME) {
-            IncomeScreen(
-                months = incomeMonths,
-                deposits = incomeDeposits,
-                currencyLabel = currency,
-                modifier = Modifier.padding(padding),
-            )
-            return@Scaffold
-        }
-        LazyColumn(
-            state = listState,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 16.dp),
-            // The Scaffold's PaddingValues covers the bars and never the floating
-            // button, so the last rows sat under it - and this app's rows end in a
-            // money value, which was being clipped to "12.25" and ".00". Padding
-            // the content rather than appending a spacer means the space is part of
-            // the scroll range, so the final row can be brought clear.
-            //
-            // Measured from the FAB alone. It used to add the navigation bar's
-            // height on top, on the reasoning that the bar hides as you scroll -
-            // but it does not, and DESIGN.md says so deliberately. The Scaffold
-            // already pads for a bar that is always there, so the two together
-            // left eighty dead points below the last transaction.
-            contentPadding = PaddingValues(bottom = FAB_CLEARANCE),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            item {
-                CardsPanel(
-                    cards = cardBalances,
+        // Fade-through between the two destinations, which is what M3 specifies
+        // for peers. It was a hard cut: the whole body and the floating button
+        // were replaced in one frame, on the transition this app uses most.
+        Crossfade(
+            targetState = destination,
+            animationSpec = tween(Motion.MEDIUM, easing = Motion.standard),
+            label = "destination",
+        ) { shown ->
+            when (shown) {
+                Destination.INCOME ->
+                IncomeScreen(
+                    months = incomeMonths,
+                    deposits = incomeDeposits,
                     currencyLabel = currency,
-                    modifier = Modifier.padding(bottom = 16.dp),
+                    modifier = Modifier.padding(padding),
                 )
-            }
-            item {
-                MonthPanel(
-                    month = selectedMonth,
-                    total = monthTotal.grouped(),
-                    totalMoney = monthTotal,
-                    salary = effectiveSalary,
-                    shares = shares,
-                    currencyLabel = currency,
-                    pendingCount = pending.size,
-                    canGoBack = earliestMonth?.let { selectedMonth.isAfter(it) } == true,
-                    canGoForward = selectedMonth.isBefore(viewModel.currentMonth),
-                    onPrevious = viewModel::showPreviousMonth,
-                    onNext = viewModel::showNextMonth,
-                    onPickMonth = { pickingMonth = true },
-                    previousTotal = previousTotal,
-                    invested = invested,
-                    byCardKind = byCardKind,
-                    activeFilter = categoryFilter,
-                    onToggleCategory = viewModel::toggleCategoryFilter,
-                )
-            }
-            item {
-                RecurringPanel(
-                    recurring = recurring,
-                    currencyLabel = currency,
-                    modifier = Modifier.padding(top = 12.dp),
-                )
-            }
 
-            if (pending.isNotEmpty()) {
+                Destination.SPENDING ->
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 16.dp),
+                // The Scaffold's PaddingValues covers the bars and never the floating
+                // button, so the last rows sat under it - and this app's rows end in a
+                // money value, which was being clipped to "12.25" and ".00". Padding
+                // the content rather than appending a spacer means the space is part of
+                // the scroll range, so the final row can be brought clear.
+                //
+                // Measured from the FAB alone. It used to add the navigation bar's
+                // height on top, on the reasoning that the bar hides as you scroll -
+                // but it does not, and DESIGN.md says so deliberately. The Scaffold
+                // already pads for a bar that is always there, so the two together
+                // left eighty dead points below the last transaction.
+                contentPadding = PaddingValues(bottom = FAB_CLEARANCE),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
                 item {
-                    Column {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                text = stringResource(R.string.pending_title),
-                                style = MaterialTheme.typography.titleMedium,
-                            )
-                            // Only offered once the queue is long enough that
-                            // working through it one at a time is not realistic.
-                            if (pending.size >= BULK_CONFIRM_THRESHOLD) {
-                                FilledTonalButton(
-                                    onClick = { confirmingAll = true },
-                                    modifier = Modifier.heightIn(min = 48.dp),
-                                ) { Text(stringResource(R.string.confirm_all)) }
+                    CardsPanel(
+                        cards = cardBalances,
+                        currencyLabel = currency,
+                        modifier = Modifier.padding(bottom = 16.dp),
+                    )
+                }
+                item {
+                    MonthPanel(
+                        month = selectedMonth,
+                        total = monthTotal.grouped(),
+                        totalMoney = monthTotal,
+                        salary = effectiveSalary,
+                        shares = shares,
+                        currencyLabel = currency,
+                        pendingCount = pending.size,
+                        canGoBack = earliestMonth?.let { selectedMonth.isAfter(it) } == true,
+                        canGoForward = selectedMonth.isBefore(viewModel.currentMonth),
+                        onPrevious = viewModel::showPreviousMonth,
+                        onNext = viewModel::showNextMonth,
+                        onPickMonth = { pickingMonth = true },
+                        previousTotal = previousTotal,
+                        invested = invested,
+                        byCardKind = byCardKind,
+                        activeFilter = categoryFilter,
+                        onToggleCategory = viewModel::toggleCategoryFilter,
+                    )
+                }
+                item {
+                    RecurringPanel(
+                        recurring = recurring,
+                        currencyLabel = currency,
+                        modifier = Modifier.padding(top = 12.dp),
+                    )
+                }
+
+                if (pending.isNotEmpty()) {
+                    item {
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.pending_title),
+                                    style = MaterialTheme.typography.titleMedium,
+                                )
+                                // Only offered once the queue is long enough that
+                                // working through it one at a time is not realistic.
+                                if (pending.size >= BULK_CONFIRM_THRESHOLD) {
+                                    FilledTonalButton(
+                                        onClick = { confirmingAll = true },
+                                        modifier = Modifier.heightIn(min = 48.dp),
+                                    ) { Text(stringResource(R.string.confirm_all)) }
+                                }
                             }
+                            Text(
+                                text = stringResource(R.string.pending_explain),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
                         }
-                        Text(
-                            text = stringResource(R.string.pending_explain),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    }
+                    // Capped. A backfill lands every recovered message PENDING - this
+                    // history reached 3,723 of them - and each slip carries the bank's
+                    // own words, nineteen category chips and two buttons. Uncapped,
+                    // the search box and the history below sat a thousand screens
+                    // down. The rest are reachable by confirming these or by "confirm
+                    // all", and the count says how many are waiting.
+                    items(pending.take(PENDING_SHOWN), key = { it.id }) { transaction ->
+                        ReceiptSlip(
+                            modifier = Modifier.animateItem(
+                                fadeInSpec = tween(Motion.SHORT, easing = Motion.emphasizedDecelerate),
+                                fadeOutSpec = tween(Motion.SHORT, easing = Motion.emphasizedAccelerate),
+                                placementSpec = tween(Motion.MEDIUM, easing = Motion.standard),
+                            ),
+                            transaction = transaction,
+                            currencyLabel = currency,
+                            onConfirm = { categoryId -> viewModel.confirm(transaction.id, categoryId) },
+                            onDismiss = { confirming = DestructiveAction.Dismiss(transaction) },
+                        )
+                    }
+                    if (pending.size > PENDING_SHOWN) {
+                        item {
+                            Text(
+                                text = stringResource(
+                                    R.string.pending_more,
+                                    (pending.size - PENDING_SHOWN).toString(),
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
+                            )
+                        }
+                    }
+                }
+
+                if (!captureEnabled) {
+                    item {
+                        AccessPrompt(
+                            title = stringResource(R.string.capture_off_title),
+                            body = stringResource(R.string.capture_off_body),
+                            action = stringResource(R.string.capture_enable),
+                            onAct = onEnableCapture,
                         )
                     }
                 }
-                items(pending, key = { it.id }) { transaction ->
-                    ReceiptSlip(
-                        modifier = Modifier.animateItem(
-                            fadeInSpec = tween(Motion.SHORT, easing = Motion.emphasizedDecelerate),
-                            fadeOutSpec = tween(Motion.SHORT, easing = Motion.emphasizedAccelerate),
-                            placementSpec = tween(Motion.MEDIUM, easing = Motion.standard),
-                        ),
-                        transaction = transaction,
-                        currencyLabel = currency,
-                        onConfirm = { categoryId -> viewModel.confirm(transaction.id, categoryId) },
-                        onDismiss = { confirming = DestructiveAction.Dismiss(transaction) },
-                    )
+
+                if (!smsEnabled) {
+                    item {
+                        AccessPrompt(
+                            title = stringResource(R.string.sms_off_title),
+                            body = stringResource(R.string.sms_off_body),
+                            action = stringResource(R.string.sms_enable),
+                            onAct = onEnableSms,
+                        )
+                    }
                 }
-            }
 
-            if (!captureEnabled) {
-                item {
-                    AccessPrompt(
-                        title = stringResource(R.string.capture_off_title),
-                        body = stringResource(R.string.capture_off_body),
-                        action = stringResource(R.string.capture_enable),
-                        onAct = onEnableCapture,
-                    )
-                }
-            }
+                item { HorizontalDivider() }
 
-            if (!smsEnabled) {
-                item {
-                    AccessPrompt(
-                        title = stringResource(R.string.sms_off_title),
-                        body = stringResource(R.string.sms_off_body),
-                        action = stringResource(R.string.sms_enable),
-                        onAct = onEnableSms,
-                    )
-                }
-            }
-
-            item { HorizontalDivider() }
-
-            item {
-                Text(
-                    text = stringResource(R.string.history_all),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-
-            item {
-                UnfiledBanner(
-                    count = monthUnfiled,
-                    active = categoryFilter == HistoryFilter.Unfiled,
-                    onOpen = { viewModel.toggleCategoryFilter(null) },
-                )
-                // A search box over an empty month is a control with nothing to
-                // act on. It stays while a filter is on, because clearing the
-                // filter is what brings the rows back.
-                if (monthRows.isNotEmpty() || query.isNotBlank() || categoryFilter != null) {
-                    HistoryFilters(
-                        query = query,
-                        onQueryChange = viewModel::onQueryChanged,
-                        activeFilter = categoryFilter,
-                        onClear = viewModel::clearFilters,
-                    )
-                }
-            }
-
-            if (monthRows.isEmpty()) {
                 item {
                     Text(
-                        text = stringResource(
-                            if (query.isNotBlank() || categoryFilter != null) {
-                                R.string.results_none
-                            } else {
-                                R.string.month_empty
-                            }
-                        ),
+                        text = stringResource(R.string.history_all),
+                        style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-            } else {
-                items(monthRows, key = { it.id }) { transaction ->
-                    TransactionRow(
-                        modifier = Modifier.animateItem(
-                            fadeInSpec = tween(Motion.SHORT, easing = Motion.emphasizedDecelerate),
-                            fadeOutSpec = tween(Motion.SHORT, easing = Motion.emphasizedAccelerate),
-                            placementSpec = tween(Motion.MEDIUM, easing = Motion.standard),
-                        ),
-                        transaction = transaction,
-                        currencyLabel = currency,
-                        cardBanks = cardBanks,
-                        cardKinds = cardKinds,
-                        salary = effectiveSalary,
-                        onRefile = { refiling = transaction },
-                    )
-                }
-            }
 
-            // Clearance is contentPadding above, not an item here.
+                item {
+                    UnfiledBanner(
+                        count = monthUnfiled,
+                        active = categoryFilter == HistoryFilter.Unfiled,
+                        onOpen = { viewModel.toggleCategoryFilter(null) },
+                    )
+                    // A search box over an empty month is a control with nothing to
+                    // act on. It stays while a filter is on, because clearing the
+                    // filter is what brings the rows back.
+                    if (monthRows.isNotEmpty() || query.isNotBlank() || categoryFilter != null) {
+                        HistoryFilters(
+                            query = query,
+                            onQueryChange = viewModel::onQueryChanged,
+                            activeFilter = categoryFilter,
+                            onClear = viewModel::clearFilters,
+                        )
+                    }
+                }
+
+                if (monthRows.isEmpty()) {
+                    item {
+                        Text(
+                            text = stringResource(
+                                if (query.isNotBlank() || categoryFilter != null) {
+                                    R.string.results_none
+                                } else {
+                                    R.string.month_empty
+                                }
+                            ),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                } else {
+                    items(monthRows, key = { it.id }) { transaction ->
+                        TransactionRow(
+                            modifier = Modifier.animateItem(
+                                fadeInSpec = tween(Motion.SHORT, easing = Motion.emphasizedDecelerate),
+                                fadeOutSpec = tween(Motion.SHORT, easing = Motion.emphasizedAccelerate),
+                                placementSpec = tween(Motion.MEDIUM, easing = Motion.standard),
+                            ),
+                            transaction = transaction,
+                            currencyLabel = currency,
+                            cardBanks = cardBanks,
+                            cardKinds = cardKinds,
+                            salary = effectiveSalary,
+                            onRefile = { refiling = transaction },
+                        )
+                    }
+                }
+
+                // Clearance is contentPadding above, not an item here.
+            }
+            }
         }
     }
 
@@ -854,6 +885,16 @@ private fun DestructiveConfirmation(
  * bulk action would only invite skipping the review the queue exists for.
  */
 private const val BULK_CONFIRM_THRESHOLD = 10
+
+/**
+ * How many pending slips the screen draws at once.
+ *
+ * A slip is a tall, expensive row - the bank's own message, nineteen chips, two
+ * buttons - and an import lands every recovered record pending. Thirty is more
+ * than anyone works through in a sitting and short enough that the history stays
+ * one flick away.
+ */
+private const val PENDING_SHOWN = 30
 
 /** Where the salary is typed. One field; clearing it removes the line. */
 @Composable

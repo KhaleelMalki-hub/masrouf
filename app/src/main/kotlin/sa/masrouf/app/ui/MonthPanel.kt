@@ -28,6 +28,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.material3.Text
@@ -304,16 +307,23 @@ internal fun MonthNavigator(
             )
         }
         Row {
-            TextButton(
-                onClick = onPrevious,
-                enabled = canGoBack,
-                modifier = Modifier.heightIn(min = 48.dp),
-            ) { Text("\u2039", style = MaterialTheme.typography.titleLarge) }
-            TextButton(
-                onClick = onNext,
-                enabled = canGoForward,
-                modifier = Modifier.heightIn(min = 48.dp),
-            ) { Text("\u203A", style = MaterialTheme.typography.titleLarge) }
+            // IconButtons with names, not bare quotation glyphs. A screen reader
+            // read the previous button as "\u2039" and the next one as "\u203A" -
+            // two punctuation marks, in an app whose whole history is paged with
+            // them. AutoMirrored so back stays on the right in Arabic, which the
+            // glyphs achieved only because Unicode mirrors them for us.
+            IconButton(onClick = onPrevious, enabled = canGoBack) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
+                    contentDescription = stringResource(R.string.month_previous),
+                )
+            }
+            IconButton(onClick = onNext, enabled = canGoForward) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                    contentDescription = stringResource(R.string.month_next),
+                )
+            }
         }
     }
 }

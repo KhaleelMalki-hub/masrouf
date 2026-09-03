@@ -134,6 +134,9 @@
     <string name="nav_spending">Spending</string>
     <string name="nav_income">Income</string>
     <string name="cards_title">Your cards</string>
+    <string name="pending_more">%1$s more waiting</string>
+    <string name="month_previous">Previous month</string>
+    <string name="month_next">Next month</string>
     <string name="card_kind_mada">On mada cards</string>
     <string name="card_kind_credit">On credit cards</string>
     <string name="card_kind_mada_short">mada</string>

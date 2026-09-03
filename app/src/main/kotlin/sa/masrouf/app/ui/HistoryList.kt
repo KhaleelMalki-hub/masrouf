@@ -38,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
@@ -167,6 +168,7 @@ internal fun TransactionRow(
                     Text(
                         text = stringResource(R.string.above_salary),
                         style = MaterialTheme.typography.labelSmall,
+                        maxLines = 1,
                         color = MaterialTheme.colorScheme.onErrorContainer,
                         modifier = Modifier
                             .clip(MaterialTheme.shapes.extraSmall)
@@ -193,6 +195,11 @@ internal fun TransactionRow(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
+                    // Last in the row and the first to give way. Without a weight
+                    // the badge and the card chip are measured first and this
+                    // collapsed to an ellipsis - the date and category, which are
+                    // what the line is for.
+                    modifier = Modifier.weight(1f, fill = false),
                 )
             }
         },
@@ -403,9 +410,16 @@ internal fun CardMark(mark: BankMark?, last4: String?, kind: CardKind? = null) {
 
     Text(
         text = text,
-        style = MaterialTheme.typography.labelSmall,
+        // Pinned to the layout direction rather than to the first strong character
+        // in it. "الراجحي مدى 2383" begins with an Arabic letter and "D360 مدى
+        // 2383" with a Latin one, so two rows of the same list put their digits at
+        // opposite ends of the chip.
+        style = MaterialTheme.typography.labelSmall.copy(
+            textDirection = if (isArabic) TextDirection.Rtl else TextDirection.Ltr,
+        ),
         color = colour,
         maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
         modifier = Modifier
             .clip(RoundedCornerShape(4.dp))
             .background(colour.copy(alpha = 0.14f))
