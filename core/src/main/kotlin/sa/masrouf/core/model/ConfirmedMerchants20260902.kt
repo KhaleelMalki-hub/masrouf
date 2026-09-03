@@ -241,5 +241,15 @@ object ConfirmedMerchants20260902 {
         // he bought it for her and was repaid to the halala, which is why that
         // day's spending nets to nothing however this row is filed.
         "DAHAM COMPANY" to SHOPPING,
+        // مؤسسة عبود باحشوان لقطع الغيار - Nissan and Haval parts, named by the
+        // owner. The inbox had reached the same name from two directions: barq
+        // activated "مؤسسة عبود باحشوان" as a beneficiary eight days before the
+        // first purchase, and the SNB refund of 610 riyals two days after the
+        // last one is FROM "مؤسسة عبود صالح بن علي باحشوان لقطع" - the same IBAN
+        // 9106, and the bank's field cuts the name at "لقطع".
+        //
+        // He already had Haval parts filed under Time-race; this is the shop that
+        // sells them.
+        "OBOUD BAH" to TRANSPORT,
     )
 }
