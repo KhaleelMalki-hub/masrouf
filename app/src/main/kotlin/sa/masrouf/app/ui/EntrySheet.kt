@@ -241,11 +241,13 @@ internal fun AmountHero(
                     inner()
                 },
             )
+            // See MonthPanel: the sign's height is the digit height of its own
+            // style, so it is sized against the amount it stands beside.
             Text(
                 text = currencyLabel,
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 8.dp, bottom = 6.dp),
+                modifier = Modifier.padding(start = 8.dp, bottom = 3.dp),
             )
         }
         HorizontalDivider(

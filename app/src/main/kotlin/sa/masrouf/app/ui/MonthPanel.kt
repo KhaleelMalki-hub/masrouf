@@ -145,11 +145,17 @@ internal fun MonthPanel(
                         style = MoneyStyle.merge(MaterialTheme.typography.displayMedium),
                     )
                 }
+                // Sized against the figure, not set once and left. "ر.س" was a
+                // two-letter word and read at any size; the riyal sign is a mark
+                // whose height IS the digit height of whatever style draws it, so
+                // at titleMedium beside a 45-point total it came out a speck. The
+                // bottom padding is the difference between the two descents, which
+                // is what makes bottom-aligned text share a baseline.
                 Text(
                     text = currencyLabel,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 8.dp, bottom = 6.dp),
+                    modifier = Modifier.padding(start = 10.dp, bottom = 4.dp),
                 )
             }
             MonthComparison(current = total, previous = previousTotal, currencyLabel = currencyLabel)
