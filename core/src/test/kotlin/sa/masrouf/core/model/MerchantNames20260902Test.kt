@@ -69,10 +69,18 @@ class MerchantNames20260902Test {
         assertEquals(SaudiCategories.GROCERIES, cat("TAP TMRALBWADI"))
     }
 
-    /** A shop registered in its owner's name says nothing; it stays for him. */
+    /**
+     * A shop registered in its owner's name says nothing on its own; it stays
+     * unfiled until he names it or the corpus does.
+     *
+     * "OBOUD BAH" was here until 2026-09-03, when two messages that were not from
+     * the shop - a barq beneficiary activation and an SNB refund - spelled out
+     * مؤسسة عبود باحشوان and he named the trade. It moved to
+     * [ConfirmedMerchants20260902]; the ones below have had no such luck.
+     */
     @Test
     fun `a personal name is not filed`() {
-        assertNull(cat("OBOUD BAH"))
         assertNull(cat("MOHAMMED"))
+        assertNull(cat("EST MUNIRAH SIDDIQUE"))
     }
 }
