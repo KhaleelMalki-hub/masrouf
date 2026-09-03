@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The colour the window shows before Compose draws. Matches the theme's
+         `surface` role, so the first frame is not a different app. -->
+    <color name="window_background">#FBF8FF</color>
+</resources>

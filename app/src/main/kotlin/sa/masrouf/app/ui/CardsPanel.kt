@@ -20,6 +20,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -57,7 +58,7 @@ fun CardsPanel(
     // number so the row is the same every launch. It arrives ordered by most recent
     // activity, which reshuffles the row whenever a card is used - and a row that
     // moves is a row you have to read rather than recognise.
-    val open = orderedCards(cards)
+    val open = remember(cards) { orderedCards(cards) }
     if (open.isEmpty()) return
 
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -65,7 +66,6 @@ fun CardsPanel(
             text = stringResource(R.string.cards_title),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 16.dp),
         )
         // One height for every tile, set by the tallest content any of them can
         // carry: left to wrap, a card showing a limit stands taller than one whose
@@ -89,8 +89,7 @@ fun CardsPanel(
         Row(
             modifier = Modifier
                 .horizontalScroll(rememberScrollState())
-                .height(IntrinsicSize.Max)
-                .padding(horizontal = 16.dp),
+                .height(IntrinsicSize.Max),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             for (card in open) {
@@ -116,7 +115,12 @@ private fun CardTile(card: CardBalance, currencyLabel: String) {
     val isArabic = LocalConfiguration.current.locales[0].language == "ar"
     val tint = mark?.colour ?: MaterialTheme.colorScheme.outline
     val limit = CreditCards.limitHalalas[card.last4]
-    val ageDays = Duration.between(Instant.ofEpochMilli(card.atMillis), Instant.now()).toDays()
+    // The clock read once per reading, not on every recomposition: read in the
+    // body, a recomposition could silently cross the staleness threshold and blank
+    // a balance the user was looking at.
+    val ageDays = remember(card.atMillis) {
+        Duration.between(Instant.ofEpochMilli(card.atMillis), Instant.now()).toDays()
+    }
 
     // A reading is old. Whether it is out of DATE is a different question, and the
     // threshold alone answered it wrongly.

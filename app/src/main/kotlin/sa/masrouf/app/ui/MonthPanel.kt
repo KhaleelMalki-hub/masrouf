@@ -116,6 +116,16 @@ internal fun MonthPanel(
                 AnimatedContent(
                     targetState = month to total,
                     transitionSpec = {
+                        // The slide is about MOVING BETWEEN months. When the month
+                        // is the same and only the figure changed - confirming an
+                        // expense, a repair landing - there is no direction to
+                        // travel in, and sliding picked one anyway: the total left
+                        // towards the previous month every time it grew. An
+                        // in-place change gets the standard curve and no movement.
+                        if (targetState.first == initialState.first) {
+                            fadeIn(tween(Motion.SHORT, easing = Motion.standard))
+                                .togetherWith(fadeOut(tween(Motion.SHORT, easing = Motion.standard)))
+                        } else {
                         val forward = targetState.first.isAfter(initialState.first)
                         val towards = if (forward) SlideDirection.Start else SlideDirection.End
                         (slideIntoContainer(towards, tween(Motion.MEDIUM, easing = Motion.emphasizedDecelerate)) { it / 3 } +
@@ -124,6 +134,7 @@ internal fun MonthPanel(
                                 slideOutOfContainer(towards, tween(Motion.SHORT, easing = Motion.emphasizedAccelerate)) { it / 3 } +
                                     fadeOut(tween(Motion.SHORT)),
                             )
+                        }
                     },
                     label = "monthTotal",
                 ) { (_, shown) ->
@@ -418,8 +429,10 @@ private fun OutsideTotalRow(
 internal fun UnfiledBanner(count: Int, active: Boolean, onOpen: () -> Unit) {
     AnimatedVisibility(
         visible = count > 0 && !active,
-        enter = fadeIn(tween(200)) + expandVertically(tween(250, easing = EaseOutQuart)),
-        exit = fadeOut(tween(150)) + shrinkVertically(tween(200, easing = EaseOutQuart)),
+        enter = fadeIn(tween(Motion.SHORT)) +
+            expandVertically(tween(Motion.MEDIUM, easing = Motion.emphasizedDecelerate)),
+        exit = fadeOut(tween(Motion.SHORT)) +
+            shrinkVertically(tween(Motion.SHORT, easing = Motion.emphasizedAccelerate)),
     ) {
         Row(
             modifier = Modifier

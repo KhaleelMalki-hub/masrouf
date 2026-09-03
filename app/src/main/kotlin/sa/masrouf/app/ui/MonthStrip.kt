@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -86,9 +87,16 @@ fun MonthStrip(
     // nothing the first time the month is drawn, which is what a strip being woven
     // looks like. Keyed on the shape of the data, so it replays when the month
     // changes and stays still while the user is only scrolling.
-    val woven = remember(bands.map { it.colour to it.amount.halalas }) { Animatable(0f) }
-    LaunchedEffect(woven) {
-        woven.animateTo(1f, animationSpec = tween(durationMillis = 620, easing = FastOutSlowInEasing))
+    //
+    // Keyed on NOTHING, and that is the fix rather than an oversight: keying it on
+    // the data replayed the weave whenever a figure changed, and the strip lives
+    // in a LazyColumn item, so scrolling it out of view and back disposed the
+    // Animatable and wove it again from zero. It is an entrance, and an entrance
+    // happens once. The bands themselves morph, because their widths are read
+    // straight from `bands` on every draw.
+    val woven = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        woven.animateTo(1f, animationSpec = tween(Motion.MEDIUM, easing = Motion.emphasizedDecelerate))
     }
 
     Canvas(
@@ -169,7 +177,11 @@ fun BandLegend(
             .animateContentSize(tween(Motion.MEDIUM, easing = Motion.standard)),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
+        // Keyed by the category, not by position. Without it, paging to a month
+        // with a different mix animated row three's fill from food's share to
+        // transport's while the icon and colour swapped instantly.
         bands.forEach { band ->
+            key(band.category?.id ?: UNCATEGORISED_KEY) {
             BandRow(
                 colour = band.colour,
                 icon = band.category.icon,
@@ -190,9 +202,13 @@ fun BandLegend(
                 // shows the share of the whole.
                 fraction = (band.amount.halalas.toFloat() / largest).coerceIn(0f, 1f),
             )
+            }
         }
     }
 }
+
+/** The legend key for the band that has no category. */
+private const val UNCATEGORISED_KEY = "uncategorised"
 
 @Composable
 private fun BandRow(

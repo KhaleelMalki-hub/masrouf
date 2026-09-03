@@ -37,7 +37,7 @@ class AddExpenseViewModelTest {
     private val repository = TransactionRepository(dao)
     private val clock = Clock.fixed(Instant.parse("2026-08-28T09:00:00Z"), ZoneOffset.UTC)
 
-    private fun viewModel() = AddExpenseViewModel(repository, clock)
+    private fun viewModel() = AddExpenseViewModel(repository, clock, background = dispatcher)
 
     @BeforeEach fun setUp() = Dispatchers.setMain(dispatcher)
     @AfterEach fun tearDown() = Dispatchers.resetMain()

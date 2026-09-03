@@ -174,7 +174,7 @@
     <string name="recurring_summary">%1$s · نحو %2$s شهرياً</string>
     <string name="recurring_next">القادم %1$s</string>
     <string name="recurring_about">نحو %1$s</string>
-    <string name="recurring_range">%1$s – %2$s</string>
+    <string name="recurring_range">\u2066%1$s – %2$s\u2069</string>
     <string name="cadence_daily">يومياً</string>
     <string name="cadence_weekly">أسبوعياً</string>
     <string name="cadence_fortnightly">كل أسبوعين</string>

@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Compose draws everything; this exists only so the manifest has a theme
-         and the window background matches before the first frame. -->
-    <style name="Theme.Masrouf" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Compose draws everything; this exists so the manifest has a theme and the
+         window has a background before the first Compose frame.
+
+         The parent was `android:Theme.Material.Light.NoActionBar`, so on a phone
+         in dark mode the window painted WHITE for the frame or two before Compose
+         took over - on every cold start, in the app whose own design doc says
+         neither theme is the afterthought. The background is a colour resource
+         with a `values-night` twin, which is what makes the first frame match the
+         theme the user is actually in. -->
+    <style name="Theme.Masrouf" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/window_background</item>
+    </style>
 </resources>

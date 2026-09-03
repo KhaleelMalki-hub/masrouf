@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -38,6 +39,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import sa.masrouf.app.R
@@ -94,7 +97,12 @@ internal fun EntrySheet(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.85f),
+            .fillMaxHeight(0.85f)
+            // The amount field takes focus as the sheet opens, so the keypad is up
+            // immediately. Without this the sheet keeps its full height behind the
+            // keypad: the merchant and note fields, and the pinned Save button,
+            // sit under it with nothing to scroll them into view.
+            .imePadding(),
     ) {
         Column(
             modifier = Modifier
@@ -198,6 +206,13 @@ internal fun AmountHero(
                     } else {
                         MaterialTheme.colorScheme.onSurface
                     },
+                    // Digits carry no direction of their own, so in Arabic the
+                    // paragraph resolved right-to-left and the halala point - typed
+                    // on the way to 45.50 - was placed to the LEFT of the digits.
+                    // The user saw ".45" and the caret jumped. An amount is one
+                    // left-to-right number in both languages, as its style says.
+                    textDirection = TextDirection.Ltr,
+                    textAlign = TextAlign.End,
                 ),
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                 // Decimal rather than Number: the halala separator has to be typeable.

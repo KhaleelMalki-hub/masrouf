@@ -413,13 +413,15 @@ RESOURCE, and `labelAr` is read by nothing at all. The screen kept the old word 
 no test noticed. `CategoryCoverageTest` now parses `strings.xml` and asserts the
 two agree - the rule CLAUDE.md states for a month's total, applied to a name.
 
-**A flake, seen twice now.** `AddExpenseViewModelTest.selecting the uncategorised
-band shows only what is still to be filed` failed once on 2026-09-02 with a
-`CompletionHandlerException` out of a producer coroutine, and passed on an
-immediate re-run. Same shape as the `MonthNavigationTest` leak recorded earlier:
-a ViewModel test whose collector outlives its scope. Two tests now, so it is the
-harness rather than one test. Re-run before believing it; fix means giving those
-tests a controlled dispatcher and cancelling the scope.
+**The flake is fixed, and it had a cause.** `MonthNavigationTest` and
+`AddExpenseViewModelTest` failed intermittently with "uncaught exceptions before
+the test started" - the exception always landing on whichever test ran NEXT, which
+is what made it look like noise. `AddExpenseViewModel.init` launched on
+`Dispatchers.Default`, a dispatcher no test can advance or await; that coroutine
+outlived the test that started it, reached back into the test's own
+`StandardTestDispatcher`, and threw. Adding `cardKinds()` to the same init made it
+frequent enough to catch. The dispatcher is now a constructor parameter and the
+three ViewModel tests pass their own. Three consecutive full runs, clean.
 
 ## The corpus answers what the web cannot (2026-09-03)
 

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -95,6 +96,16 @@ class AddExpenseViewModel(
     private val clock: Clock = Clock.system(RiyadhTime.ZONE),
     private val readInbox: (suspend () -> List<sa.masrouf.core.capture.RawMessage>)? = null,
     private val maintenance: suspend () -> Unit = {},
+    /**
+     * Where launch-time work runs.
+     *
+     * Injectable because it was `Dispatchers.Default` in the `init` block, which a
+     * test cannot advance or wait for: the coroutine outlived the test that
+     * started it, reached back into the test's own dispatcher, and threw - and the
+     * exception surfaced against whichever test ran NEXT, as "uncaught exceptions
+     * before the test started". A flake with a cause, not a mystery.
+     */
+    private val background: CoroutineContext = Dispatchers.Default,
 ) : ViewModel() {
 
     /** What the one-off history import is doing, for the dashboard to report. */
@@ -459,7 +470,7 @@ class AddExpenseViewModel(
         // Off the main thread: the filing pass alone runs two thousand rows through
         // two hundred rules, and on Main it froze the first three seconds of every
         // launch - legend drawn, total stuck at 0.00, strip blank.
-        viewModelScope.launch(Dispatchers.Default) {
+        viewModelScope.launch(background) {
             maintenance()
             // After maintenance, not before: it purges bodies the gate now refuses
             // and re-parses the rest, and this reads those bodies.

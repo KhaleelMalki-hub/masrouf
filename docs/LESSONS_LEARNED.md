@@ -536,3 +536,22 @@ and look for a second string that fills the gaps in the first one's timeline. A
 brand and a legal name that never overlap in time are usually the same shop.
 **How to apply:** Any unidentified merchant that appears in bursts with gaps.
 **Source:** session 2026-09-03, NIBRAS ALARABIA CO / OUNASS.
+
+### 2026-09-03 — A flake that reports against the wrong test
+**Mistake:** Recorded "a ViewModel test fails rarely, re-run before believing it"
+twice over two days, and moved on. It was not noise: `AddExpenseViewModel.init`
+launched its launch-time work on `Dispatchers.Default`, which no test can advance
+or wait for. The coroutine outlived the test that started it, reached back into
+that test's `StandardTestDispatcher` after it had closed, and threw - and JUnit
+attributed the exception to whichever test happened to run next.
+**Why:** The failure named an innocent test, so every reading of it looked
+arbitrary. Adding work to that same init made it frequent enough to catch, which
+is the only reason it was diagnosed at all.
+**Rule:** "Uncaught exceptions before the test started" is never about the test it
+names. Look for a coroutine launched on a dispatcher the test does not own -
+`Dispatchers.Default`, `Dispatchers.IO`, a hardcoded scope - and make it a
+parameter. A flake with an unexplained cause is a bug that has not been read yet;
+re-running is triage, not diagnosis.
+**How to apply:** Any intermittent failure in a test that touches a ViewModel, a
+repository, or anything with an `init` that launches.
+**Source:** session 2026-09-03, `AddExpenseViewModel.background`.

@@ -58,7 +58,7 @@ class MonthNavigationTest {
      * real via collectAsStateWithLifecycle; a test has to say so explicitly.
      */
     private fun TestScope.viewModel(): AddExpenseViewModel {
-        val vm = AddExpenseViewModel(repository, clock)
+        val vm = AddExpenseViewModel(repository, clock, background = dispatcher)
         listOf(vm.monthTotal, vm.monthShares, vm.monthTransactions, vm.earliestMonth)
             .forEach { flow -> backgroundScope.launch { flow.collect {} } }
         return vm

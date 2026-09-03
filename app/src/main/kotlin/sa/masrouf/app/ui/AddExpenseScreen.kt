@@ -374,16 +374,14 @@ fun AddExpenseScreen(
             // the content rather than appending a spacer means the space is part of
             // the scroll range, so the final row can be brought clear.
             //
-            // Measured from the FAB, not from the bar: the Scaffold already pads
-            // for the bar, but it pads for the bar's CURRENT height, and the bar
-            // shrinks as it hides. Taking the larger of the two keeps the last row
-            // reachable at either end of that gesture.
-            contentPadding = PaddingValues(bottom = FAB_CLEARANCE + NAV_BAR_HEIGHT),
+            // Measured from the FAB alone. It used to add the navigation bar's
+            // height on top, on the reasoning that the bar hides as you scroll -
+            // but it does not, and DESIGN.md says so deliberately. The Scaffold
+            // already pads for a bar that is always there, so the two together
+            // left eighty dead points below the last transaction.
+            contentPadding = PaddingValues(bottom = FAB_CLEARANCE),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            if (importState !is AddExpenseViewModel.ImportState.Idle) {
-            }
-
             item {
                 CardsPanel(
                     cards = cardBalances,
@@ -450,6 +448,11 @@ fun AddExpenseScreen(
                 }
                 items(pending, key = { it.id }) { transaction ->
                     ReceiptSlip(
+                        modifier = Modifier.animateItem(
+                            fadeInSpec = tween(Motion.SHORT, easing = Motion.emphasizedDecelerate),
+                            fadeOutSpec = tween(Motion.SHORT, easing = Motion.emphasizedAccelerate),
+                            placementSpec = tween(Motion.MEDIUM, easing = Motion.standard),
+                        ),
                         transaction = transaction,
                         currencyLabel = currency,
                         onConfirm = { categoryId -> viewModel.confirm(transaction.id, categoryId) },

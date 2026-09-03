@@ -47,7 +47,7 @@ class HistoryFilterTest {
     @AfterEach fun tearDown() = Dispatchers.resetMain()
 
     private fun TestScope.viewModel(): AddExpenseViewModel {
-        val vm = AddExpenseViewModel(repository, clock)
+        val vm = AddExpenseViewModel(repository, clock, background = dispatcher)
         listOf(vm.monthTransactions, vm.monthShares)
             .forEach { flow -> backgroundScope.launch { flow.collect {} } }
         return vm

@@ -36,6 +36,20 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+/**
+ * What the Compose compiler may treat as stable.
+ *
+ * `:core` is a plain Kotlin/JVM module and carries no Compose compiler, so every
+ * model it exports reaches `:app` as an UNSTABLE type. A composable taking one
+ * cannot skip, which meant every transaction row recomposed whenever any state in
+ * the screen changed - with a month of several hundred rows, that is the app's
+ * jank floor. The listed types are immutable data classes, value classes and
+ * enums; see the file for why each qualifies.
+ */
+composeCompiler {
+    stabilityConfigurationFile = rootProject.file("app/compose_stability.conf")
+}
+
 android {
     namespace = "sa.masrouf.app"
     compileSdk = 35

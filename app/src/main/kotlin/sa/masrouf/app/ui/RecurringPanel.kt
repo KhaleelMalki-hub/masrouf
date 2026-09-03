@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -27,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -61,7 +63,14 @@ fun RecurringPanel(
     modifier: Modifier = Modifier,
 ) {
     if (recurring.isEmpty()) return
-    var open by remember { mutableStateOf(false) }
+    // rememberSaveable: the panel lives in a LazyColumn item, so scrolling it out
+    // of view disposed a plain `remember` and closed it behind the user's back.
+    var open by rememberSaveable { mutableStateOf(false) }
+    val chevron by animateFloatAsState(
+        targetValue = if (open) 180f else 0f,
+        animationSpec = tween(Motion.MEDIUM, easing = Motion.standard),
+        label = "chevron",
+    )
     val monthly = RecurringDetector.monthlyCost(recurring)
 
     Column(
@@ -97,7 +106,10 @@ fun RecurringPanel(
                 imageVector = Icons.Outlined.ExpandMore,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.rotate(if (open) 180f else 0f),
+                // Turned, not flipped: the panel below takes the medium token to
+                // open and a chevron that snapped to its new angle read as a
+                // different control from the one that was moving.
+                modifier = Modifier.rotate(chevron),
             )
         }
         AnimatedVisibility(
