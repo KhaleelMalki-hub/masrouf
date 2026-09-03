@@ -3,6 +3,7 @@ package sa.masrouf.core.model
 import sa.masrouf.core.model.SaudiCategories.BILLS
 import sa.masrouf.core.model.SaudiCategories.CHARITY
 import sa.masrouf.core.model.SaudiCategories.ENTERTAINMENT
+import sa.masrouf.core.model.SaudiCategories.FEES
 import sa.masrouf.core.model.SaudiCategories.FOOD
 import sa.masrouf.core.model.SaudiCategories.GROCERIES
 import sa.masrouf.core.model.SaudiCategories.HEALTH
@@ -202,5 +203,15 @@ object ConfirmedMerchants20260902 {
         "GOLDEN SC" to SHOPPING, "GOLDENSCENT" to SHOPPING,
         "ALMUSALLM" to GROCERIES,
         "HNAK" to GROCERIES,
+        // "رائد بلس" activated the same day as the 348-riyal charge: the annual
+        // subscription to the freelance licence, which the owner named. A
+        // government licence fee, not a shop.
+        "FUTURE WO" to FEES,
+        // الخزائن المبتكرة, whose newer messages sign themselves "Creative
+        // Closets". The owner had already named the same business under another
+        // of its strings (see "MAAN HAMA"); these five purchases from 2016 to
+        // 2019 are the same fitted-cabinet maker under its older name.
+        "INTERNATIONAL CREATIVE" to SHOPPING,
+        "INTERNATION01 CREATIVE" to SHOPPING,
     )
 }

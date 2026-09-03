@@ -124,6 +124,9 @@ class ConfirmedMerchants20260902Test {
             "Golden Sc" to SaudiCategories.SHOPPING,
             "ALMUSALLM" to SaudiCategories.GROCERIES,
             "HNAK" to SaudiCategories.GROCERIES,
+            "FUTURE WO" to SaudiCategories.FEES,
+            "INTERNATIONAL CREATIVE" to SaudiCategories.SHOPPING,
+            "Internation01 Creative Jeddah" to SaudiCategories.SHOPPING,
         )
         for ((merchant, category) in expected) {
             assertEquals(category, CategoryGuess.forMerchant(merchant), merchant)
