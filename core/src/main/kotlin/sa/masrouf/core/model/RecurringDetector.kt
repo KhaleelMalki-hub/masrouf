@@ -118,7 +118,17 @@ object RecurringDetector {
     fun detect(transactions: List<Transaction>, now: Instant): List<Recurring> =
         transactions
             .asSequence()
-            .filter { it.direction == Direction.DEBIT && it.status == Status.CONFIRMED }
+            .filter { it.status == Status.CONFIRMED }
+            // A payment, not a movement. [countsAsSpending] is the app's single
+            // decision about which debits are money leaving, and this panel had
+            // been asking a different question: it read the owner's 186 transfers
+            // to his own AlRajhi account as a recurring payment, and told him on
+            // the home screen that he pays out 102,890 riyals a month.
+            //
+            // Reusing that one function rather than listing types here is CLAUDE.md
+            // rule 5 - two surfaces disagreeing about what counts is the failure it
+            // exists to prevent, and a figure at the top of the screen is a surface.
+            .filter { it.countsAsSpending }
             .filter { !it.merchantKey.isNullOrBlank() }
             // Grouped by the name a person knows, where there is one, and by the
             // raw key otherwise. Netflix arrived as "NETFLIX COM" for eighteen

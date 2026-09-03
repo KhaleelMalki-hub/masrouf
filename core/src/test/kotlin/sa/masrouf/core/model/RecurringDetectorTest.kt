@@ -19,14 +19,20 @@ class RecurringDetectorTest {
 
     private val now = Instant.parse("2026-08-30T12:00:00Z")
 
-    private fun tx(merchant: String, daysAgo: Long, riyals: String) = Transaction(
+    private fun tx(
+        merchant: String,
+        daysAgo: Long,
+        riyals: String,
+        type: TransactionType = TransactionType.PURCHASE,
+        categoryId: String? = null,
+    ) = Transaction(
         id = "$merchant-$daysAgo",
         amount = Money.ofMajor(riyals),
         direction = Direction.DEBIT,
-        type = TransactionType.PURCHASE,
+        type = type,
         occurredAt = now.minus(Duration.ofDays(daysAgo)),
         accountId = null,
-        categoryId = null,
+        categoryId = categoryId,
         merchantRaw = merchant,
         merchantKey = merchant.uppercase(),
         note = null,
@@ -119,5 +125,41 @@ class RecurringDetectorTest {
         assertEquals(2, found.size)
         assertEquals(listOf(Money.ofMajor("1041.00"), Money.ofMajor("286.00")), found.map { it.typicalAmount })
         assertTrue(found.all { it.cadence == RecurringDetector.Cadence.MONTHLY })
+    }
+
+    /**
+     * A movement is not a payment.
+     *
+     * The owner transfers money to his own AlRajhi account most weeks - 186 of
+     * them - and the panel read that as a recurring payment, announcing on his
+     * home screen that he pays out 102,890 riyals a month. The filter is
+     * [countsAsSpending], the app's single decision about which debits are money
+     * leaving, so this panel and the month's total can never disagree again.
+     */
+    @Test
+    fun `a standing transfer to the owner's own account is not a payment`() {
+        val rows = listOf(2L, 32, 61, 92, 122)
+            .map { tx("KHALEEL MALKI", it, "3500.00", type = TransactionType.OWN_TRANSFER) }
+
+        assertTrue(RecurringDetector.detect(rows, now).isEmpty())
+    }
+
+    /** A monthly deposit at the investment house is money he still has. */
+    @Test
+    fun `a standing investment deposit is not a payment`() {
+        val rows = listOf(2L, 32, 61, 92, 122).map {
+            tx("TAMRA CAPITAL", it, "2000.00", categoryId = SaudiCategories.INVESTMENT.id)
+        }
+
+        assertTrue(RecurringDetector.detect(rows, now).isEmpty())
+    }
+
+    /** But a standing transfer to someone else is money that left. */
+    @Test
+    fun `a standing transfer to another person is still a payment`() {
+        val rows = listOf(2L, 32, 61, 92, 122)
+            .map { tx("HANEEN", it, "1200.00", type = TransactionType.TRANSFER_OUT) }
+
+        assertEquals(1, RecurringDetector.detect(rows, now).size)
     }
 }
