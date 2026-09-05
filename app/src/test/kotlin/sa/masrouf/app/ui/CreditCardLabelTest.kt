@@ -21,6 +21,11 @@ import kotlin.test.assertTrue
  */
 class CreditCardLabelTest {
 
+    /** Card limits are process-wide too, and production reads them. */
+    @org.junit.jupiter.api.AfterEach
+    fun clearLimits() = CreditCards.configure("")
+
+
     @Test
     fun `a well-formed spec is read`() {
         CreditCards.configure("1111:1230000 ; 2222:4560000")

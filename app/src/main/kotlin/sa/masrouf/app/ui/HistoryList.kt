@@ -82,8 +82,14 @@ fun SignedAmount(
 ) {
     val isCredit = transaction.direction == Direction.CREDIT
     Text(
+        // The plus is isolated with the amount rather than left loose beside it.
+        // A "+" is a neutral to the bidi algorithm and binds to digits only when it
+        // sits directly between them, so with a space in front of it in an Arabic
+        // paragraph it took the paragraph's own direction and could land on the far
+        // side of the figure it belongs to. Isolating the run puts it where it was
+        // written. Code points, never the characters themselves - rule 7.
         text = if (isCredit) {
-            "+ ${transaction.amount.forDisplay(currencyLabel)}"
+            FIRST_STRONG_ISOLATE + "+" + transaction.amount.forDisplay(currencyLabel) + POP_ISOLATE
         } else {
             transaction.amount.forDisplay(currencyLabel)
         },
@@ -106,6 +112,7 @@ internal fun TransactionRow(
     salary: Money?,
     onRefile: () -> Unit,
 ) {
+    val isArabic = LocalConfiguration.current.locales[0].language == "ar"
     val category = SaudiCategories.byId(transaction.categoryId)
     val aboveSalary = salary != null && transaction.direction == Direction.DEBIT &&
         transaction.countsAsSpending && transaction.amount.halalas >= salary.halalas
@@ -155,6 +162,14 @@ internal fun TransactionRow(
                     ?: transaction.merchantRaw
                     ?: transaction.note
                     ?: stringResource(transaction.type.labelRes),
+                // Pinned to the layout direction, for the reason CardMark below
+                // gives: unpinned, a paragraph takes the direction of its first
+                // strong letter, so "SUBWAY 4587" aligned left while the Arabic name
+                // under it aligned right - and the ellipsis fell on whichever end the
+                // name happened to vote for.
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    textDirection = if (isArabic) TextDirection.Rtl else TextDirection.Ltr,
+                ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -169,6 +184,7 @@ internal fun TransactionRow(
                         text = stringResource(R.string.above_salary),
                         style = MaterialTheme.typography.labelSmall,
                         maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                         color = MaterialTheme.colorScheme.onErrorContainer,
                         modifier = Modifier
                             .clip(MaterialTheme.shapes.extraSmall)
@@ -350,7 +366,7 @@ internal fun RefileSheet(
                         selected = scope == value,
                         onClick = { scope = value },
                         shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
-                    ) { Text(label, maxLines = 1) }
+                    ) { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 }
             }
         }
@@ -459,3 +475,9 @@ internal val CardKind.shortLabelRes: Int
         CardKind.MADA -> R.string.card_kind_mada_short
         CardKind.CREDIT -> R.string.card_kind_credit_short
     }
+
+/** FIRST STRONG ISOLATE - opens a run whose direction is its own. */
+private val FIRST_STRONG_ISOLATE = Char(0x2068).toString()
+
+/** POP DIRECTIONAL ISOLATE - closes it. */
+private val POP_ISOLATE = Char(0x2069).toString()

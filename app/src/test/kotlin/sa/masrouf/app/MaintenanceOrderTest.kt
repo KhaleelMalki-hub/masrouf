@@ -96,9 +96,10 @@ class MaintenanceOrderTest {
         assertEquals(emptyList(), needed)
     }
 
-    /** Each repair appears once. A duplicate would scan the table twice again. */
-    @Test
-    fun `no repair is declared twice`() {
-        assertEquals(repairs.size, repairs.toSet().size)
-    }
+    // A test that asserted no enum entry appeared twice in `entries` stood here. The
+    // language guarantees that, so it could never go red. Replacing it with "no two
+    // repairs share a version" was worse: it went red immediately, and it was the
+    // assertion that was wrong - PURGE_REJECTED and REPARSE_BODIES are both at 27 on
+    // purpose, because the selector is `done < introducedIn` and two repairs added
+    // in one release are meant to run together. Deleted rather than replaced.
 }

@@ -30,8 +30,15 @@ class FakeDao : TransactionDao {
     override suspend fun neighbours(fromMillis: Long, untilMillis: Long) =
         state.value.filter { it.occurredAtMillis in fromMillis..untilMillis }
 
+    // CONFIRMED only, like the query it stands in for. Without the filter this
+    // double drew every captured row twice - once pending, once recent - which is
+    // the defect the real query's comment records being fixed.
     override fun observeRecent(limit: Int): Flow<List<TransactionEntity>> =
-        state.map { rows -> rows.sortedByDescending { it.occurredAtMillis }.take(limit) }
+        state.map { rows ->
+            rows.filter { it.status == Status.CONFIRMED.name }
+                .sortedByDescending { it.occurredAtMillis }
+                .take(limit)
+        }
 
     override fun observeBetween(fromMillis: Long, untilMillis: Long) =
         state.map { rows -> rows.filter { it.occurredAtMillis in fromMillis until untilMillis } }
@@ -153,8 +160,17 @@ class FakeDao : TransactionDao {
     override suspend fun latestSmsMillis(): Long? =
         state.value.filter { it.source == "SMS" }.maxOfOrNull { it.occurredAtMillis }
 
+    // The largest of the three most recent CONFIRMED salaries, like the query.
+    // Taking the newest alone is the incident that query was written against: the
+    // newest salary was 50 riyals, and the dashboard measured a month against it for
+    // six days. A double that reproduces the bug proves nothing about the fix.
     override fun observeLatestSalary(): Flow<Long?> = state.map { rows ->
-        rows.filter { it.type == "SALARY" && it.direction == "CREDIT" }.maxByOrNull { it.occurredAtMillis }?.amountHalalas
+        rows.filter {
+            it.type == "SALARY" && it.direction == "CREDIT" && it.status == Status.CONFIRMED.name
+        }
+            .sortedByDescending { it.occurredAtMillis }
+            .take(3)
+            .maxOfOrNull { it.amountHalalas }
     }
 
     override suspend fun withMissingParty(): List<TransactionEntity> =

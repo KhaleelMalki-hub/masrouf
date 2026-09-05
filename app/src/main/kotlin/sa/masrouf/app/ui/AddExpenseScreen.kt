@@ -654,7 +654,7 @@ private fun MoreMenu(
     var open by remember { mutableStateOf(false) }
 
     Box {
-        LabelledIconButton(label = stringResource(R.string.more_actions), onClick = { open = true }) {
+        LabelledIconButton(tooltip = stringResource(R.string.more_actions), onClick = { open = true }) {
             Icon(imageVector = Icons.Outlined.MoreVert, contentDescription = null)
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
@@ -747,7 +747,11 @@ private fun AddExpenseTopBar(
             // of icons read as a status rather than a control; the tooltip-free
             // answer is the standard translate glyph, with the target language as
             // its description for a screen reader.
-            LabelledIconButton(label = stringResource(R.string.language_toggle), onClick = onSwitchLanguage) {
+            LabelledIconButton(
+                tooltip = stringResource(R.string.language_toggle),
+                name = stringResource(R.string.language_switch),
+                onClick = onSwitchLanguage,
+            ) {
                 Icon(imageVector = Icons.Outlined.Translate, contentDescription = null)
             }
         },
@@ -778,7 +782,8 @@ private fun ThemeMenu(mode: ThemeMode, onSelect: (ThemeMode) -> Unit) {
         // there for anyone who cannot see the shape: it is the content
         // description, and it is the menu item's own label.
         LabelledIconButton(
-            label = stringResource(mode.labelRes),
+            tooltip = stringResource(mode.labelRes),
+            name = stringResource(R.string.theme_switch),
             onClick = { open = true },
         ) {
             Icon(painter = painterResource(mode.iconRes), contentDescription = null)
@@ -984,25 +989,33 @@ private fun SalaryDialog(
 
 /**
  * An icon-only action with the name M3 says it must have: a tooltip on a long
- * press, and the same name for a screen reader.
+ * press, and a name for a screen reader.
+ *
+ * The two are separate on purpose. A tooltip may show a STATE - the language button
+ * shows "EN" because that is what pressing it gets you, and the theme button shows
+ * the mode you are in - but an accessible name has to say what the control DOES, or
+ * a screen-reader user hears "EN, button" and learns nothing. Passing one string to
+ * both is how a control ends up announcing its state and nothing else.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun LabelledIconButton(
-    label: String,
+    tooltip: String,
     onClick: () -> Unit,
+    /** What the button does. Defaults to the tooltip, for the ones that say it already. */
+    name: String = tooltip,
     content: @Composable () -> Unit,
 ) {
     TooltipBox(
         positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-        tooltip = { PlainTooltip { Text(label) } },
+        tooltip = { PlainTooltip { Text(tooltip) } },
         state = rememberTooltipState(),
     ) {
         IconButton(
             onClick = onClick,
             modifier = Modifier
                 .heightIn(min = 48.dp)
-                .semantics { contentDescription = label },
+                .semantics { contentDescription = name },
         ) { content() }
     }
 }

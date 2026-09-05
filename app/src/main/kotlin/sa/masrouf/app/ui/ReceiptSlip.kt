@@ -83,9 +83,13 @@ fun ReceiptSlip(
             .padding(top = 16.dp, bottom = 24.dp)
             // One node for the whole slip: a screen reader should hear the record,
             // not eleven fragments it has to assemble before it can act on them.
-            .semantics(mergeDescendants = true) {
-                contentDescription = "$merchant، $amount"
-            },
+            // Merged, but NOT renamed. An explicit description on a merging node
+            // replaces everything under it, so the slip announced its merchant and
+            // its amount and silenced the rest - including the bank's own words,
+            // which are the whole reason the slip exists: "is 8.28 right, and here
+            // is what the bank wrote". Letting the merge concatenate gives a screen
+            // reader the sentence a sighted reader gets.
+            .semantics(mergeDescendants = true) {},
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Row(

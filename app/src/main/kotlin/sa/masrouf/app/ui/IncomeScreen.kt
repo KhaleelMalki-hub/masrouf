@@ -53,6 +53,7 @@ import sa.masrouf.core.model.SaudiCategories
 import sa.masrouf.core.money.Money
 import java.time.YearMonth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.text.style.TextOverflow
 
 /**
  * Salary and bonuses, over the years.
@@ -304,6 +305,8 @@ private fun MonthRow(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
+            // Clip is the default, and it cuts mid-glyph without saying it did.
+            overflow = TextOverflow.Ellipsis,
             // A minimum, not a width: at a large font scale a fixed 108 points
             // truncated "September" to an ellipsis on one line.
             modifier = Modifier.widthIn(min = 108.dp),

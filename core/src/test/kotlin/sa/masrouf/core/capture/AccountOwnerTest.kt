@@ -15,6 +15,15 @@ import kotlin.test.assertTrue
  */
 class AccountOwnerTest {
 
+    /**
+     * The owner is process-wide state, so a test that sets it and walks away leaves
+     * it set for whatever class the JVM runs next - and one of those asserts a
+     * transfer's direction on a body that contains the owner's name.
+     */
+    @org.junit.jupiter.api.AfterEach
+    fun clearOwner() = AccountOwner.configure("")
+
+
     private val transferToStranger =
         "حوالة صادرة محلية\nمبلغ2850.00SAR\nالى OWNER NAME\nبنكD360 BANK\nلحساب2207"
 
