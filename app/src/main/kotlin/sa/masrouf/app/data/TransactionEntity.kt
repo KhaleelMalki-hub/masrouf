@@ -32,6 +32,16 @@ import java.time.Instant
         // notification history must not be able to write it twice.
         Index(value = ["fingerprint"], unique = true),
         Index(value = ["occurred_at_millis"]),
+        // The three columns the app filters on that were full scans of 26,000 rows.
+        //
+        // Not a micro-optimisation: `observePending` and `observeCardBalances` are
+        // FLOWS, so Room re-runs them on every insert - and a backfill inserts
+        // twenty-two thousand times. That is the launch freeze the repository's
+        // dispatcher comment describes from the other side; the dispatcher moved the
+        // scan off the main thread, and these stop it being a scan.
+        Index(value = ["status"]),
+        Index(value = ["account_last4"]),
+        Index(value = ["merchant_key"]),
     ],
 )
 data class TransactionEntity(

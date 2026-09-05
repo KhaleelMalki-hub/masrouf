@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [TransactionEntity::class, MerchantRule::class],
-    version = 6,
+    version = 7,
     exportSchema = true,
 )
 abstract class MasroufDatabase : RoomDatabase() {
@@ -62,7 +62,31 @@ abstract class MasroufDatabase : RoomDatabase() {
          */
         /** In order, for the app and for the migration test alike. */
         val ALL_MIGRATIONS: Array<Migration>
-            get() = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+            get() = arrayOf(
+                MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6,
+                MIGRATION_6_7,
+            )
+
+        /**
+         * Indexes for the three predicates that were scanning the whole table.
+         *
+         * The names are Room's own convention, because Room validates the schema it
+         * finds against the schema it expects and a hand-named index fails that check
+         * on the next launch rather than at build time.
+         */
+        private val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_transactions_status ON transactions (status)")
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_transactions_account_last4 " +
+                        "ON transactions (account_last4)",
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_transactions_merchant_key " +
+                        "ON transactions (merchant_key)",
+                )
+            }
+        }
 
         private val MIGRATION_5_6 = object : Migration(5, 6) {
             override fun migrate(db: SupportSQLiteDatabase) {

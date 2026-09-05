@@ -147,3 +147,44 @@ dependencies {
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
 }
+
+/**
+ * Refuses to run the instrumented tests against the phone that holds real data.
+ *
+ * `connectedAndroidTest` uninstalls the app when it finishes, and uninstalling takes
+ * the database with it. Gradle does that unconditionally and there is no flag to
+ * stop it. CLAUDE.md has said so in capital letters for months, and it happened
+ * anyway on 2026-09-05: twelve years of captured messages, restored from a backup
+ * taken half an hour earlier because one had been taken at all.
+ *
+ * A warning in a document is read by whoever is not about to make the mistake. This
+ * reads the serial from `local.properties` - gitignored, like the owner's names -
+ * and fails the task before it can install anything. The emulator is unaffected,
+ * which is where these tests belong.
+ *
+ *     protected.device=SERIAL        # in local.properties
+ *     ./gradlew :app:connectedDebugAndroidTest -Punprotect=true   # deliberate override
+ */
+tasks.matching { it.name.startsWith("connected") && it.name.endsWith("AndroidTest") }
+    .configureEach {
+        doFirst {
+            val protectedSerial = localValue("protected.device")
+            if (protectedSerial.isBlank()) return@doFirst
+            if (project.hasProperty("unprotect")) return@doFirst
+
+            val adb = android.sdkDirectory.resolve("platform-tools/adb")
+            if (!adb.exists()) return@doFirst
+            val attached = providers.exec {
+                commandLine(adb.absolutePath, "devices")
+            }.standardOutput.asText.get()
+
+            if (attached.lineSequence().any { it.startsWith(protectedSerial) && it.endsWith("device") }) {
+                throw GradleException(
+                    "Refusing to run instrumented tests: device $protectedSerial is attached, and " +
+                        "this task uninstalls the app when it finishes - which deletes its database. " +
+                        "Use the masrouf35 emulator, or pass -Punprotect=true if you have a backup " +
+                        "and mean it.",
+                )
+            }
+        }
+    }

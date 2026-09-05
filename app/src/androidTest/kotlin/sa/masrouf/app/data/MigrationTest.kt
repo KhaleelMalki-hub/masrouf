@@ -29,7 +29,7 @@ class MigrationTest {
     )
 
     @Test
-    fun migrates_from_1_to_6_and_keeps_the_rows() {
+    fun migrates_from_1_to_7_and_keeps_the_rows() {
         helper.createDatabase(DB, 1).use { db ->
             db.execSQL(
                 """
@@ -42,7 +42,7 @@ class MigrationTest {
             )
         }
 
-        val db = helper.runMigrationsAndValidate(DB, 6, true, *MasroufDatabase.ALL_MIGRATIONS)
+        val db = helper.runMigrationsAndValidate(DB, 7, true, *MasroufDatabase.ALL_MIGRATIONS)
 
         db.query("SELECT category_source, account_last4, bank_id, balance_kind FROM transactions WHERE id = 't1'").use { c ->
             assertEquals(1, c.count)
@@ -53,6 +53,17 @@ class MigrationTest {
             assertEquals(null, c.getString(2))
             // 5 to 6 adds the column only; the body is read on the next launch.
             assertEquals(null, c.getString(3))
+        }
+
+        // 6 to 7 is three indexes, and `runMigrationsAndValidate` above has already
+        // compared them against the entity's own declaration - the check that catches
+        // a hand-named index, which Room would otherwise reject on the next launch
+        // rather than here.
+        db.query("SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'transactions'").use { c ->
+            val names = buildList { while (c.moveToNext()) add(c.getString(0)) }
+            assertEquals(true, names.contains("index_transactions_status"))
+            assertEquals(true, names.contains("index_transactions_account_last4"))
+            assertEquals(true, names.contains("index_transactions_merchant_key"))
         }
     }
 
@@ -71,7 +82,7 @@ class MigrationTest {
             db.execSQL("PRAGMA user_version = 3")
         }
 
-        val db = helper.runMigrationsAndValidate(DB, 6, true, *MasroufDatabase.ALL_MIGRATIONS)
+        val db = helper.runMigrationsAndValidate(DB, 7, true, *MasroufDatabase.ALL_MIGRATIONS)
 
         db.query("SELECT merchant_key, category_id FROM merchant_rules").use { c ->
             assertEquals(1, c.count)
