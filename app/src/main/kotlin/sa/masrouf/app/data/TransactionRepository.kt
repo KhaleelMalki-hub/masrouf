@@ -669,6 +669,11 @@ class TransactionRepository(
      * @return how many existing records were refiled.
      */
     suspend fun fileMerchant(merchantKey: String, categoryId: String): Int {
+        // The narrower rules go with it. This writes the category onto every row of
+        // the merchant, including the ones a bank-scoped rule was written for, so
+        // leaving that rule behind made the stored rows and the next capture through
+        // that bank disagree - silently, until someone refiled.
+        rules?.forgetAtEveryBank(merchantKey)
         rules?.upsert(MerchantRule(merchantKey = merchantKey, categoryId = categoryId))
         return dao.setCategoryForMerchant(merchantKey, categoryId, CategorySource.MANUAL.name)
     }

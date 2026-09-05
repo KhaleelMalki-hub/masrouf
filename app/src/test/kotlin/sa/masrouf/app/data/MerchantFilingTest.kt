@@ -30,6 +30,9 @@ class MerchantFilingTest {
         override suspend fun categoryFor(merchantKey: String) = stored[merchantKey]
         override suspend fun all() = stored.map { MerchantRule(it.key, it.value) }
         override suspend fun forget(merchantKey: String) { stored.remove(merchantKey) }
+        override suspend fun forgetAtEveryBank(merchantKey: String) {
+            stored.keys.filter { it.startsWith("$merchantKey@") }.forEach(stored::remove)
+        }
     }
 
     private val dao = FakeDao()
@@ -241,4 +244,28 @@ class MerchantFilingTest {
         assertEquals(SaudiCategories.GROCERIES.id, dao.rows.single { it.id == "bakery2" }.categoryId)
         assertEquals(SaudiCategories.FOOD.id, dao.rows.single { it.id == "cafe2" }.categoryId)
     }
+    /**
+     * Filing the whole merchant supersedes what was filed for one bank of it.
+     *
+     * The general filing rewrites every row of the merchant, the bank-scoped ones
+     * included. Leaving the narrower RULE behind made the stored rows say one thing
+     * and the next capture through that bank say another - and nothing would have
+     * reported the disagreement.
+     */
+    @Test
+    fun `filing a merchant everywhere drops the rule it had at one bank`() = runTest {
+        repository.recordCaptured(record("bakery", "AMMAR", 0).copy(bankId = "barq"))
+        repository.fileMerchantAtBank("AMMAR", "barq", SaudiCategories.FOOD.id)
+
+        repository.fileMerchant("AMMAR", SaudiCategories.GROCERIES.id)
+
+        // The stored row moved, as it always did.
+        assertEquals(SaudiCategories.GROCERIES.id, dao.rows.single { it.id == "bakery" }.categoryId)
+        // And so does the next one through that bank. Before this, the row said
+        // groceries and the rule still said food, so the next capture disagreed with
+        // the record beside it.
+        repository.recordCaptured(record("bakery2", "AMMAR", 60).copy(bankId = "barq"))
+        assertEquals(SaudiCategories.GROCERIES.id, dao.rows.single { it.id == "bakery2" }.categoryId)
+    }
+
 }

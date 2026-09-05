@@ -481,6 +481,11 @@ class AddExpenseViewModel(
      */
     fun confirmAllPending() {
         viewModelScope.launch {
+            // The bar first, then the work. Confirming three thousand records takes
+            // seconds, and the dialog has already closed by then - so the screen sat
+            // inert with nothing to say it was busy, which is the state this app is
+            // careful everywhere else not to leave a user in.
+            _importState.value = ImportState.Refiling
             _importState.value = ImportState.Confirmed(repository.confirmAllPending())
         }
     }
@@ -488,6 +493,7 @@ class AddExpenseViewModel(
     /** Files every unfiled record whose merchant is recognised. */
     fun fileHistory() {
         viewModelScope.launch {
+            _importState.value = ImportState.Refiling
             _importState.value = ImportState.Filed(repository.fileUncategorised())
         }
     }
@@ -536,6 +542,7 @@ class AddExpenseViewModel(
      */
     fun fileMerchant(merchantKey: String, categoryId: String) {
         viewModelScope.launch {
+            _importState.value = ImportState.Refiling
             _importState.value = ImportState.Filed(repository.fileMerchant(merchantKey, categoryId))
         }
     }
@@ -549,6 +556,7 @@ class AddExpenseViewModel(
      */
     fun forgetMerchant(merchantKey: String) {
         viewModelScope.launch {
+            _importState.value = ImportState.Refiling
             _importState.value = ImportState.Filed(repository.forgetMerchant(merchantKey))
         }
     }
@@ -556,6 +564,7 @@ class AddExpenseViewModel(
     /** Files one merchant as it arrives through one bank; see the repository. */
     fun fileMerchantAtBank(merchantKey: String, bankId: String, categoryId: String) {
         viewModelScope.launch {
+            _importState.value = ImportState.Refiling
             _importState.value = ImportState.Filed(repository.fileMerchantAtBank(merchantKey, bankId, categoryId))
         }
     }

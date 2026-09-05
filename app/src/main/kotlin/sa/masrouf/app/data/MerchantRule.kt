@@ -55,4 +55,16 @@ interface MerchantRuleDao {
      */
     @Query("DELETE FROM merchant_rules WHERE merchant_key = :merchantKey")
     suspend fun forget(merchantKey: String)
+
+    /**
+     * Forgets the narrower decisions a general one replaces.
+     *
+     * A bank-scoped rule is stored as `KEY@bank`. Filing the whole merchant rewrote
+     * every row including those, and left their rules standing - so the rows carried
+     * the new category while the next capture through that bank got the old one, and
+     * the two disagreed until something refiled them. A general decision is the wider
+     * statement of the same intent; it takes the narrow ones with it.
+     */
+    @Query("DELETE FROM merchant_rules WHERE merchant_key LIKE :merchantKey || '@%'")
+    suspend fun forgetAtEveryBank(merchantKey: String)
 }

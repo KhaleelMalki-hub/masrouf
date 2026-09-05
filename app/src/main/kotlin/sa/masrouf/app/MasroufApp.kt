@@ -96,7 +96,13 @@ class MasroufApp : Application() {
         // complete is worse than a failure: it cannot be retried, because nothing
         // knows it did not happen.
         preferences.maintenanceVersion = if (deferred) {
-            minOf(CURRENT_MAINTENANCE_VERSION, Repair.REREAD_WHOLE_INBOX.introducedIn - 1)
+            // Never BELOW where this install already was. The floor used to be a
+            // literal, so an install past the deferred repair would have been walked
+            // backwards and every repair between here and there re-run - or, worse,
+            // a future repair introduced in that gap marked complete by a pass that
+            // never touched it. Nothing sits in that gap today; the next one added
+            // would have found this the hard way.
+            maxOf(done, minOf(CURRENT_MAINTENANCE_VERSION, Repair.REREAD_WHOLE_INBOX.introducedIn - 1))
         } else {
             CURRENT_MAINTENANCE_VERSION
         }
