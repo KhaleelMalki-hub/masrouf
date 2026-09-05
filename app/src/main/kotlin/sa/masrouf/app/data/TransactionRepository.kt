@@ -896,4 +896,5 @@ internal fun TransactionEntity.toSignature(): EventSignature = EventSignature(
     merchantKey = merchantKey,
     source = enumValueOf(source),
     body = rawText?.let(ArabicText::normalize)?.takeIf { it.isNotBlank() },
+    bankId = bankId,
 )

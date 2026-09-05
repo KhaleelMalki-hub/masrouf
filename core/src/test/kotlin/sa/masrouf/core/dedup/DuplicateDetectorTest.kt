@@ -299,6 +299,99 @@ class DuplicateDetectorTest {
         assertEquals(listOf(0), result.newIncoming)
     }
 
+    /**
+     * One hundred riyals arrived once and the owner read three rows for it.
+     *
+     * AlAhli announced the transfer under three templates in the same second - one
+     * naming the sender, one not - and the same-route rule asked only whether the
+     * two bodies were the SAME text. Three bodies, three rows, and the two carrying
+     * a name looked like two transfers from the same person.
+     */
+    @Test
+    fun `one bank telling one transfer three ways is one event`() {
+        val at = Instant.parse("2026-09-04T11:20:14Z")
+        fun telling(seconds: Long, body: String) = EventSignature.of(
+            Money.ofMajor("100.00"), Direction.CREDIT, at.plusSeconds(seconds), Source.SMS,
+            last4 = null, merchantRaw = null, body = body, bankId = "snb",
+        )
+        val named = telling(0, "حوالة واردة داخلية ب100 SAR\nمن0106* اريج حلواني\n04/09/26 14:20")
+        val plain = telling(2, "اشعار ايداع\nمبلغ SAR 100\nحساب0104*\nفي 04/09/26 14:20")
+        val third = telling(3, "تحويل وارد بمبلغ 100 ريال الى حسابك 0104*")
+
+        val second = DuplicateDetector().reconcile(existing = listOf(named), incoming = listOf(plain))
+        val stillOne = DuplicateDetector().reconcile(existing = listOf(named), incoming = listOf(third))
+
+        assertEquals(emptyList<Int>(), second.newIncoming)
+        assertEquals(emptyList<Int>(), stillOne.newIncoming)
+    }
+
+    /**
+     * The protection that rule must not cost: two banks reporting the same amount in
+     * the same breath are the two legs of his own money moving between his accounts,
+     * and both are real. He does this several times a month, five thousand at a time.
+     */
+    @Test
+    fun `two banks announcing one amount at once are two records`() {
+        val at = Instant.parse("2026-09-04T11:20:14Z")
+        val fromBarq = EventSignature.of(
+            Money.ofMajor("5000.00"), Direction.CREDIT, at, Source.SMS,
+            last4 = null, merchantRaw = null, bankId = "barq",
+            body = "استلمت حوالة بمبلغ 5000 ريال",
+        )
+        val fromAlRajhi = EventSignature.of(
+            Money.ofMajor("5000.00"), Direction.CREDIT, at.plusSeconds(4), Source.SMS,
+            last4 = null, merchantRaw = null, bankId = "alrajhi",
+            body = "حوالة واردة\nمبلغ SAR 5000\nالى 7404*",
+        )
+
+        val result = DuplicateDetector().reconcile(existing = listOf(fromBarq), incoming = listOf(fromAlRajhi))
+
+        assertEquals(listOf(0), result.newIncoming)
+    }
+
+    /**
+     * And a differently-worded message from the same bank is only a second telling
+     * for a few seconds. Beyond that it is long enough for a person to have sent the
+     * same amount again, which is the error that costs money rather than clutter.
+     */
+    @Test
+    fun `a differently worded message a minute later is a new record`() {
+        val at = Instant.parse("2026-09-04T11:20:14Z")
+        fun telling(seconds: Long, body: String) = EventSignature.of(
+            Money.ofMajor("100.00"), Direction.CREDIT, at.plusSeconds(seconds), Source.SMS,
+            last4 = null, merchantRaw = null, body = body, bankId = "snb",
+        )
+
+        val result = DuplicateDetector().reconcile(
+            existing = listOf(telling(0, "حوالة واردة داخلية ب100 SAR\nمن0106* اريج حلواني")),
+            incoming = listOf(telling(60, "اشعار ايداع\nمبلغ SAR 100\nحساب0104*")),
+        )
+
+        assertEquals(listOf(0), result.newIncoming)
+    }
+
+    /**
+     * Across routes the bodies always differ, so the text cannot decide - but time
+     * alone cannot either. Two debits of one size, neither naming a card nor a
+     * party, are two payments until something says otherwise.
+     */
+    @Test
+    fun `a push and an sms agreeing on nothing but the amount are two records`() {
+        val at = Instant.parse("2026-09-04T11:20:14Z")
+        val sms = EventSignature.of(
+            Money.ofMajor("75.00"), Direction.DEBIT, at, Source.SMS,
+            last4 = null, merchantRaw = null, body = "خصم 75 ريال",
+        )
+        val push = EventSignature.of(
+            Money.ofMajor("75.00"), Direction.DEBIT, at.plusSeconds(20), Source.NOTIFICATION,
+            last4 = null, merchantRaw = null, body = "عملية بمبلغ 75",
+        )
+
+        val result = DuplicateDetector().reconcile(existing = listOf(sms), incoming = listOf(push))
+
+        assertEquals(listOf(0), result.newIncoming)
+    }
+
     /** And the same SMS delivered twice is still one event. */
     @Test
     fun `a redelivered message with an identical body is one event`() {
