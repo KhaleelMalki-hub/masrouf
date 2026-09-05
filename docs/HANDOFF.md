@@ -576,6 +576,45 @@ it may not name. Every money figure is a plain `String` from one formatter, so
 there is no single place to attach a spoken label - it would be one per call site.
 Worth doing if he uses TalkBack.
 
+## The five-reviewer council, 2026-09-05
+
+Five reviewers in parallel - Material 3 conformance, interaction behaviour, money
+correctness, accessibility/RTL/scaling, codebase and test integrity - each required
+to prove every finding against the live tree and to read the comments before calling
+a documented decision a defect. Seven commits came out of it, `cfcb65d`..`5a2437d`.
+
+**The one the owner reported.** One inbound transfer, three rows. The detector's
+same-route rule asked whether two bodies were the SAME text, and AlAhli announces a
+transfer under three templates in one second. A second telling is now allowed, hedged
+three ways: same bank, within thirty seconds, and only when the two bodies are not
+one sentence with different numbers in it - two separate transfers always arrive on
+ONE template, so they share a skeleton and can never be merged by that route. The
+cross-route branch was tightened in the same pass: a push and an SMS used to merge on
+amount and two minutes alone. **The three stored rows are untouched**; a repair pass
+must reconcile in LISTS, never row by row.
+
+**The intermittent red was one missing argument.** `HistoryFilterTest` built its
+repository without the test dispatcher, so a producer ran on a real `Dispatchers.Default`
+thread and completed after `resetMain()` - and the throw was reported against whichever
+test started next. Three consecutive clean runs since.
+
+**Three ways work could be lost silently**, all fixed: Save closed the sheet whether or
+not it saved (and crashed the app on a failed insert); a category chosen on a pending
+slip was lost by scrolling; and confirming a slip stamped the app's own guess MANUAL,
+which made it immune to `refileAll`.
+
+**Still open, device-dependent.** Two findings need the phone before they can be
+settled, because two comments in the tree contradict each other and only one can be
+right: `BankWords`' `reverseScrolling = isRtl` (CardsPanel documents the same
+parameter as an empirically-found bug) and the `Crossfade` between destinations,
+which is a cross-dissolve where M3 specifies a sequential fade-through.
+
+**Deferred with reasons.** Indexes on `status`, `account_last4` and `merchant_key`
+(a version 7 migration; `observePending` is a Flow re-running a full scan on every
+insert during a 22,000-message backfill). Six count strings that hardcode the
+singular Arabic noun where plurals exist. Fifteen dead strings. `MonthPanel`,
+`CardTile` and `TransactionRow` are each over a hundred lines.
+
 ## Open items
 
 0. **Every confirmed sender now has a profile** (urpay, meem, Vision Bank added
