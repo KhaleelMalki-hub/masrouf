@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -234,6 +235,7 @@ class AddExpenseViewModel(
         _selectedMonth
             .flatMapLatest { month -> repository.observeMonth(month) }
             .map { rows -> rows.filter { it.status == Status.CONFIRMED } }
+            .flowOn(background)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     /**
@@ -267,6 +269,7 @@ class AddExpenseViewModel(
     val monthUnfiled: StateFlow<Int> =
         confirmedThisMonth
             .map { rows -> rows.count { SaudiCategories.byId(it.categoryId) == null } }
+            .flowOn(background)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
 
     /**
@@ -277,6 +280,7 @@ class AddExpenseViewModel(
     val monthInvested: StateFlow<Money?> =
         confirmedThisMonth
             .map { rows -> rows.investedTotal().takeIf { !it.isZero } }
+            .flowOn(background)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     /**
@@ -288,6 +292,7 @@ class AddExpenseViewModel(
      */
     val incomeByMonth: StateFlow<List<IncomeMonth>> =
         repository.observeIncomeByMonth()
+            .flowOn(background)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     /**
@@ -298,6 +303,7 @@ class AddExpenseViewModel(
     val incomeLoaded: StateFlow<Boolean> =
         repository.observeIncomeByMonth()
             .map { true }
+            .flowOn(background)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     /**
@@ -309,6 +315,7 @@ class AddExpenseViewModel(
     val incomeDeposits: StateFlow<Map<YearMonth, List<Transaction>>> =
         repository.observeIncomeRows()
             .map { rows -> rows.groupBy { YearMonth.from(RiyadhTime.localDate(it.occurredAt)) } }
+            .flowOn(background)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     /**
@@ -321,6 +328,7 @@ class AddExpenseViewModel(
         _selectedMonth
             .flatMapLatest { month -> repository.observeMonth(month.minusMonths(1)) }
             .map { rows -> rows.takeIf { it.isNotEmpty() }?.spendingTotal() }
+            .flowOn(background)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun showPreviousMonth() {
@@ -372,12 +380,14 @@ class AddExpenseViewModel(
         _selectedMonth
             .flatMapLatest { month -> repository.observeMonth(month) }
             .map { true }
+            .flowOn(background)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     val monthShares: StateFlow<List<Pair<Category?, Money>>> =
         _selectedMonth
             .flatMapLatest { month -> repository.observeMonth(month) }
             .map { it.categoryShares() }
+            .flowOn(background)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     /**
@@ -390,12 +400,14 @@ class AddExpenseViewModel(
     /** The month split into mada and credit, for the cards whose kind is known. */
     val monthByCardKind: StateFlow<List<Pair<CardKind, Money>>> =
         combine(confirmedThisMonth, _cardKinds) { rows, kinds -> rows.spendingByCardKind(kinds) }
+            .flowOn(background)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val monthTotal: StateFlow<Money> =
         _selectedMonth
             .flatMapLatest { month -> repository.observeMonth(month) }
             .map { it.spendingTotal() }
+            .flowOn(background)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), Money.ZERO)
 
     fun onAmountChanged(typed: String) {

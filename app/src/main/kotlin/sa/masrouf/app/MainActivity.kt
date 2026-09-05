@@ -42,12 +42,17 @@ class MainActivity : ComponentActivity() {
         val app = application as MasroufApp
         val repository = app.transactions
         val preferences = app.preferences
+        // Read before the composition rather than inside it. The first touch of
+        // SharedPreferences goes to disk, and inside `setContent` that read happens
+        // on the way to the first frame, which is the frame the user is waiting for.
+        val storedTheme = preferences.themeMode
+        val storedSalary = preferences.salaryHalalas?.let(Money::ofHalalas)
 
         setContent {
             // Read once from storage, then owned by the composition. The setter
             // writes through, so the choice survives a restart.
-            var themeMode by remember { mutableStateOf(preferences.themeMode) }
-            var salary by remember { mutableStateOf(preferences.salaryHalalas?.let(Money::ofHalalas)) }
+            var themeMode by remember { mutableStateOf(storedTheme) }
+            var salary by remember { mutableStateOf(storedSalary) }
 
             // The system bars follow the APP's theme, not the phone's. The default
             // enableEdgeToEdge() reads the system setting, so forcing the app dark
