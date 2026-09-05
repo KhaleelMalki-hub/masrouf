@@ -40,7 +40,7 @@ class HistoryFilterTest {
 
     private val dispatcher = StandardTestDispatcher()
     private val dao = FakeDao()
-    private val repository = TransactionRepository(dao)
+    private val repository = TransactionRepository(dao, computation = dispatcher)
     private val clock = Clock.fixed(Instant.parse("2026-08-15T09:00:00Z"), ZoneOffset.UTC)
 
     @BeforeEach fun setUp() = Dispatchers.setMain(dispatcher)
