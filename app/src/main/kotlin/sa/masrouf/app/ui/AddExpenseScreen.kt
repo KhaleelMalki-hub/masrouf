@@ -18,6 +18,7 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.background
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -111,6 +112,7 @@ fun AddExpenseScreen(
     val effectiveSalary = salary ?: detectedSalary
     val monthUnfiled by viewModel.monthUnfiled.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
+    val incomeState = rememberLazyListState()
     // The bar leaves on the way down and returns on the way up, as M3 top bars do
     // over a scrolling list; the month is the thing to look at, not the title.
     val topBarScroll = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -125,6 +127,7 @@ fun AddExpenseScreen(
     val cardBanks by viewModel.cardBanks.collectAsStateWithLifecycle()
     val cardKinds by viewModel.cardKinds.collectAsStateWithLifecycle()
     val monthLoaded by viewModel.monthLoaded.collectAsStateWithLifecycle()
+    val incomeLoaded by viewModel.incomeLoaded.collectAsStateWithLifecycle()
     val byCardKind by viewModel.monthByCardKind.collectAsStateWithLifecycle()
     val incomeMonths by viewModel.incomeByMonth.collectAsStateWithLifecycle()
     val incomeDeposits by viewModel.incomeDeposits.collectAsStateWithLifecycle()
@@ -211,6 +214,7 @@ fun AddExpenseScreen(
             MonthPicker(
                 selected = selectedMonth,
                 monthsWithData = monthsWithData,
+                currentMonth = viewModel.currentMonth,
                 onPick = { month ->
                     viewModel.showMonth(month)
                     pickingMonth = false
@@ -371,6 +375,12 @@ fun AddExpenseScreen(
                     months = incomeMonths,
                     deposits = incomeDeposits,
                     currencyLabel = currency,
+                    loaded = incomeLoaded,
+                    // Hoisted for the same reason the spending list's is: the two
+                    // destinations swap inside a Crossfade, which keeps no state of
+                    // its own, so an unhoisted list went back to the top - and every
+                    // opened month closed - on every switch.
+                    state = incomeState,
                     modifier = Modifier.padding(padding),
                 )
 
@@ -428,6 +438,7 @@ fun AddExpenseScreen(
                         byCardKind = byCardKind,
                         activeFilter = categoryFilter,
                         onToggleCategory = viewModel::toggleCategoryFilter,
+                        monthLoaded = monthLoaded,
                     )
                 }
                 if (pending.isNotEmpty()) {
@@ -585,6 +596,13 @@ fun AddExpenseScreen(
             }
             }
         }
+    }
+
+    // Back returns to the start destination before it leaves the app. A two-item
+    // navigation bar is read as two tabs, and back out of a tab is how every other
+    // Android app behaves.
+    BackHandler(enabled = destination != Destination.SPENDING) {
+        destination = Destination.SPENDING
     }
 
     // The sheet closes when a record is stored, never when Save is merely tapped.

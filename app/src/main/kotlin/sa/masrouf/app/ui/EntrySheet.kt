@@ -212,7 +212,7 @@ internal fun AmountHero(
                 value = value,
                 onValueChange = onValueChange,
                 singleLine = true,
-                textStyle = MoneyStyle.merge(MaterialTheme.typography.displaySmall).copy(
+                textStyle = MaterialTheme.typography.displaySmall.copy(
                     color = if (error != null) {
                         MaterialTheme.colorScheme.error
                     } else {
@@ -243,7 +243,7 @@ internal fun AmountHero(
                     if (value.isEmpty()) {
                         Text(
                             text = stringResource(R.string.amount_hint),
-                            style = MoneyStyle.merge(MaterialTheme.typography.displaySmall),
+                            style = MaterialTheme.typography.displaySmall,
                             color = MaterialTheme.colorScheme.outline,
                         )
                     }

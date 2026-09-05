@@ -153,9 +153,19 @@ private val MasroufTypography = Typography().run {
     )
 }
 
-/** The amount, wherever it appears. Tracking tightened so figures read as one object. */
+/**
+ * The amount, wherever it is not already a headline.
+ *
+ * Applied as `typography.role.merge(MoneyStyle)` and never the other way round.
+ * `merge` fills the RECEIVER's gaps from the argument, and every role in this scale
+ * sets a weight and a tracking - so written the other way it was inert at thirteen
+ * call sites, and the card's last-four was actually WIDENED by `labelMedium`'s
+ * 0.8sp, the opposite of what this style is for.
+ *
+ * The two headline amounts take their role plain: the month total and the entry
+ * field carry their weight in the scale itself, and are heavier than this.
+ */
 val MoneyStyle: TextStyle = TextStyle(
-    fontFamily = MasroufArabic,
     fontWeight = FontWeight.SemiBold,
     letterSpacing = (-0.3).sp,
 )

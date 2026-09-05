@@ -291,6 +291,16 @@ class AddExpenseViewModel(
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     /**
+     * Whether the income series has arrived. See [monthLoaded]: the same distinction,
+     * and the income screen was making the same mistake - "لا يوجد دخل مسجّل بعد"
+     * over twelve years of salaries, for as long as the query took.
+     */
+    val incomeLoaded: StateFlow<Boolean> =
+        repository.observeIncomeByMonth()
+            .map { true }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+
+    /**
      * The individual deposits behind [incomeByMonth], keyed by month.
      *
      * Grouped here rather than in the screen so the screen holds no logic about

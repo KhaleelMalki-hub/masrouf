@@ -1,7 +1,7 @@
 package sa.masrouf.app.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import java.time.LocalDate
@@ -50,19 +51,27 @@ import java.time.format.TextStyle
 fun MonthPicker(
     selected: LocalDate,
     monthsWithData: List<LocalDate>,
+    /** Always reachable, even before anything has been captured in it. */
+    currentMonth: LocalDate,
     onPick: (LocalDate) -> Unit,
 ) {
-    val years = remember(monthsWithData) {
-        monthsWithData.map { it.year }.distinct().sortedDescending()
+    val years = remember(monthsWithData, currentMonth) {
+        (monthsWithData.map { it.year } + currentMonth.year).distinct().sortedDescending()
     }
     var shownYear by remember(selected) { mutableStateOf(selected.year) }
-    val available = remember(monthsWithData, shownYear) {
-        monthsWithData.filter { it.year == shownYear }.map { it.monthValue }.toSet()
+    // The current month is selectable whether or not anything has landed in it. On
+    // the first of a quiet month it was dimmed like a month that does not exist, and
+    // a user who had paged back could not get home through the picker at all.
+    val available = remember(monthsWithData, currentMonth, shownYear) {
+        monthsWithData.filter { it.year == shownYear }.map { it.monthValue }.toSet() +
+            setOfNotNull(currentMonth.monthValue.takeIf { shownYear == currentMonth.year })
     }
     val yearState = rememberLazyListState()
 
-    // Open on the year being looked at rather than at the end of the list.
-    LaunchedEffect(years, shownYear) {
+    // Once per opening, not once per tap. Keyed on shownYear it re-ran when the user
+    // chose a year, and scrollToItem puts the item at the leading edge - so the chip
+    // under their finger jumped across the row as they pressed it.
+    LaunchedEffect(years) {
         val index = years.indexOf(shownYear)
         if (index >= 0) yearState.scrollToItem(index)
     }
@@ -108,13 +117,13 @@ private fun YearChip(year: Int, selected: Boolean, onClick: () -> Unit) {
         selected = selected,
         onClick = onClick,
         label = {
-            Text(
-                // toString, not a formatter: a localised one renders 2026 as ٢٠٢٦ in
-                // Arabic, and every other number in this app is Western.
-                text = year.toString(),
-                style = MaterialTheme.typography.titleMedium,
-            )
+            // toString, not a formatter: a localised one renders 2026 as ٢٠٢٦ in
+            // Arabic, and every other number in this app is Western.
+            Text(text = year.toString())
         },
+        // A FilterChip is 32dp by default, under the 48dp minimum - the same floor
+        // the category and type chips set, for the same reason.
+        modifier = Modifier.heightIn(min = 48.dp),
     )
 }
 
@@ -176,7 +185,15 @@ private fun MonthCell(
                     else -> MaterialTheme.colorScheme.surfaceContainerLow
                 }
             )
-            .clickable(enabled = enabled, onClick = onClick),
+            // selectable, not clickable: the cell spent its `selected` entirely on a
+            // background colour, so a screen reader could not tell which month was
+            // chosen and neither could anyone reading by tone alone.
+            .selectable(
+                selected = selected,
+                enabled = enabled,
+                role = Role.RadioButton,
+                onClick = onClick,
+            ),
         contentAlignment = Alignment.Center,
     ) {
         Text(

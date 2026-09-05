@@ -9,7 +9,7 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
@@ -37,6 +37,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.LayoutDirection
@@ -247,10 +248,13 @@ private fun BandRow(
             // The legend already names every category, so it is also the filter.
             // A separate filter menu would be the same list printed twice.
             //
-            // Background BEFORE clickable: the other order paints the fill over the
+            // Background BEFORE the click: the other order paints the fill over the
             // ripple, and the row gave no press feedback at all.
             .background(highlight)
-            .clickable(onClick = onClick),
+            // selectable, not clickable. Which category the history below is
+            // narrowed to was carried by one surface tone and nothing else - not
+            // spoken, and hard to see.
+            .selectable(selected = selected, role = Role.Tab, onClick = onClick),
     ) {
         // The proportion, drawn behind the text rather than beside it. A swatch
         // tells you which colour a category is; this tells you how big it is
@@ -293,7 +297,7 @@ private fun BandRow(
             }
             Text(
                 text = amount,
-                style = MoneyStyle.merge(MaterialTheme.typography.bodyMedium),
+                style = MaterialTheme.typography.bodyMedium.merge(MoneyStyle),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }

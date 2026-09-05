@@ -259,7 +259,10 @@ internal fun HistoryFilters(
         OutlinedTextField(
             value = query,
             onValueChange = onQueryChange,
-            placeholder = { Text(stringResource(R.string.search_hint)) },
+            // A label, not only a placeholder: the placeholder leaves the tree on
+            // the first keystroke, and what it left behind was an edit box with no
+            // name at all to a screen reader.
+            label = { Text(stringResource(R.string.search_hint)) },
             singleLine = true,
             // The search bar's own shape in M3 is the full pill.
             shape = MaterialTheme.shapes.extraLarge,

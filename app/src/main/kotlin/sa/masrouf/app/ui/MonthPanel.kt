@@ -15,7 +15,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -44,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import sa.masrouf.app.R
 import sa.masrouf.core.model.CardKind
@@ -52,6 +53,7 @@ import sa.masrouf.core.model.Direction
 import sa.masrouf.core.model.SaudiCategories
 import java.time.LocalDate
 import sa.masrouf.core.money.Money
+import androidx.compose.foundation.clickable
 
 /**
  * The month panel: the total, how it compares, the bands that make it up, and the
@@ -80,6 +82,15 @@ internal fun MonthPanel(
     byCardKind: List<Pair<CardKind, Money>>,
     activeFilter: HistoryFilter?,
     onToggleCategory: (Category?) -> Unit,
+    /**
+     * Whether the month has been read yet.
+     *
+     * "I have not looked yet" and "there is nothing" are different sentences, and
+     * without this the card could only say the second - over a 26,000-record
+     * history, for the seconds before the first row arrives. The list below was
+     * given this guard; the card that carries the number was not.
+     */
+    monthLoaded: Boolean,
 ) {
     val uncategorised = stringResource(R.string.uncategorised)
     val bands = shares.map { (category, amount) ->
@@ -142,7 +153,7 @@ internal fun MonthPanel(
                 ) { (_, shown) ->
                     Text(
                         text = shown,
-                        style = MoneyStyle.merge(MaterialTheme.typography.displayMedium),
+                        style = MaterialTheme.typography.displayMedium,
                     )
                 }
                 // Sized against the figure, not set once and left. "ر.س" was a
@@ -190,7 +201,7 @@ internal fun MonthPanel(
             },
         )
 
-        if (bands.isEmpty()) {
+        if (bands.isEmpty() && monthLoaded) {
             Text(
                 text = stringResource(R.string.month_empty),
                 style = MaterialTheme.typography.bodySmall,
@@ -276,7 +287,7 @@ private fun CardKindSplit(byCardKind: List<Pair<CardKind, Money>>, currencyLabel
                 )
                 Text(
                     text = amount.forDisplay(currencyLabel),
-                    style = MoneyStyle.merge(MaterialTheme.typography.bodySmall),
+                    style = MaterialTheme.typography.bodySmall.merge(MoneyStyle),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -419,7 +430,9 @@ private fun OutsideTotalRow(
                     Modifier
                 }
             )
-            .clickable(onClick = onClick)
+            // selectable rather than clickable: this row is a filter like the legend
+            // rows above it, and which one is on was carried by a surface tone alone.
+            .selectable(selected = selected, role = Role.Tab, onClick = onClick)
             // A row that filters the month is a control, and a control is at least
             // 48dp tall however little text it holds.
             .heightIn(min = 48.dp)
@@ -442,7 +455,7 @@ private fun OutsideTotalRow(
         }
         Text(
             text = amount.forDisplay(currencyLabel),
-            style = MoneyStyle.merge(MaterialTheme.typography.bodyMedium),
+            style = MaterialTheme.typography.bodyMedium.merge(MoneyStyle),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }

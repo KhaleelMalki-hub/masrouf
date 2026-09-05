@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -51,6 +52,7 @@ import sa.masrouf.app.data.IncomeMonth
 import sa.masrouf.core.model.SaudiCategories
 import sa.masrouf.core.money.Money
 import java.time.YearMonth
+import androidx.compose.foundation.layout.heightIn
 
 /**
  * Salary and bonuses, over the years.
@@ -69,8 +71,14 @@ fun IncomeScreen(
     months: List<IncomeMonth>,
     deposits: Map<YearMonth, List<Transaction>>,
     currencyLabel: String,
+    /** Whether the series has been read yet. See AddExpenseViewModel.incomeLoaded. */
+    loaded: Boolean,
+    state: LazyListState,
     modifier: Modifier = Modifier,
 ) {
+    // Nothing at all until the series has arrived: an empty list is not evidence of
+    // an empty history, and this screen used to say so over twelve years of salaries.
+    if (!loaded) return
     if (months.isEmpty()) {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
@@ -86,6 +94,7 @@ fun IncomeScreen(
     val years = months.groupBy { it.month.year }.toSortedMap(compareByDescending { it })
 
     LazyColumn(
+        state = state,
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -176,7 +185,7 @@ private fun LegendLine(colour: Color, label: String, amount: Money, currencyLabe
         }
         Text(
             text = amount.forDisplay(currencyLabel),
-            style = MoneyStyle.merge(MaterialTheme.typography.bodyMedium),
+            style = MaterialTheme.typography.bodyMedium.merge(MoneyStyle),
         )
     }
 }
@@ -212,7 +221,7 @@ private fun YearCard(
                 Text(text = year.toString(), style = MaterialTheme.typography.titleMedium)
                 Text(
                     text = (yearSalary + yearBonus).forDisplay(currencyLabel),
-                    style = MoneyStyle.merge(MaterialTheme.typography.titleSmall),
+                    style = MaterialTheme.typography.titleSmall.merge(MoneyStyle),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -276,6 +285,9 @@ private fun MonthRow(
                             onClick(label = openLabel) { false }
                         }
                         .clickable { expanded = !expanded }
+                        // 48dp, like every other tappable row here. Text plus a
+                        // 10dp bar and 6dp of padding came to about thirty.
+                        .heightIn(min = 48.dp)
                 } else {
                     Modifier
                 }
@@ -307,7 +319,7 @@ private fun MonthRow(
         )
         Text(
             text = month.total.grouped(),
-            style = MoneyStyle.merge(MaterialTheme.typography.bodySmall),
+            style = MaterialTheme.typography.bodySmall.merge(MoneyStyle),
         )
         if (expandable) {
             Icon(
@@ -384,7 +396,7 @@ private fun DepositRow(deposit: Transaction, currencyLabel: String) {
         )
         Text(
             text = deposit.amount.forDisplay(currencyLabel),
-            style = MoneyStyle.merge(MaterialTheme.typography.labelSmall),
+            style = MaterialTheme.typography.labelSmall.merge(MoneyStyle),
         )
         Spacer(Modifier.width(18.dp))
     }

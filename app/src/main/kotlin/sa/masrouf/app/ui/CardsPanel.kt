@@ -163,7 +163,7 @@ private fun CardTile(card: CardBalance, currencyLabel: String) {
             Spacer(Modifier.width(6.dp))
             Text(
                 text = card.last4,
-                style = MoneyStyle.merge(MaterialTheme.typography.labelMedium),
+                style = MaterialTheme.typography.labelMedium.merge(MoneyStyle),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
@@ -186,7 +186,7 @@ private fun CardTile(card: CardBalance, currencyLabel: String) {
             )
             Text(
                 text = Money.ofHalalas(halalas).forDisplay(currencyLabel),
-                style = MoneyStyle.merge(MaterialTheme.typography.titleMedium),
+                style = MaterialTheme.typography.titleMedium.merge(MoneyStyle),
             )
             // What is left means little without what it is left of. Shown only for
             // a limit the owner has stated, never a high-water mark guessed from
@@ -222,7 +222,7 @@ private fun CardTile(card: CardBalance, currencyLabel: String) {
             )
             Text(
                 text = "\u2014",
-                style = MoneyStyle.merge(MaterialTheme.typography.titleMedium),
+                style = MaterialTheme.typography.titleMedium.merge(MoneyStyle),
                 color = MaterialTheme.colorScheme.outline,
             )
         }
