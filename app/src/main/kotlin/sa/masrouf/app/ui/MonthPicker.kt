@@ -79,7 +79,7 @@ fun MonthPicker(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp)
+            .padding(horizontal = SHEET_EDGE)
             .padding(bottom = 28.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -177,7 +177,7 @@ private fun MonthCell(
             // inside it, and clipped the name at a large font scale.
             .fillMaxHeight()
             .heightIn(min = CELL_HEIGHT)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(MaterialTheme.shapes.medium)
             .background(
                 when {
                     selected -> MaterialTheme.colorScheme.primaryContainer

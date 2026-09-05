@@ -149,7 +149,7 @@ internal fun TransactionRow(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(bandColour(category).copy(alpha = 0.16f)),
+                    .background(bandColour(category).copy(alpha = TINT_ALPHA)),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -348,7 +348,7 @@ internal fun RefileSheet(
         Text(
             text = stringResource(R.string.refile_title, merchant),
             style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(horizontal = 20.dp),
+            modifier = Modifier.padding(horizontal = SHEET_EDGE),
         )
         if (transaction.merchantKey != null) {
             // How far the decision reaches. The whole merchant is the useful
@@ -359,7 +359,7 @@ internal fun RefileSheet(
             SingleChoiceSegmentedButtonRow(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
+                    .padding(horizontal = SHEET_EDGE),
             ) {
                 val options = buildList {
                     add(RefileScope.THIS_ONE to stringResource(R.string.refile_scope_one))
@@ -380,12 +380,12 @@ internal fun RefileSheet(
         CategoryChips(
             selected = current,
             onSelect = { onPick(it, scope) },
-            edgePadding = 20.dp,
+            edgePadding = SHEET_EDGE,
         )
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp),
+                .padding(horizontal = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             if (transaction.merchantKey != null) {
@@ -459,7 +459,7 @@ internal fun CardMark(
         overflow = TextOverflow.Ellipsis,
         modifier = modifier
             .clip(MaterialTheme.shapes.extraSmall)
-            .background(colour.copy(alpha = 0.14f))
+            .background(colour.copy(alpha = TINT_ALPHA))
             .padding(horizontal = 6.dp, vertical = 1.dp),
     )
 }

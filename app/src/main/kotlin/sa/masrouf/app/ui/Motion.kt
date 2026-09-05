@@ -55,3 +55,14 @@ object Motion {
  */
 val FAB_CLEARANCE = 96.dp
 
+/**
+ * The inner padding of a panel, and the side margin of a modal sheet.
+ *
+ * Two numbers because they are two jobs, and named because they were six: the month
+ * card sat at 20 where every other panel sat at 16, and the three sheets aligned
+ * their content at 24, 20 and 20. Nothing said why, which is the whole argument -
+ * a rhythm a reader cannot name is one that drifts a point at a time.
+ */
+val PANEL_PADDING = 16.dp
+val SHEET_EDGE = 20.dp
+

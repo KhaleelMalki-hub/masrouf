@@ -66,7 +66,8 @@ face is a Naskh and makes the app look like a default; Plex Arabic shares a
 skeleton with its Latin, so Arabic labels and the Western numerals this app insists
 on sit on one line without looking like two typefaces.
 
-- Display for the month total only, tight tracking so a five-figure number reads
+- Display for the two figures a screen is built around - the month total and the
+  amount being typed - with tight tracking so a five-figure number reads
   as one object.
 - Title for section headings.
 - Body for transaction rows.

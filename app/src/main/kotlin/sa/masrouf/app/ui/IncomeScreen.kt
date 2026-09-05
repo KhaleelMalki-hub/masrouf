@@ -269,7 +269,7 @@ private fun MonthRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
+            .clip(MaterialTheme.shapes.small)
             // Only where there is something to open. A month with one deposit is
             // already telling the whole truth, and a control that does nothing is
             // worse than none.

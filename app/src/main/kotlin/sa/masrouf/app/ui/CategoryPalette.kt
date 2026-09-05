@@ -110,3 +110,13 @@ fun uncategorisedColour(): Color = MaterialTheme.colorScheme.outlineVariant
  */
 internal val BandsByTheme: Map<String, Map<String, androidx.compose.ui.graphics.Color>> =
     mapOf("light" to LightBands, "dark" to DarkBands)
+
+/**
+ * How strongly a category's colour tints a container behind text.
+ *
+ * One value, because it was three - 0.16 on the history disc, 0.14 on the card chip,
+ * 0.22 on the legend fill - with nothing saying why the same idea differed by site.
+ * The legend keeps its own, heavier value: it is a proportion bar as well as a tint,
+ * and it has to read as a length.
+ */
+const val TINT_ALPHA = 0.16f

@@ -107,7 +107,7 @@ internal fun MonthPanel(
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.large)
             .background(MaterialTheme.colorScheme.surfaceContainer)
-            .padding(20.dp),
+            .padding(PANEL_PADDING),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         MonthNavigator(

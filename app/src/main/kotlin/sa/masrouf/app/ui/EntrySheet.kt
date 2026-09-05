@@ -110,7 +110,7 @@ internal fun EntrySheet(
             modifier = Modifier
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = SHEET_EDGE),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
             Text(
@@ -172,7 +172,7 @@ internal fun EntrySheet(
                 text = stringResource(R.string.error_save_failed),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(horizontal = 24.dp),
+                modifier = Modifier.padding(horizontal = SHEET_EDGE),
             )
         }
 
@@ -183,7 +183,7 @@ internal fun EntrySheet(
             onClick = onSave,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = SHEET_EDGE)
                 .padding(top = 12.dp, bottom = 28.dp)
                 .heightIn(min = 56.dp),
         ) { Text(stringResource(R.string.save)) }
