@@ -10,7 +10,7 @@ starting work.
 
 ```bash
 ./gradlew :core:test              # 372 tests, runs anywhere with a JDK
-./gradlew :app:testDebugUnitTest  # 184 tests, needs the Android SDK
+./gradlew :app:testDebugUnitTest  # 185 tests, needs the Android SDK
 ./gradlew :app:assembleDebug      # needs local.properties with sdk.dir
 ./gradlew :app:assembleRelease    # what the owner actually runs - R8, signed with
                                   # the debug key so it REPLACES rather than removes

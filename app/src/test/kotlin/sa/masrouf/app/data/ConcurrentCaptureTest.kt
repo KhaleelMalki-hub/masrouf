@@ -95,7 +95,7 @@ class ConcurrentCaptureTest {
         override fun observeEarliest(): Flow<Long?> = MutableStateFlow(null)
         override fun observeMonthsWithData(): Flow<List<String>> = MutableStateFlow(emptyList())
         override suspend fun uncategorised() = emptyList<TransactionEntity>()
-        override suspend fun uncategorisedOrMerchant(merchantKey: String) =
+        override suspend fun ofMerchant(merchantKey: String) =
             emptyList<TransactionEntity>()
         override suspend fun delete(id: String) = 0
     }

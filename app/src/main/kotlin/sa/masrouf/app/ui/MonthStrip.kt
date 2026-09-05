@@ -90,12 +90,13 @@ fun MonthStrip(
     // looks like. Keyed on the shape of the data, so it replays when the month
     // changes and stays still while the user is only scrolling.
     //
-    // Keyed on NOTHING, and that is the fix rather than an oversight: keying it on
-    // the data replayed the weave whenever a figure changed, and the strip lives
-    // in a LazyColumn item, so scrolling it out of view and back disposed the
-    // Animatable and wove it again from zero. It is an entrance, and an entrance
-    // happens once. The bands themselves morph, because their widths are read
-    // straight from `bands` on every draw.
+    // Keyed on NOTHING, which stops the weave replaying whenever a figure changes.
+    // It does NOT stop it replaying when the strip scrolls out of view and back: the
+    // strip lives in a LazyColumn item, and a disposed `remember` is gone whatever
+    // its key was. The comment here used to claim otherwise, which is worth more than
+    // the animation - a wrong explanation outlives the code it explains. Fixing that
+    // properly means hoisting the progress above the list, and the replay is a
+    // quarter-second of bands growing, so it stays until it annoys someone.
     val woven = remember { Animatable(0f) }
     LaunchedEffect(Unit) {
         woven.animateTo(1f, animationSpec = tween(Motion.MEDIUM, easing = Motion.emphasizedDecelerate))

@@ -6,7 +6,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
 
 ## Where things stand
 
-- All tests green: **372** in `:core`, **184** in `:app`, **9** instrumented
+- All tests green: **372** in `:core`, **185** in `:app`, **9** instrumented
   (`:app:connectedDebugAndroidTest`).
 - **`connectedDebugAndroidTest` uninstalls the app and deletes its database.**
   It has already cost the owner's phone once. Use the `masrouf35` emulator, or
@@ -466,7 +466,7 @@ owner remember الخزائن الاحترافية in Al Rawdah.
 **Where the filing ended:** 728 unfiled debits, 129,868 riyals, across 466
 merchants; 245 of those records (32,580 riyals) are in the last 24 months. It began
 the day at 2,063 records and 580,669 riyals. Maintenance is at **40**, nothing is
-pending, and the tests stand at 372 in `:core` and 184 in `:app`.
+pending, and the tests stand at 372 in `:core` and 185 in `:app`.
 
 **A bug found in a screenshot he sent.** The home screen said he pays 102,890
 riyals a month across 14 recurring payments. `RecurringDetector` filtered on
@@ -647,6 +647,41 @@ incoming transfers (money that did leave, including the owner's hundred) and one
 cheque reversal that matches neither rule and was left alone. Lifetime spending fell
 from **8,208,588.67 to 8,197,321.69** - 11,266.98 riyals of spending that never
 happened, net of the 1,100 that correctly became outgoing.
+
+## Performance, and the build he was running
+
+He said the app did not scroll smoothly and sometimes looked about to crash. It was
+measured before anything was touched: **15.9% of frames janky, 90th percentile 27ms
+against a 16.7ms budget**, and the slow part was the UI thread, not the GPU.
+
+Three pieces of work were being paid in the wrong place. Every history row searched
+the merchant list to decide what to call itself, inside the composable, so a fast
+scroll paid it again for every row it composed. That search re-glued two strings for
+every keyword it tested, though the glued form is computed once when the list is
+built. And the card kinds read **every stored body** at launch - twenty-odd thousand,
+each folded - while the first screen was drawing. Then eleven derived flows in the
+view model were doing their filtering, folding and summing on the collecting thread,
+which is Main.
+
+**The largest single win was not code.** He was running a debug build: no R8, no
+ahead-of-time compilation, Compose's debug paths. Same phone, same data, same swipes:
+
+| | janky | 90th | launch |
+|---|---|---|---|
+| debug, before | 15.9% | 27ms | 677ms, 131 frames skipped |
+| debug, after the fixes | 5.6-12.5% | 16-20ms | 677ms, 117 skipped |
+| **release** | **2.68%** | **12ms** | **215ms, none skipped** |
+
+The release build is signed with the **debug key on purpose**: the key decides
+whether an install replaces the app or has to remove it first, and removing it takes
+the database. It is not debuggable, so `run-as` is refused - measure on release, work
+on debug, and either install replaces the other without touching the data.
+
+Also this round: the reversal work (see above), a general merchant filing now drops
+the bank-scoped rules it supersedes, five bulk actions show a progress bar, count
+strings became Arabic plurals, eighteen dead things went, three indexes landed, and
+every amount is now spoken with a currency - the riyal sign has no name in any
+speech engine yet.
 
 ## Open items
 

@@ -691,8 +691,7 @@ class TransactionRepository(
         rules?.forget(merchantKey)
         var filed = 0
         inTransaction {
-            dao.uncategorisedOrMerchant(merchantKey).forEach { row ->
-                if (row.merchantKey != merchantKey) return@forEach
+            dao.ofMerchant(merchantKey).forEach { row ->
                 val model = runCatching { row.toModel() }.getOrNull() ?: return@forEach
                 val category = CategoryGuess.suggest(model.merchantRaw, model.type)?.id
                 val source = category?.let { CategorySource.AUTOMATIC.name }

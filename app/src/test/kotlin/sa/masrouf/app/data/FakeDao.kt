@@ -79,7 +79,7 @@ class FakeDao : TransactionDao {
     override fun observeMonthsWithData(): Flow<List<String>> = state.map { rows ->
         rows.map {
             java.time.Instant.ofEpochMilli(it.occurredAtMillis)
-                .atZone(java.time.ZoneId.of("Asia/Riyadh"))
+                .atZone(sa.masrouf.core.time.RiyadhTime.ZONE)
                 .toLocalDate()
                 .withDayOfMonth(1)
                 .toString()
@@ -299,7 +299,7 @@ class FakeDao : TransactionDao {
         return 1
     }
 
-    override suspend fun uncategorisedOrMerchant(merchantKey: String): List<TransactionEntity> =
+    override suspend fun ofMerchant(merchantKey: String): List<TransactionEntity> =
         state.value.filter { it.merchantKey == merchantKey }
 
     override suspend fun uncategorised(): List<TransactionEntity> =

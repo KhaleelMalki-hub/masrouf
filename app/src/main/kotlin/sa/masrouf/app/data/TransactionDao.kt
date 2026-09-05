@@ -520,7 +520,7 @@ interface TransactionDao {
 
     /** Every record of one merchant, for re-deriving its category from scratch. */
     @Query("SELECT * FROM transactions WHERE merchant_key = :merchantKey")
-    suspend fun uncategorisedOrMerchant(merchantKey: String): List<TransactionEntity>
+    suspend fun ofMerchant(merchantKey: String): List<TransactionEntity>
 
     /**
      * Files one merchant's records that arrived through one bank.
