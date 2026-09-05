@@ -81,6 +81,7 @@ fun SignedAmount(
     style: TextStyle = MaterialTheme.typography.bodyLarge,
 ) {
     val isCredit = transaction.direction == Direction.CREDIT
+    val spoken = transaction.amount.forSpeech(stringResource(R.string.currency_spoken))
     Text(
         // The plus is isolated with the amount rather than left loose beside it.
         // A "+" is a neutral to the bidi algorithm and binds to digits only when it
@@ -99,6 +100,10 @@ fun SignedAmount(
         } else {
             MaterialTheme.colorScheme.onSurface
         },
+        // Said with a currency, which the drawing carries in a way speech cannot: the
+        // riyal sign has no spoken name in any engine yet, so every amount in the app
+        // was announced as a bare number.
+        modifier = Modifier.semantics { contentDescription = spoken },
     )
 }
 
@@ -137,7 +142,9 @@ internal fun TransactionRow(
             // The row is the way to refile it. A wrong category is the most common
             // thing a person wants to change about a transaction, and it should not
             // require finding a control.
-            .clickable(onClick = onRefile),
+            // Named, so the action a screen reader offers says what it opens rather
+            // than "activate".
+            .clickable(onClickLabel = stringResource(R.string.refile_action), onClick = onRefile),
         // Transparent so the list stays one surface; M3's default container would
         // paint every row and turn the history into a stack of cards.
         colors = ListItemDefaults.colors(containerColor = Color.Transparent),

@@ -36,6 +36,16 @@ private val AMOUNT_FORMAT = DecimalFormat(
 fun Money.forDisplay(currencyLabel: String): String = "${grouped()} $currencyLabel"
 
 /**
+ * The amount as it should be SAID, which is not how it is drawn.
+ *
+ * The riyal sign was encoded in 2025 and no speech engine has a name for it yet, so
+ * every amount in the app was announced as a bare number - "six thousand one hundred
+ * and ninety six point one eight", with nothing saying of what. The glyph stays on
+ * screen; this is what a screen reader is given instead.
+ */
+fun Money.forSpeech(currencyName: String): String = "${grouped()} $currencyName"
+
+/**
  * Just the digits, grouped.
  *
  * Rounding is set to UNNECESSARY on purpose: the value is already exact to the

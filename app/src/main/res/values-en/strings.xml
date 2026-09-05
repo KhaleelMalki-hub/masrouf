@@ -177,4 +177,6 @@
         <item quantity="one">from one message</item>
         <item quantity="other">from %1$s messages</item>
     </plurals>
+    <string name="currency_spoken">riyals</string>
+    <string name="refile_action">File this transaction</string>
 </resources>

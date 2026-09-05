@@ -54,6 +54,7 @@ import sa.masrouf.core.model.SaudiCategories
 import java.time.LocalDate
 import sa.masrouf.core.money.Money
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.semantics.semantics
 
 /**
  * The month panel: the total, how it compares, the bands that make it up, and the
@@ -120,7 +121,15 @@ internal fun MonthPanel(
         )
 
         Column {
-            Row(verticalAlignment = Alignment.Bottom) {
+            // One node, and one sentence. The figure and its sign were siblings, so a
+        // screen reader read a number and then met a character it has no name for.
+        val spokenTotal = totalMoney.forSpeech(stringResource(R.string.currency_spoken))
+        Row(
+            verticalAlignment = Alignment.Bottom,
+            modifier = Modifier.semantics(mergeDescendants = true) {
+                contentDescription = spokenTotal
+            },
+        ) {
                 // Shared-axis X, as M3 specifies for moving between siblings: the
                 // new month's total slides in from the side the user is heading
                 // towards, and the old one leaves the other way. Direction comes

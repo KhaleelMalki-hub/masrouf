@@ -222,4 +222,6 @@
         <item quantity="many">من %1$s رسالة</item>
         <item quantity="other">من %1$s رسالة</item>
     </plurals>
+    <string name="currency_spoken">ريال</string>
+    <string name="refile_action">تصنيف العملية</string>
 </resources>
