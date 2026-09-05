@@ -331,13 +331,27 @@ interface TransactionDao {
      * and folding twenty-six thousand bodies on every database write would cost the
      * dashboard its first frame - the lesson `MerchantMatch.Rules` already records.
      */
+    @Query("SELECT DISTINCT account_last4 FROM transactions WHERE account_last4 IS NOT NULL")
+    suspend fun cardsSeen(): List<String>
+
+    /**
+     * The newest bodies that name one card.
+     *
+     * Bounded, where this used to read every body in the table - twenty-six thousand
+     * of them, each folded for matching, on the launch path. The verdict is a
+     * majority over a card's own messages, and a card does not change what it is, so
+     * the newest few hundred decide it as surely as all of them: a run long enough
+     * to overturn would have to be longer than the sample itself.
+     */
     @Query(
         """
-        SELECT account_last4 AS last4, raw_text AS body FROM transactions
-        WHERE account_last4 IS NOT NULL AND raw_text IS NOT NULL
+        SELECT raw_text FROM transactions
+        WHERE account_last4 = :last4 AND raw_text IS NOT NULL
+        ORDER BY occurred_at_millis DESC
+        LIMIT :limit
         """
     )
-    suspend fun cardBodies(): List<CardBody>
+    suspend fun newestBodiesForCard(last4: String, limit: Int): List<String>
 
     /** Stored bodies whose merchant or card was never read. For a one-off re-parse. */
     @Query(

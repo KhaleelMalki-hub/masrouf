@@ -46,19 +46,26 @@ object MerchantMatch {
         val glued = folded.replace(" ", "")
 
         rules.entries.firstOrNull { it.glued == glued }?.let { return it.value }
-        return rules.entries.firstOrNull { matches(folded, it.folded) }?.value
+        return rules.entries.firstOrNull { matches(folded, glued, it) }?.value
     }
 
-    private fun matches(foldedMerchant: String, foldedKeyword: String): Boolean {
-        if (foldedKeyword.length < MIN_SUBSTRING_LENGTH) {
-            return matchesWholeWord(foldedMerchant, foldedKeyword)
+    /**
+     * The glued forms are passed in, never rebuilt here.
+     *
+     * This ran `replace(" ", "")` on BOTH sides for every entry it tested - so one
+     * lookup against the merchant list allocated a couple of hundred strings, and the
+     * name shown on a history row is one such lookup per row. The keyword's glued
+     * form is computed once when the list is built, and the merchant's once per
+     * lookup; this only compares them.
+     */
+    private fun matches(foldedMerchant: String, gluedMerchant: String, entry: Entry<*>): Boolean {
+        if (entry.folded.length < MIN_SUBSTRING_LENGTH) {
+            return matchesWholeWord(foldedMerchant, entry.folded)
         }
-        val merchant = foldedMerchant.replace(" ", "")
-        val keyword = foldedKeyword.replace(" ", "")
-        if (merchant.contains(keyword)) return true
+        if (gluedMerchant.contains(entry.glued)) return true
         // A truncated name is accepted when the keyword starts with it, which is
         // what truncation means: "HUNGERSTA" is HUNGERSTATION with the end cut off.
-        return merchant.length >= MIN_TRUNCATED_LENGTH && keyword.startsWith(merchant)
+        return gluedMerchant.length >= MIN_TRUNCATED_LENGTH && entry.glued.startsWith(gluedMerchant)
     }
 
     /**

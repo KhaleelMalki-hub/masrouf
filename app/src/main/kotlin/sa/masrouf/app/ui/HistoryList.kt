@@ -113,6 +113,13 @@ internal fun TransactionRow(
     onRefile: () -> Unit,
 ) {
     val isArabic = LocalConfiguration.current.locales[0].language == "ar"
+    // Remembered against the descriptor, because it is a search and not a lookup:
+    // the merchant list is scanned twice, with a normalisation on the way in. One
+    // row's worth is nothing; a fast scroll composes rows faster than a frame, and
+    // this was being paid again on every recomposition of every one of them.
+    val name = remember(transaction.merchantRaw) {
+        MerchantNames.forMerchant(transaction.merchantRaw)
+    }
     val category = SaudiCategories.byId(transaction.categoryId)
     val aboveSalary = salary != null && transaction.direction == Direction.DEBIT &&
         transaction.countsAsSpending && transaction.amount.halalas >= salary.halalas
@@ -158,7 +165,7 @@ internal fun TransactionRow(
                 // The Arabic name when there is one. The bank's own descriptor is
                 // still what is stored and searched; this only changes what a
                 // person reads.
-                text = MerchantNames.forMerchant(transaction.merchantRaw)?.forLocale()
+                text = name?.forLocale()
                     ?: transaction.merchantRaw
                     ?: transaction.note
                     ?: stringResource(transaction.type.labelRes),

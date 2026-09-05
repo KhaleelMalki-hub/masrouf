@@ -240,11 +240,18 @@ class FakeDao : TransactionDao {
 
     override suspend fun allWithBody(): List<TransactionEntity> = state.value.filter { it.rawText != null }
 
-    override suspend fun cardBodies(): List<CardBody> = state.value.mapNotNull { row ->
-        val last4 = row.accountLast4 ?: return@mapNotNull null
-        val body = row.rawText ?: return@mapNotNull null
-        CardBody(last4 = last4, body = body)
-    }
+    override suspend fun cardsSeen(): List<String> =
+        state.value.mapNotNull { it.accountLast4 }.distinct()
+
+    // Newest first and bounded, like the query: a double that returned them in
+    // storage order would let a sampled verdict look right here and be decided by
+    // the oldest messages on the phone.
+    override suspend fun newestBodiesForCard(last4: String, limit: Int): List<String> =
+        state.value
+            .filter { it.accountLast4 == last4 && it.rawText != null }
+            .sortedByDescending { it.occurredAtMillis }
+            .take(limit)
+            .mapNotNull { it.rawText }
 
     override suspend fun withBodyOfType(spendingTypes: List<String>): List<TransactionEntity> =
         state.value.filter { it.rawText != null && it.type in spendingTypes }

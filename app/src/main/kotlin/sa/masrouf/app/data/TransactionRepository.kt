@@ -646,12 +646,10 @@ class TransactionRepository(
      * arrived. See [CardKinds] for why the network is not evidence.
      */
     suspend fun cardKinds(): Map<String, CardKind> = withContext(computation) {
-        dao.cardBodies()
-            .groupBy(CardBody::last4)
-            .mapNotNull { (last4, rows) ->
-                CardKinds.verdict(rows.map(CardBody::body))?.let { last4 to it }
-            }
-            .toMap()
+        dao.cardsSeen().mapNotNull { last4 ->
+            val bodies = dao.newestBodiesForCard(last4, CARD_KIND_SAMPLE)
+            CardKinds.verdict(bodies)?.let { last4 to it }
+        }.toMap()
     }
 
     fun observePending(): Flow<List<Transaction>> =
@@ -851,6 +849,16 @@ class TransactionRepository(
         const val BALANCE_NONE = "NONE"
 
         const val REPARSE_BATCH = 500
+
+        /**
+         * How many of a card's newest messages decide what kind of card it is.
+         *
+         * This read every body in the table - twenty-odd thousand, folded one by one
+         * while the first screen was trying to draw. A card does not change what it
+         * is, and two hundred of its own messages settle a majority that thousands
+         * would settle the same way.
+         */
+        const val CARD_KIND_SAMPLE = 200
 
         /** Folded, because that is the form a stored body is compared in. */
         const val REVERSAL_WORD = "عكس"
