@@ -37,15 +37,6 @@ data class EventSignature(
      * redelivery of it. It was not; the user had made two.
      */
     val body: String? = null,
-    /**
-     * Which bank sent the message, when it is known.
-     *
-     * Only ever used to REFUSE a merge across senders. Two banks announcing the same
-     * amount in the same second are the two legs of one top-up moving between his
-     * own accounts - two real records - and that is the shape most likely to be
-     * mistaken for one event told twice.
-     */
-    val bankId: String? = null,
 ) {
     val day: LocalDate get() = RiyadhTime.localDate(occurredAt)
 
@@ -58,7 +49,6 @@ data class EventSignature(
             last4: String? = null,
             merchantRaw: String? = null,
             body: String? = null,
-            bankId: String? = null,
         ): EventSignature = EventSignature(
             amount = amount,
             direction = direction,
@@ -67,7 +57,6 @@ data class EventSignature(
             merchantKey = merchantRaw?.let(ArabicText::normalizeMerchant)?.takeIf { it.isNotBlank() },
             source = source,
             body = body?.let(ArabicText::normalize)?.takeIf { it.isNotBlank() },
-            bankId = bankId,
         )
     }
 }

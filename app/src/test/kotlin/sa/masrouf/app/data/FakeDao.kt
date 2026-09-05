@@ -249,6 +249,19 @@ class FakeDao : TransactionDao {
     override suspend fun withBodyOfType(spendingTypes: List<String>): List<TransactionEntity> =
         state.value.filter { it.rawText != null && it.type in spendingTypes }
 
+    // Direction as well as type, and MANUAL rows untouched - both of which the real
+    // query does, and a double that skipped either would let the reversal pass look
+    // right while rewriting a record the user vouched for.
+    override suspend fun redirect(id: String, type: String, direction: String, categoryId: String?): Int {
+        val target = state.value.firstOrNull { it.id == id && it.source != "MANUAL" } ?: return 0
+        state.value = state.value.map {
+            if (it.id != target.id) it
+            else if (it.categorySource == "MANUAL") it.copy(type = type, direction = direction)
+            else it.copy(type = type, direction = direction, categoryId = categoryId)
+        }
+        return 1
+    }
+
     override suspend fun retype(id: String, type: String, categoryId: String?): Int {
         val target = state.value.firstOrNull { it.id == id } ?: return 0
         state.value = state.value.map {

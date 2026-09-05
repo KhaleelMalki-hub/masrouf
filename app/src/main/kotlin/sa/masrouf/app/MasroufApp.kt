@@ -80,6 +80,7 @@ class MasroufApp : Application() {
                 Repair.REPARSE_BODIES -> transactions.reparseStoredBodies()
                 Repair.RETYPE_SALARY -> transactions.retypeSalaryDeposits()
                 Repair.RETYPE_OWN_MONEY -> transactions.retypeOwnMoney()
+                Repair.RETYPE_REVERSALS -> transactions.retypeReversals()
                 Repair.REREAD_WHOLE_INBOX -> if (!rereadWholeInbox()) deferred = true
                 Repair.REFILE_ALL -> transactions.refileAll()
             }
@@ -178,6 +179,19 @@ class MasroufApp : Application() {
         RETYPE_OWN_MONEY(26),
 
         /**
+         * Reversals read backwards: money that came back, stored as money that left.
+         *
+         * AlAhli's card refunds say حوالة عكسية, and the classifier knew only
+         * عملية عكسية - so حوالة carried them into the outgoing-transfer rules. 105
+         * records, 12,568.63 riyals, every one counted as spending on top of the
+         * purchase it refunds; and the mirror case, a reversed incoming transfer,
+         * stored as arriving when the money had gone back out.
+         *
+         * Before REFILE_ALL, because a refund's category is not a transfer's.
+         */
+        RETYPE_REVERSALS(41),
+
+        /**
          * The whole inbox, re-read once, because the app can now understand a
          * sender it never could.
          *
@@ -207,7 +221,9 @@ class MasroufApp : Application() {
         // 38: الدهام للساعات.
         // 39: مؤسسة عبود باحشوان, Nissan and Haval parts.
         // 40: الخزائن الاحترافية, the wardrobe.
-        REFILE_ALL(40),
+        // 41: after the reversals below were corrected - a refund that becomes a
+        //     credit has a different category from the transfer it used to be.
+        REFILE_ALL(41),
     }
 
     /**

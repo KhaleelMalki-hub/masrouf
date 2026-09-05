@@ -320,6 +320,49 @@ class TransactionRepository(
     }
 
     /**
+     * Re-reads every stored reversal, which the classifier used to read backwards.
+     *
+     * AlAhli writes a card refund as "حوالة عكسية / بطاقة ائتمانية **0000 / مبلغ N /
+     * لدى A SHOP". The classifier knew عملية عكسية and not حوالة عكسية, so the word
+     * حوالة carried it into the outgoing-transfer rules and the row was stored as
+     * money LEAVING - 105 records, 12,568.63 riyals, each one counted as spending on
+     * top of the purchase it refunds. The same word with واردة is the mirror: a
+     * reversed incoming transfer is money going back out, and it was stored as
+     * arriving.
+     *
+     * Only rows the re-parse disagrees with are touched, and only where the parser
+     * now reads a reversal - a row whose body the profiles cannot read at all is
+     * left exactly as it is. Manual records are never rewritten: the user saw the
+     * transaction and meant it.
+     *
+     * @return how many rows had their direction corrected.
+     */
+    suspend fun retypeReversals(): Int {
+        val parsers = SaudiBanks.ALL.map(::BankMessageParser)
+        var moved = 0
+        dao.allWithBody().chunked(REPARSE_BATCH).forEach { batch ->
+            inTransaction {
+                batch.forEach { row ->
+                    val body = row.rawText ?: return@forEach
+                    if (!ArabicText.foldForMatching(body).contains(REVERSAL_WORD)) return@forEach
+                    val message = RawMessage(body = body, receivedAt = Instant.EPOCH)
+                    val draft = parsers.firstNotNullOfOrNull {
+                        (it.parse(message) as? ParseResult.Parsed)?.draft
+                    } ?: return@forEach
+                    if (draft.direction.name == row.direction && draft.type.name == row.type) {
+                        return@forEach
+                    }
+                    val category = CategoryGuess.forType(draft.type)?.id
+                    if (dao.redirect(row.id, draft.type.name, draft.direction.name, category) == 1) {
+                        moved++
+                    }
+                }
+            }
+        }
+        return moved
+    }
+
+    /**
      * Replaces account numbers standing in for a party with the name beside them.
      *
      * The pattern that read the party matched the account line, so 2,014 records
@@ -809,6 +852,9 @@ class TransactionRepository(
 
         const val REPARSE_BATCH = 500
 
+        /** Folded, because that is the form a stored body is compared in. */
+        const val REVERSAL_WORD = "عكس"
+
         /** A learned rule scoped to one bank: "AMMAR@barq". The bare key is the general rule. */
         fun ruleKey(merchantKey: String, bankId: String) = "$merchantKey@$bankId"
 
@@ -917,5 +963,4 @@ internal fun TransactionEntity.toSignature(): EventSignature = EventSignature(
     merchantKey = merchantKey,
     source = enumValueOf(source),
     body = rawText?.let(ArabicText::normalize)?.takeIf { it.isNotBlank() },
-    bankId = bankId,
 )

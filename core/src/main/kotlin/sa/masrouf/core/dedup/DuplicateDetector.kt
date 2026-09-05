@@ -58,16 +58,6 @@ class DuplicateDetector(
      */
     private val messageRedeliveryWindow: Duration = Duration.ofMinutes(2),
 
-    /**
-     * How far apart one bank's two DIFFERENTLY-WORDED messages may sit and still be
-     * two tellings of one event.
-     *
-     * Much tighter than the redelivery window, deliberately. A bank that announces
-     * one transfer under several templates sends them in the same breath; two
-     * minutes is long enough for a person to make a second transfer of the same
-     * size, and that is the error that costs money.
-     */
-    private val retellWindow: Duration = Duration.ofSeconds(30),
 ) {
 
     /** A pairing of one incoming record with the already-stored record it duplicates. */
@@ -154,21 +144,20 @@ class DuplicateDetector(
         val gap = Duration.between(a.occurredAt, b.occurredAt).abs()
         val sameRoute = a.source == b.source && a.body != null && b.body != null
         return if (sameRoute) {
-            // A redelivered SMS is the same SMS, byte for byte. Two purchases a
-            // minute apart are two bodies, because the bank stamps each with its own
-            // time - and that is what kept the second of two 250-riyal Tamra
-            // deposits alive.
+            // A redelivered SMS is the same SMS, byte for byte, and only that. Two
+            // purchases a minute apart are two bodies, because the bank stamps each
+            // with its own time - which is what kept the second of two 250-riyal
+            // Tamra deposits alive.
             //
-            // But a bank also announces ONE transfer under several templates, and
-            // those bodies differ too: the owner read three rows for one hundred
-            // riyals he was sent once. So a second telling is allowed - only from
-            // the same bank, only within seconds, and only when the two bodies are
-            // not the same sentence with different numbers in it.
-            if (a.body == b.body) gap <= messageRedeliveryWindow
-            else {
-                gap <= retellWindow && sameBank(a, b) &&
-                    differentTemplate(a.body, b.body) && neitherReverses(a.body, b.body)
-            }
+            // A rule that also merged DIFFERENTLY-worded messages from one bank
+            // stood here for a day, written for three rows the owner read for one
+            // hundred riyals. He was asked and said the hundred was sent once: the
+            // three messages were an arrival, a reversal eight seconds later, and
+            // the arrival again - three real entries, and the app's error was that
+            // it stored the reversal as a credit. Nothing needed merging at all, and
+            // a rule that merges two same-amount messages on the strength of their
+            // wording is a rule that can destroy money. Removed.
+            a.body == b.body && gap <= messageRedeliveryWindow
         } else {
             // Across routes - the bank's push and its SMS for one purchase - the
             // bodies always differ, so the text cannot decide. Time alone is not
@@ -178,36 +167,6 @@ class DuplicateDetector(
             gap <= messageRedeliveryWindow && corroborated(a, b)
         }
     }
-
-    /** Same sender, positively known on both sides. A missing bank is not a match. */
-    private fun sameBank(a: EventSignature, b: EventSignature): Boolean =
-        a.bankId != null && a.bankId == b.bankId
-
-    /**
-     * True when two bodies are not the same sentence with different numbers in it.
-     *
-     * Every digit run collapses to one placeholder, so a template stamped with its
-     * own time and amount reduces to the same skeleton every time it is sent. Two
-     * separate transfers always arrive on ONE template, so they always share a
-     * skeleton and this route can never merge them; one transfer told twice arrives
-     * on two templates, and only that pair differs.
-     */
-    private fun differentTemplate(a: String, b: String): Boolean = skeleton(a) != skeleton(b)
-
-    private fun skeleton(body: String): String = body.replace(DIGITS, "#")
-
-    /**
-     * Neither message undoes the other.
-     *
-     * A reversal is a differently-worded message from the same bank about the same
-     * amount seconds later - which is exactly the shape of a second telling, and it
-     * is the opposite of one: one is money arriving and the other is that money
-     * going back. Found in the owner's own history, where a hundred riyals arrived,
-     * was reversed eight seconds later, and was sent again a minute after that.
-     * Without this the reversal would be swallowed by the transfer it undoes.
-     */
-    private fun neitherReverses(a: String, b: String): Boolean =
-        !a.contains(REVERSAL) && !b.contains(REVERSAL)
 
     /**
      * Something beyond the amount agrees: the card, or the party.
@@ -229,12 +188,4 @@ class DuplicateDetector(
         a == null || b == null || a == b
 
     private val Source.isStatement: Boolean get() = this == Source.STATEMENT
-
-    private companion object {
-        /** Arabic-Indic digits too: a stored body is folded, not transliterated. */
-        val DIGITS = Regex("[0-9\u0660-\u0669]+")
-
-        /** How every Saudi bank in this corpus words a reversal. */
-        const val REVERSAL = "عكسي"
-    }
 }

@@ -104,6 +104,27 @@ object IntentClassifier {
         Rule(TransactionType.REFUND, Direction.CREDIT, listOf("عكس", "عملي")),
         Rule(TransactionType.REFUND, Direction.CREDIT, listOf("استرجاع")),
 
+        // The same event under the other word AlAhli uses for it. "حوالة عكسية /
+        // بطاقة ائتمانية **0926 / مبلغ 2520.45 / لدى Landmark" is a purchase being
+        // undone, but it says حوالة, so it fell through to the outgoing-transfer
+        // rules and was stored as money LEAVING. 105 records, 12,568.63 riyals,
+        // every one of them counted as spending on top of the purchase it reverses -
+        // so each of those purchases was charged to the owner twice and the refund
+        // never appeared at all.
+        //
+        // The bank's own figures settle it: after the 2,520.45 purchase the card
+        // read "الصرف المتبقي 443.79", and after the reversal "الرصيد المتبقي
+        // 2,964.24" - 443.79 + 2,520.45 exactly. The limit was restored, so the
+        // money came back. Sixty of the eighty comparable rows match that
+        // arithmetic to the halala.
+        Rule(TransactionType.REFUND, Direction.CREDIT, listOf("عكس", "حوال", "بطاق")),
+
+        // And the mirror, which is the same word doing the opposite: a reversal of
+        // an INCOMING transfer is money going back out. "حوالة عكسية واردة داخلية"
+        // arrived eight seconds after a hundred riyals did, and the hundred left
+        // again. Stored as a credit it made one arrival look like two.
+        Rule(TransactionType.TRANSFER_OUT, Direction.DEBIT, listOf("عكس", "حوال", "وارد")),
+
         // Paying off a credit card, in Arabic. Must precede the bare سداد rule
         // below, which would otherwise call it a bill payment and count it as
         // spending - charging the same riyals twice, once when each purchase on

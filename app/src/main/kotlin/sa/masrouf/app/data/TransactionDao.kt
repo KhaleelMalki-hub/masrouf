@@ -458,6 +458,26 @@ interface TransactionDao {
     suspend fun retype(id: String, type: String, categoryId: String?): Int
 
     /**
+     * The same, for a row whose DIRECTION was read backwards.
+     *
+     * Separate from [retype] because direction is the one field no other pass
+     * changes: a type can be wrong and the money still moved the way the row says,
+     * and every pass so far has been about the first. A reversal is the case where
+     * both are wrong at once, and where leaving the direction alone would keep money
+     * that came back counted as money that left.
+     */
+    @Query(
+        """
+        UPDATE transactions
+        SET type = :type,
+            direction = :direction,
+            category_id = CASE WHEN category_source = 'MANUAL' THEN category_id ELSE :categoryId END
+        WHERE id = :id AND source <> 'MANUAL'
+        """
+    )
+    suspend fun redirect(id: String, type: String, direction: String, categoryId: String?): Int
+
+    /**
      * The salary the bank last announced, in halalas. Read, not inferred.
      *
      * The largest of the three most recent, not simply the newest. A company the
