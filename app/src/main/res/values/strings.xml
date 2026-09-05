@@ -7,7 +7,6 @@
 <resources>
     <string name="app_name">مصروفي</string>
 
-    <string name="add_expense_title">تسجيل مصروف</string>
     <string name="amount_label">المبلغ</string>
     <string name="merchant_label">المتجر</string>
     <string name="note_label">ملاحظة</string>
@@ -31,10 +30,7 @@
     <string name="error_amount_required">أدخل المبلغ</string>
     <string name="error_amount_invalid">مبلغ غير صالح. ريالات وهللتان على الأكثر.</string>
 
-    <string name="recent_title">آخر العمليات</string>
-    <string name="recent_empty">لا توجد عمليات بعد</string>
 
-    <string name="month_total_label">مصروف هذا الشهر</string>
     <string name="uncategorised">بلا تصنيف</string>
     <string name="category_prompt">على ماذا صُرف؟</string>
     <string name="bank_said">نص الرسالة</string>
@@ -87,16 +83,10 @@
     <string name="category_transfers">تحويلات</string>
     <string name="category_other">أخرى</string>
     <string name="dashboard_title">مصروفي</string>
-    <string name="greeting_month">شهر %1$s</string>
     <string name="add_expense">سجّل مصروف</string>
     <string name="import_history">اقرأ رسائل البنك القديمة</string>
-    <string name="import_history_body">يقرأ التطبيق رسائلك النصية مرة وحدة ويستخرج عمليات بنوكك منها. الرسائل الشخصية تُقرأ وتُهمل ولا تُحفظ.</string>
-    <string name="import_running">يقرأ… %1$s رسالة</string>
-    <string name="import_done">أُضيفت %1$s عملية من %2$s رسالة</string>
     <string name="import_none">ما فيه عمليات جديدة في رسائلك</string>
     <string name="file_history">صنّف ما لم يُصنَّف</string>
-    <string name="file_history_done">صُنّفت %1$s عملية</string>
-    <string name="nothing_pending">كل شي مؤكّد</string>
     <string name="history_all">كل العمليات</string>
     <string name="language_toggle">EN</string>
     <string name="language_switch">تغيير اللغة</string>
@@ -107,23 +97,17 @@
     <string name="entry_title">مصروف جديد</string>
     <string name="entry_details">تفاصيل</string>
     <string name="entry_details_hide">إخفاء التفاصيل</string>
-    <string name="entry_close">إغلاق</string>
     <string name="amount_hint">0.00</string>
     <string name="confirm_all">أكّد الكل</string>
     <string name="confirm_all_title">تأكيد كل العمليات؟</string>
-    <string name="confirm_all_body">سيتم تأكيد %1$s عملية دفعة واحدة ودخولها في مجاميع شهورها. تقدر تحذف أي عملية غلط بعدين.</string>
-    <string name="confirm_all_done">تم تأكيد %1$s عملية</string>
     <string name="search_hint">ابحث عن متجر</string>
     <string name="filter_clear">إلغاء التصفية</string>
     <string name="compare_less">أقل بـ %1$s عن الشهر الماضي</string>
     <string name="compare_more">أكثر بـ %1$s عن الشهر الماضي</string>
     <string name="compare_same">مثل الشهر الماضي تقريباً</string>
-    <string name="compare_none">لا مقارنة، ما فيه شهر قبله</string>
     <string name="results_none">ما فيه نتيجة</string>
     <string name="showing_category">%1$s فقط</string>
     <string name="refile_title">تصنيف %1$s</string>
-    <string name="refile_all_note">يُطبَّق على كل عمليات هذا المتجر، وعلى القادمة منه.</string>
-    <string name="refile_done">صُنّفت %1$s عملية</string>
     <string name="category_charity">صدقة وزكاة</string>
     <string name="category_travel">سفر</string>
     <string name="category_bonus">مكافآت</string>
@@ -138,7 +122,6 @@
     <string name="category_education">مدارس وتعليم</string>
     <string name="category_fees">رسوم وأجور</string>
     <string name="category_housing">رسوم شهرية (سكن)</string>
-    <string name="refile_running">يعيد التصنيف…</string>
     <string name="category_services">مغاسل وعناية</string>
     <string name="refile_forget">دع التطبيق يقرّر</string>
     <string name="category_investment">استثمار</string>
@@ -151,7 +134,6 @@
     <string name="nav_spending">المصروف</string>
     <string name="nav_income">الدخل</string>
     <string name="cards_title">بطاقاتك</string>
-    <string name="pending_more">وفي الانتظار %1$s عملية أخرى</string>
     <string name="month_previous">الشهر السابق</string>
     <string name="month_next">الشهر التالي</string>
     <string name="card_kind_mada">على بطاقات مدى</string>
@@ -195,4 +177,49 @@
     </plurals>
     <string name="month_strip_description">توزيع الإنفاق، أكبر فئة %1$s بنسبة %2$s بالمئة</string>
     <string name="error_save_failed">تعذّر الحفظ. ما كتبته باقٍ كما هو - جرّب مرة أخرى.</string>
+    <plurals name="confirm_all_body">
+        <item quantity="one">سيتم تأكيد عملية واحدة ودخولها في مجموع شهرها. تقدر تحذفها بعدين لو طلعت غلط.</item>
+        <item quantity="two">سيتم تأكيد عمليتين ودخولهما في مجاميع شهورهما. تقدر تحذف أي عملية غلط بعدين.</item>
+        <item quantity="few">سيتم تأكيد %1$s عمليات دفعة واحدة ودخولها في مجاميع شهورها. تقدر تحذف أي عملية غلط بعدين.</item>
+        <item quantity="many">سيتم تأكيد %1$s عملية دفعة واحدة ودخولها في مجاميع شهورها. تقدر تحذف أي عملية غلط بعدين.</item>
+        <item quantity="other">سيتم تأكيد %1$s عملية دفعة واحدة ودخولها في مجاميع شهورها. تقدر تحذف أي عملية غلط بعدين.</item>
+    </plurals>
+    <plurals name="confirm_all_done">
+        <item quantity="zero">لم تُؤكَّد أي عملية</item>
+        <item quantity="one">تم تأكيد عملية واحدة</item>
+        <item quantity="two">تم تأكيد عمليتين</item>
+        <item quantity="few">تم تأكيد %1$s عمليات</item>
+        <item quantity="many">تم تأكيد %1$s عملية</item>
+        <item quantity="other">تم تأكيد %1$s عملية</item>
+    </plurals>
+    <plurals name="file_history_done">
+        <item quantity="zero">لم تُصنَّف أي عملية</item>
+        <item quantity="one">صُنّفت عملية واحدة</item>
+        <item quantity="two">صُنّفت عمليتان</item>
+        <item quantity="few">صُنّفت %1$s عمليات</item>
+        <item quantity="many">صُنّفت %1$s عملية</item>
+        <item quantity="other">صُنّفت %1$s عملية</item>
+    </plurals>
+    <plurals name="pending_more">
+        <item quantity="one">وفي الانتظار عملية أخرى</item>
+        <item quantity="two">وفي الانتظار عمليتان أخريان</item>
+        <item quantity="few">وفي الانتظار %1$s عمليات أخرى</item>
+        <item quantity="many">وفي الانتظار %1$s عملية أخرى</item>
+        <item quantity="other">وفي الانتظار %1$s عملية أخرى</item>
+    </plurals>
+    <plurals name="import_added">
+        <item quantity="zero">لم تُضف أي عملية</item>
+        <item quantity="one">أُضيفت عملية واحدة</item>
+        <item quantity="two">أُضيفت عمليتان</item>
+        <item quantity="few">أُضيفت %1$s عمليات</item>
+        <item quantity="many">أُضيفت %1$s عملية</item>
+        <item quantity="other">أُضيفت %1$s عملية</item>
+    </plurals>
+    <plurals name="import_scanned">
+        <item quantity="one">من رسالة واحدة</item>
+        <item quantity="two">من رسالتين</item>
+        <item quantity="few">من %1$s رسائل</item>
+        <item quantity="many">من %1$s رسالة</item>
+        <item quantity="other">من %1$s رسالة</item>
+    </plurals>
 </resources>

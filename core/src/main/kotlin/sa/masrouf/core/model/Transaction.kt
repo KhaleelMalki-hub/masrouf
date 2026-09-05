@@ -85,7 +85,6 @@ data class Category(
     val id: String,
     val labelAr: String,
     val labelEn: String,
-    val parentId: String? = null,
 )
 
 /** A funding source: a bank account, a card, or a digital wallet. */
@@ -163,9 +162,6 @@ data class Transaction(
 
     /** The Riyadh calendar day this transaction belongs to. */
     val calendarDay: LocalDate get() = RiyadhTime.localDate(occurredAt)
-
-    /** Signed value, for summing a mixed list. */
-    val signedAmount: Money get() = if (direction == Direction.DEBIT) -amount else amount
 }
 
 /**

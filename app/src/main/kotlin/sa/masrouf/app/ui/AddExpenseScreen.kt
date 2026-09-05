@@ -73,6 +73,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
@@ -234,7 +235,11 @@ fun AddExpenseScreen(
             onDismissRequest = { confirmingAll = false },
             title = { Text(stringResource(R.string.confirm_all_title)) },
             text = {
-                Text(stringResource(R.string.confirm_all_body, pending.size.toString()))
+                Text(
+                    pluralStringResource(
+                        R.plurals.confirm_all_body, pending.size, pending.size.toString(),
+                    ),
+                )
             },
             confirmButton = {
                 TextButton(
@@ -510,8 +515,9 @@ fun AddExpenseScreen(
                     if (pending.size > PENDING_SHOWN) {
                         item {
                             Text(
-                                text = stringResource(
-                                    R.string.pending_more,
+                                text = pluralStringResource(
+                                    R.plurals.pending_more,
+                                    pending.size - PENDING_SHOWN,
                                     (pending.size - PENDING_SHOWN).toString(),
                                 ),
                                 style = MaterialTheme.typography.bodySmall,
@@ -722,12 +728,22 @@ private fun importResultText(state: AddExpenseViewModel.ImportState): String? = 
         if (state.stored == 0) {
             stringResource(R.string.import_none)
         } else {
-            stringResource(R.string.import_done, state.stored.toString(), state.examined.toString())
+            // Two counts, so two plurals: Arabic agrees with each number separately,
+            // and one string cannot be right about both. Each half is a whole phrase
+            // a translator can move; only the space between them is built here.
+            val added = pluralStringResource(
+                R.plurals.import_added, state.stored, state.stored.toString(),
+            )
+            val scanned = pluralStringResource(
+                R.plurals.import_scanned, state.examined, state.examined.toString(),
+            )
+            "$added $scanned"
         }
     is AddExpenseViewModel.ImportState.Filed ->
         if (state.count == 0) stringResource(R.string.file_history_none)
-        else stringResource(R.string.file_history_done, state.count.toString())
-    is AddExpenseViewModel.ImportState.Confirmed -> stringResource(R.string.confirm_all_done, state.count.toString())
+        else pluralStringResource(R.plurals.file_history_done, state.count, state.count.toString())
+    is AddExpenseViewModel.ImportState.Confirmed ->
+        pluralStringResource(R.plurals.confirm_all_done, state.count, state.count.toString())
     else -> null
 }
 

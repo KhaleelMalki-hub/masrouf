@@ -2,7 +2,6 @@
 <resources>
     <string name="app_name">Masroufi</string>
 
-    <string name="add_expense_title">Record an expense</string>
     <string name="amount_label">Amount</string>
     <string name="merchant_label">Merchant</string>
     <string name="note_label">Note</string>
@@ -26,10 +25,7 @@
     <string name="error_amount_required">Enter an amount</string>
     <string name="error_amount_invalid">Not a valid amount. Riyals and at most two halalas.</string>
 
-    <string name="recent_title">Recent</string>
-    <string name="recent_empty">Nothing recorded yet</string>
 
-    <string name="month_total_label">Spent this month</string>
     <string name="uncategorised">Unfiled</string>
     <string name="category_prompt">What was it for?</string>
     <string name="bank_said">What the bank said</string>
@@ -70,16 +66,10 @@
     <string name="category_transfers">Transfers</string>
     <string name="category_other">Other</string>
     <string name="dashboard_title">Masroufi</string>
-    <string name="greeting_month">%1$s</string>
     <string name="add_expense">Record an expense</string>
     <string name="import_history">Read older bank messages</string>
-    <string name="import_history_body">Reads your text messages once and pulls your bank transactions out of them. Personal messages are read, ignored, and never stored.</string>
-    <string name="import_running">Reading… %1$s messages</string>
-    <string name="import_done">Added %1$s transactions from %2$s messages</string>
     <string name="import_none">No new transactions in your messages</string>
     <string name="file_history">File what\'s unfiled</string>
-    <string name="file_history_done">Filed %1$s transactions</string>
-    <string name="nothing_pending">Everything confirmed</string>
     <string name="history_all">All transactions</string>
     <string name="language_toggle">ع</string>
     <string name="language_switch">Switch language</string>
@@ -90,23 +80,17 @@
     <string name="entry_title">New expense</string>
     <string name="entry_details">Details</string>
     <string name="entry_details_hide">Hide details</string>
-    <string name="entry_close">Close</string>
     <string name="amount_hint">0.00</string>
     <string name="confirm_all">Confirm all</string>
     <string name="confirm_all_title">Confirm every transaction?</string>
-    <string name="confirm_all_body">%1$s transactions will be confirmed at once and enter their months\' totals. You can delete any that are wrong afterwards.</string>
-    <string name="confirm_all_done">Confirmed %1$s transactions</string>
     <string name="search_hint">Search a merchant</string>
     <string name="filter_clear">Clear filter</string>
     <string name="compare_less">%1$s less than last month</string>
     <string name="compare_more">%1$s more than last month</string>
     <string name="compare_same">About the same as last month</string>
-    <string name="compare_none">No earlier month to compare</string>
     <string name="results_none">Nothing matches</string>
     <string name="showing_category">%1$s only</string>
     <string name="refile_title">File %1$s</string>
-    <string name="refile_all_note">Applies to every transaction from this merchant, and future ones.</string>
-    <string name="refile_done">Filed %1$s transactions</string>
     <string name="category_charity">Charity</string>
     <string name="category_travel">Travel</string>
     <string name="category_bonus">Bonuses</string>
@@ -121,7 +105,6 @@
     <string name="category_education">Education</string>
     <string name="category_fees">Fees and wages</string>
     <string name="category_housing">Housing</string>
-    <string name="refile_running">Re-filing…</string>
     <string name="category_services">Personal care</string>
     <string name="refile_forget">Let the app decide</string>
     <string name="category_investment">Investment</string>
@@ -134,7 +117,6 @@
     <string name="nav_spending">Spending</string>
     <string name="nav_income">Income</string>
     <string name="cards_title">Your cards</string>
-    <string name="pending_more">%1$s more waiting</string>
     <string name="month_previous">Previous month</string>
     <string name="month_next">Next month</string>
     <string name="card_kind_mada">On mada cards</string>
@@ -171,4 +153,28 @@
     </plurals>
     <string name="month_strip_description">Spending breakdown, largest category %1$s at %2$s percent</string>
     <string name="error_save_failed">Could not save. What you typed is still here - try again.</string>
+    <plurals name="confirm_all_body">
+        <item quantity="one">One transaction will be confirmed and enter its month\'s total. You can delete it afterwards if it is wrong.</item>
+        <item quantity="other">%1$s transactions will be confirmed at once and enter their months\' totals. You can delete any that are wrong afterwards.</item>
+    </plurals>
+    <plurals name="confirm_all_done">
+        <item quantity="one">Confirmed one transaction</item>
+        <item quantity="other">Confirmed %1$s transactions</item>
+    </plurals>
+    <plurals name="file_history_done">
+        <item quantity="one">Filed one transaction</item>
+        <item quantity="other">Filed %1$s transactions</item>
+    </plurals>
+    <plurals name="pending_more">
+        <item quantity="one">One more waiting</item>
+        <item quantity="other">%1$s more waiting</item>
+    </plurals>
+    <plurals name="import_added">
+        <item quantity="one">Added one transaction</item>
+        <item quantity="other">Added %1$s transactions</item>
+    </plurals>
+    <plurals name="import_scanned">
+        <item quantity="one">from one message</item>
+        <item quantity="other">from %1$s messages</item>
+    </plurals>
 </resources>

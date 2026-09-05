@@ -19,8 +19,16 @@ value class Money private constructor(val halalas: Long) : Comparable<Money> {
 
     operator fun plus(other: Money): Money = Money(Math.addExact(halalas, other.halalas))
     operator fun minus(other: Money): Money = Money(Math.subtractExact(halalas, other.halalas))
-    operator fun unaryMinus(): Money = Money(Math.negateExact(halalas))
 
+    /**
+     * Negation, reached through the `-` operator rather than by name.
+     *
+     * Deleted once as unused on the strength of a grep for `unaryMinus`, which is not
+     * how anyone writes it: `StatementImporter` says `-amount`. The compiler found it
+     * in one build. A negative finding is only as strong as the search behind it, and
+     * a name search cannot see an operator.
+     */
+    operator fun unaryMinus(): Money = Money(Math.negateExact(halalas))
     fun abs(): Money = if (halalas < 0) Money(Math.negateExact(halalas)) else this
 
     fun toBigDecimal(): BigDecimal = BigDecimal.valueOf(halalas, MINOR_UNIT_SCALE)

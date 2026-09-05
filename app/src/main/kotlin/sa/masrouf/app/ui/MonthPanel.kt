@@ -2,7 +2,6 @@ package sa.masrouf.app.ui
 
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.EaseOutQuart
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -455,7 +454,7 @@ private fun OutsideTotalRow(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
-                    .size(width = 4.dp, height = 16.dp)
+                    .size(width = SWATCH_WIDTH, height = SWATCH_HEIGHT)
                     .clip(RoundedCornerShape(2.dp))
                     .background(bandColour(category)),
             )

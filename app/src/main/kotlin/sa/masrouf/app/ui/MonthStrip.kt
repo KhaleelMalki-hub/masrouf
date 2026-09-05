@@ -5,7 +5,6 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -307,8 +306,8 @@ private fun BandRow(
 }
 
 private val STRIP_HEIGHT = 76.dp
-private val SWATCH_WIDTH = 4.dp
-private val SWATCH_HEIGHT = 16.dp
+internal val SWATCH_WIDTH = 4.dp
+internal val SWATCH_HEIGHT = 16.dp
 /** M3's minimum touch target; the rows are tappable filters. They were 38dp. */
 private val ROW_HEIGHT = 48.dp
 

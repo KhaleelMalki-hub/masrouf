@@ -28,9 +28,6 @@ object RiyadhTime {
     /** The first instant of a Riyadh calendar day. */
     fun startOfDay(date: LocalDate): Instant = date.atStartOfDay(ZONE).toInstant()
 
-    /** The instant immediately after the last one belonging to a Riyadh calendar day. */
-    fun endOfDayExclusive(date: LocalDate): Instant = startOfDay(date.plusDays(1))
-
     /** Interprets a wall-clock date-time read out of a bank message as Riyadh local time. */
     fun toInstant(local: LocalDateTime): Instant = local.atZone(ZONE).toInstant()
 

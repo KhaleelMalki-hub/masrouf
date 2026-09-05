@@ -286,27 +286,6 @@ internal fun SheetLabel(text: String) {
     )
 }
 
-@Composable
-internal fun AmountField(
-    value: String,
-    error: AddExpenseState.AmountError?,
-    onValueChange: (String) -> Unit,
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        label = { Text(stringResource(R.string.amount_label)) },
-        // Decimal rather than Number: the halala separator has to be typeable.
-        keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Decimal,
-            imeAction = ImeAction.Next,
-        ),
-        singleLine = true,
-        isError = error != null,
-        supportingText = error?.let { { Text(stringResource(it.messageRes)) } },
-        modifier = Modifier.fillMaxWidth(),
-    )
-}
 
 @get:StringRes
 private val AddExpenseState.AmountError.messageRes: Int

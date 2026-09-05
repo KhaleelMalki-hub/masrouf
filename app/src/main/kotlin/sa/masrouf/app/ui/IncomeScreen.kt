@@ -174,7 +174,7 @@ private fun LegendLine(colour: Color, label: String, amount: Money, currencyLabe
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
-                    .size(width = 4.dp, height = 16.dp)
+                    .size(width = SWATCH_WIDTH, height = SWATCH_HEIGHT)
                     .clip(RoundedCornerShape(2.dp))
                     .background(colour),
             )
