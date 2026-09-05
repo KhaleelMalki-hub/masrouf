@@ -6,7 +6,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
 
 ## Where things stand
 
-- All tests green: **372** in `:core`, **181** in `:app`, **9** instrumented
+- All tests green: **372** in `:core`, **184** in `:app`, **9** instrumented
   (`:app:connectedDebugAndroidTest`).
 - **`connectedDebugAndroidTest` uninstalls the app and deletes its database.**
   It has already cost the owner's phone once. Use the `masrouf35` emulator, or
@@ -466,7 +466,7 @@ owner remember الخزائن الاحترافية in Al Rawdah.
 **Where the filing ended:** 728 unfiled debits, 129,868 riyals, across 466
 merchants; 245 of those records (32,580 riyals) are in the last 24 months. It began
 the day at 2,063 records and 580,669 riyals. Maintenance is at **40**, nothing is
-pending, and the tests stand at 372 in `:core` and 181 in `:app`.
+pending, and the tests stand at 372 in `:core` and 184 in `:app`.
 
 **A bug found in a screenshot he sent.** The home screen said he pays 102,890
 riyals a month across 14 recurring payments. `RecurringDetector` filtered on
@@ -614,6 +614,39 @@ which is a cross-dissolve where M3 specifies a sequential fade-through.
 insert during a 22,000-message backfill). Six count strings that hardcode the
 singular Arabic noun where plurals exist. Fifteen dead strings. `MonthPanel`,
 `CardTile` and `TransactionRow` are each over a hundred lines.
+
+## Reversals were money moving the wrong way, 2026-09-05
+
+The three rows the owner read for one hundred riyals were not a duplicate at all.
+Asked whether the hundred had been sent once or twice, he said **once** - so the
+three messages are an arrival, a reversal eight seconds later, and the arrival
+again: three real entries, and the app's error was storing the reversal as a credit.
+The rule written the day before for the duplicate reading was removed with the
+diagnosis it rested on; only the cross-route tightening survived it.
+
+Underneath was the defect that mattered. AlAhli writes a card refund as
+`حوالة عكسية`, the classifier knew only `عملية عكسية`, and the word حوالة carried
+every one into the outgoing-transfer rules - where TRANSFER_OUT counts as spending.
+**105 records, 12,568.63 riyals**, each counted as money leaving on top of the
+purchase it refunds: the purchase charged twice, the refund never credited.
+
+The direction is not a judgement call - the bank's own figures settle it. After a
+2,520.45 purchase the card read `الصرف المتبقي 443.79`; after the reversal,
+`الرصيد المتبقي 2,964.24`, which is 443.79 + 2,520.45 to the halala. **Sixty of the
+eighty rows carrying both figures match that sum exactly.**
+
+Two classifier rules, because the same word does opposite things - a reversal on a
+card returns money, a reversal of an INCOMING transfer sends it back out - and
+maintenance **41**, which re-reads every stored body containing عكسية and corrects
+what the parser now disagrees with, direction included. No pass before it had ever
+changed a direction. Manual records are never touched.
+
+**Applied to the phone on 2026-09-05, after a full backup.** 104 rows became
+CREDIT/REFUND; three stayed outgoing and are correct as they are - two reversals of
+incoming transfers (money that did leave, including the owner's hundred) and one
+cheque reversal that matches neither rule and was left alone. Lifetime spending fell
+from **8,208,588.67 to 8,197,321.69** - 11,266.98 riyals of spending that never
+happened, net of the 1,100 that correctly became outgoing.
 
 ## Open items
 
