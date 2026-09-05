@@ -10,7 +10,11 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.animation.Crossfade
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.Icons
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -366,9 +370,22 @@ fun AddExpenseScreen(
         // Fade-through between the two destinations, which is what M3 specifies
         // for peers. It was a hard cut: the whole body and the floating button
         // were replaced in one frame, on the transition this app uses most.
-        Crossfade(
+        // A fade-through, which is what M3 specifies between peers - and what the
+        // comment here claimed while a Crossfade did something else. A Crossfade
+        // holds both children at overlapping alpha for the whole duration, so one
+        // screen of figures showed through another; a fade-through empties the space
+        // first and grows the new screen into it.
+        AnimatedContent(
             targetState = destination,
-            animationSpec = tween(Motion.MEDIUM, easing = Motion.standard),
+            transitionSpec = {
+                (
+                    fadeIn(tween(Motion.FADE_IN, Motion.FADE_OUT, Motion.emphasizedDecelerate)) +
+                        scaleIn(
+                            initialScale = Motion.FADE_IN_SCALE,
+                            animationSpec = tween(Motion.FADE_IN, Motion.FADE_OUT, Motion.emphasizedDecelerate),
+                        )
+                    ).togetherWith(fadeOut(tween(Motion.FADE_OUT, easing = Motion.emphasizedAccelerate)))
+            },
             label = "destination",
         ) { shown ->
             when (shown) {

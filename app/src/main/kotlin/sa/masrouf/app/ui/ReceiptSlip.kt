@@ -1,7 +1,5 @@
 package sa.masrouf.app.ui
 
-import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.foundation.border
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
@@ -168,7 +166,6 @@ private fun BankWords(raw: String, modifier: Modifier = Modifier) {
     // elevated card reads as a rendering fault, not as quoted material. One step
     // down from the card with a hairline is how M3 quotes: still recessed, still
     // the same material.
-    val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -192,9 +189,19 @@ private fun BankWords(raw: String, modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
                 .padding(top = 4.dp)
-                // The zero point of a sideways scroll is the LEFT edge in either
-                // direction; unreversed, an Arabic message opened showing its END.
-                .horizontalScroll(rememberScrollState(), reverseScrolling = isRtl),
+                // Plain, with nothing steering it. The comment that stood here said
+                // the zero point of a sideways scroll is the left edge in either
+                // direction; CardsPanel says the opposite and says it from an
+                // observed bug - `horizontalScroll` places with `placeRelative`, so
+                // RTL is already handled, and `reverseScrolling` flips again and
+                // opens the row at its far end. Two comments, one of them written
+                // against something someone actually saw.
+                //
+                // Argued rather than photographed: the slip only draws for a pending
+                // record and the queue is empty, so there was nothing to open. If an
+                // Arabic message ever opens on its tail, this line is the first
+                // place to look.
+                .horizontalScroll(rememberScrollState()),
         )
     }
 }

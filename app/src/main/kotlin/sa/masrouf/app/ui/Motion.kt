@@ -30,6 +30,19 @@ object Motion {
 
     const val SHORT = 200
     const val MEDIUM = 400
+
+    /**
+     * The two halves of a fade-through, M3's transition between peers.
+     *
+     * Sequential, not crossed: the outgoing screen leaves first and the incoming one
+     * arrives into the space it left. A `Crossfade` runs both at once, and over two
+     * screens of figures that ghosts one column of numbers through another.
+     */
+    const val FADE_OUT = 90
+    const val FADE_IN = 210
+
+    /** How far the incoming screen scales up from. M3's fade-through grows slightly. */
+    const val FADE_IN_SCALE = 0.92f
 }
 
 /**
