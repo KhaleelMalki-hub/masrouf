@@ -25,14 +25,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,9 +40,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import sa.masrouf.app.R
 import sa.masrouf.core.model.Category
 import sa.masrouf.core.money.Money
 
@@ -179,9 +173,6 @@ fun BandLegend(
 ) {
     val largest = bands.maxOfOrNull { it.amount.halalas }?.takeIf { it > 0L } ?: 1L
 
-    var showAll by rememberSaveable { mutableStateOf(false) }
-    val visible = legendRows(bands, selected, showAll)
-    val hidden = bands.size - visible.size
 
     Column(
         modifier = modifier
@@ -192,7 +183,7 @@ fun BandLegend(
         // Keyed by the category, not by position. Without it, paging to a month
         // with a different mix animated row three's fill from food's share to
         // transport's while the icon and colour swapped instantly.
-        visible.forEach { band ->
+        bands.forEach { band ->
             key(band.category?.id ?: UNCATEGORISED_KEY) {
             BandRow(
                 colour = band.colour,
@@ -210,37 +201,7 @@ fun BandLegend(
             )
             }
         }
-        if (hidden > 0) {
-            TextButton(onClick = { showAll = true }) {
-                Text(stringResource(R.string.legend_show_all, hidden.toString()))
-            }
-        } else if (showAll && bands.size > LEGEND_CEILING) {
-            TextButton(onClick = { showAll = false }) {
-                Text(stringResource(R.string.legend_show_less))
-            }
-        }
     }
-}
-
-/**
- * The legend rows a month card shows.
- *
- * A legend is as long as the month is varied, and a month can touch every category
- * there is. Left uncapped it pushed the history below it off a phone screen, so the
- * card stops at [LEGEND_CEILING] rows and offers the rest on a tap.
- *
- * The exception is a filter that lands below the cut. Hiding the selected row would
- * narrow the history below with nothing on screen saying what by, so a selection the
- * ceiling would hide opens the whole legend instead.
- */
-internal fun legendRows(
-    bands: List<Band>,
-    selected: HistoryFilter?,
-    showAll: Boolean,
-): List<Band> {
-    if (showAll || bands.size <= LEGEND_CEILING) return bands
-    val kept = bands.take(LEGEND_CEILING)
-    return if (bands.drop(LEGEND_CEILING).any { it.isSelectedBy(selected) }) bands else kept
 }
 
 /**
@@ -345,8 +306,6 @@ private val SWATCH_HEIGHT = 16.dp
 /** M3's minimum touch target; the rows are tappable filters. They were 38dp. */
 private val ROW_HEIGHT = 48.dp
 
-/** How many legend rows a month card shows before it offers the rest on a tap. */
-internal const val LEGEND_CEILING = 6
 private const val GAP_PX = 3f
 private const val CORNER_PX = 6f
 
