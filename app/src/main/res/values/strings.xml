@@ -194,4 +194,5 @@
         <item quantity="other">%1$s شهر</item>
     </plurals>
     <string name="month_strip_description">توزيع الإنفاق، أكبر فئة %1$s بنسبة %2$s بالمئة</string>
+    <string name="error_save_failed">تعذّر الحفظ. ما كتبته باقٍ كما هو - جرّب مرة أخرى.</string>
 </resources>

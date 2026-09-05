@@ -150,12 +150,15 @@ fun AddExpenseScreen(
     }
     val currency = stringResource(R.string.currency_sar)
 
-    var entryOpen by remember { mutableStateOf(false) }
+    // rememberSaveable, all of them: this app's own language toggle recreates the
+    // activity, and so does a rotation. A half-typed entry sheet used to vanish on
+    // the way to English and come back as nothing at all.
+    var entryOpen by rememberSaveable { mutableStateOf(false) }
     var confirming by remember { mutableStateOf<DestructiveAction?>(null) }
-    var confirmingAll by remember { mutableStateOf(false) }
-    var pickingMonth by remember { mutableStateOf(false) }
+    var confirmingAll by rememberSaveable { mutableStateOf(false) }
+    var pickingMonth by rememberSaveable { mutableStateOf(false) }
     var refiling by remember { mutableStateOf<Transaction?>(null) }
-    var editingSalary by remember { mutableStateOf(false) }
+    var editingSalary by rememberSaveable { mutableStateOf(false) }
 
     if (editingSalary) {
         SalaryDialog(
@@ -470,7 +473,7 @@ fun AddExpenseScreen(
                             ),
                             transaction = transaction,
                             currencyLabel = currency,
-                            onConfirm = { categoryId -> viewModel.confirm(transaction.id, categoryId) },
+                            onConfirm = { categoryId, chosen -> viewModel.confirm(transaction.id, categoryId, chosen) },
                             onDismiss = { confirming = DestructiveAction.Dismiss(transaction) },
                         )
                     }
@@ -584,6 +587,9 @@ fun AddExpenseScreen(
         }
     }
 
+    // The sheet closes when a record is stored, never when Save is merely tapped.
+    LaunchedEffect(Unit) { viewModel.saved.collect { entryOpen = false } }
+
     if (entryOpen) {
         ModalBottomSheet(
             onDismissRequest = { entryOpen = false },
@@ -602,10 +608,7 @@ fun AddExpenseScreen(
                 onCategoryChanged = viewModel::onCategoryChanged,
                 onMerchantChanged = viewModel::onMerchantChanged,
                 onNoteChanged = viewModel::onNoteChanged,
-                onSave = {
-                    viewModel.save()
-                    entryOpen = false
-                },
+                onSave = viewModel::save,
             )
         }
     }

@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,13 +55,23 @@ import sa.masrouf.core.model.Transaction
 fun ReceiptSlip(
     transaction: Transaction,
     currencyLabel: String,
-    onConfirm: (categoryId: String?) -> Unit,
+    onConfirm: (categoryId: String?, chosenByUser: Boolean) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var chosen by remember(transaction.id) {
-        mutableStateOf(SaudiCategories.byId(transaction.categoryId))
+    // The ID, not the Category, and saveable rather than remembered. A slip lives
+    // in a LazyColumn item, so scrolling it out of view disposes a plain `remember`
+    // - the user filed slip twelve, scrolled up to check the total, came back, and
+    // the chip was blank again. Confirming then stored it unfiled with no sign that
+    // anything had been dropped.
+    var chosenId by rememberSaveable(transaction.id) {
+        mutableStateOf(transaction.categoryId)
     }
+    val chosen = SaudiCategories.byId(chosenId)
+    // Whether the person chose, rather than whether the value changed. The slip
+    // opens on the app's own guess, and agreeing with a guess by saying nothing is
+    // not the same as filing it - see confirmWithCategory.
+    var chosenByUser by rememberSaveable(transaction.id) { mutableStateOf(false) }
     val merchant = transaction.merchantRaw ?: stringResource(transaction.type.labelRes)
     val amount = transaction.amount.forDisplay(currencyLabel)
 
@@ -118,7 +129,7 @@ fun ReceiptSlip(
         )
         CategoryChips(
             selected = chosen,
-            onSelect = { chosen = it },
+            onSelect = { chosenId = it?.id; chosenByUser = true },
             edgePadding = SLIP_PADDING,
         )
 
@@ -128,7 +139,7 @@ fun ReceiptSlip(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             FilledTonalButton(
-                onClick = { onConfirm(chosen?.id) },
+                onClick = { onConfirm(chosenId, chosenByUser) },
                 modifier = Modifier.heightIn(min = 48.dp),
             ) { Text(stringResource(R.string.confirm)) }
             TextButton(

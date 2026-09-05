@@ -744,8 +744,22 @@ class TransactionRepository(
      * words when they answer both questions - is this right, and what was it for -
      * and splitting them into two taps is how the second one stops being answered.
      */
-    suspend fun confirmWithCategory(id: String, categoryId: String?): Boolean {
-        setCategory(id, categoryId)
+    suspend fun confirmWithCategory(
+        id: String,
+        categoryId: String?,
+        /**
+         * Whether the user actually picked the category on the slip.
+         *
+         * Passed in rather than inferred, for the reason rule 9 gives. The slip
+         * arrives with the app's own guess already selected, so confirming without
+         * touching the chips used to stamp that guess MANUAL - and MANUAL is what
+         * `refileAll` refuses to overwrite. Every slip confirmed that way made a
+         * guessed category permanent, including the ones a later rule would have
+         * corrected.
+         */
+        chosenByUser: Boolean,
+    ): Boolean {
+        if (chosenByUser) setCategory(id, categoryId)
         return confirm(id)
     }
 

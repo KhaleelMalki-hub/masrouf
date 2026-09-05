@@ -170,4 +170,5 @@
         <item quantity="other">%1$s months</item>
     </plurals>
     <string name="month_strip_description">Spending breakdown, largest category %1$s at %2$s percent</string>
+    <string name="error_save_failed">Could not save. What you typed is still here - try again.</string>
 </resources>

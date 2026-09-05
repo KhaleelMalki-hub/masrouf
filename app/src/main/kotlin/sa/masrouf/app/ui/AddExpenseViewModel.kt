@@ -5,9 +5,12 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -64,6 +67,14 @@ data class AddExpenseState(
      * then, so an empty field is not scolded before it has been filled in.
      */
     val submitAttempted: Boolean = false,
+    /**
+     * True when the last save was accepted and then failed to store.
+     *
+     * Distinct from an amount error, which is the user's to fix: this one is the
+     * app's, and the only honest thing to do with it is say so and keep what was
+     * typed on screen.
+     */
+    val saveFailed: Boolean = false,
     /**
      * True while a save is in flight.
      *
@@ -403,8 +414,8 @@ class AddExpenseViewModel(
      * One action, because it is one decision made while looking at the bank's own
      * message. A null category is allowed - filing can wait, vouching cannot.
      */
-    fun confirm(id: String, categoryId: String? = null) {
-        viewModelScope.launch { repository.confirmWithCategory(id, categoryId) }
+    fun confirm(id: String, categoryId: String? = null, chosenByUser: Boolean = false) {
+        viewModelScope.launch { repository.confirmWithCategory(id, categoryId, chosenByUser) }
     }
 
     /**
@@ -549,16 +560,21 @@ class AddExpenseViewModel(
      * is recorded when it is recorded. Back-dating is a feature that can be added
      * with a date picker, and guessing at it silently is not.
      */
+    private val _saved = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    /** Emits once per stored record. The entry sheet closes on it and nothing else. */
+    val saved: SharedFlow<Unit> = _saved.asSharedFlow()
+
     fun save() {
         val current = _form.value
         if (current.isSaving) return
         val amount = (current.amountResult as? AmountInput.Result.Valid)?.amount
         if (amount == null) {
-            _form.value = current.copy(submitAttempted = true)
+            _form.value = current.copy(submitAttempted = true, saveFailed = false)
             return
         }
 
-        _form.value = current.copy(isSaving = true)
+        _form.value = current.copy(isSaving = true, saveFailed = false)
         viewModelScope.launch {
             try {
                 repository.recordManual(
@@ -576,12 +592,20 @@ class AddExpenseViewModel(
                     type = current.type,
                     category = current.category,
                 )
+                // The sheet closes on THIS, not on the tap. A tap that failed
+                // validation used to close it too, so the error the form had just
+                // armed was never on screen and the expense was simply not there.
+                _saved.tryEmit(Unit)
             } catch (e: Exception) {
                 // Releasing the flag is load-bearing: without it a failed write
                 // locks the form forever, which is the mirror-image defect of the
                 // double-write this flag prevents.
-                _form.value = current.copy(isSaving = false)
-                throw e
+                //
+                // And it is reported rather than rethrown. This runs in
+                // viewModelScope with no handler, so throwing here killed the app
+                // on a failed insert - the loudest possible way to lose an entry
+                // the user had already typed.
+                _form.value = current.copy(isSaving = false, saveFailed = true)
             }
         }
     }

@@ -167,6 +167,15 @@ internal fun EntrySheet(
             }
         }
 
+        if (form.saveFailed) {
+            Text(
+                text = stringResource(R.string.error_save_failed),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(horizontal = 24.dp),
+            )
+        }
+
         // Pinned, never scrolled past. The previous sheet put this below two text
         // fields, so completing the task required scrolling a form the user had
         // already finished with.
