@@ -75,7 +75,20 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // A real build, because the owner runs what we install and a debug build
+            // is the slow one by construction: no R8, no ahead-of-time compilation,
+            // and Compose's own debug paths. The cold start he described as looking
+            // like a crash is mostly this.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+
+            // Signed with the debug key on purpose. This app is not published - it is
+            // installed on one phone by cable - and the key it is signed with decides
+            // whether an install REPLACES the app or has to remove it first. Removing
+            // it takes the database, so the release and debug builds must share a key
+            // and always have.
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 

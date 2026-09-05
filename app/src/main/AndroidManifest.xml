@@ -27,6 +27,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Masrouf">
 
+        <!--
+             Frame timing and traces without making the build debuggable. A release
+             build is the one worth measuring - it is what the owner runs - and
+             `dumpsys gfxinfo` reports nothing for a build that is neither.
+        -->
+        <profileable android:shell="true" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

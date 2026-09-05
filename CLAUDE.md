@@ -12,6 +12,9 @@ starting work.
 ./gradlew :core:test              # 372 tests, runs anywhere with a JDK
 ./gradlew :app:testDebugUnitTest  # 184 tests, needs the Android SDK
 ./gradlew :app:assembleDebug      # needs local.properties with sdk.dir
+./gradlew :app:assembleRelease    # what the owner actually runs - R8, signed with
+                                  # the debug key so it REPLACES rather than removes
+
 # DANGER: uninstalls the app when it finishes, which DELETES its database.
 # Gradle does this unconditionally and there is no flag to stop it. On the
 # emulator that costs nothing. On the owner's phone it costs twelve years of
@@ -45,6 +48,12 @@ adb shell cmd notification allow_listener \
   sa.masrouf.app/sa.masrouf.app.capture.MasroufNotificationListener
 adb logcat -s MasroufCapture     # one line per message the listener refused
 ```
+
+The release build is **not debuggable**, so `run-as` is refused on it and every
+recipe below - the backup, the read, the restore - needs the debug build installed
+first. Both are signed with the same key, so `adb install -r` of either one replaces
+the other and keeps the data; only an uninstall takes it. Measure on the release
+build, work on the debug one.
 
 Reading the database off a device needs the write-ahead log, not just the file.
 Room runs in WAL mode, so a write made seconds ago is still in `masrouf.db-wal`
