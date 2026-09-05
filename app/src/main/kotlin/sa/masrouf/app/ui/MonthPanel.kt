@@ -9,6 +9,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ArrowDropDown
 import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.animation.AnimatedContent
@@ -332,9 +333,18 @@ internal fun MonthNavigator(
             modifier = Modifier.heightIn(min = 48.dp),
         ) {
             Text(
-                text = month.monthLabel() + "  \u25BE",
+                text = month.monthLabel(),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
+            )
+            // An icon rather than a glyph glued to the label. The composable below
+            // records why the paging arrows stopped being characters: a screen
+            // reader reads punctuation as punctuation. The same was true here, and
+            // a character does not size with the icon set or mirror with the layout.
+            Icon(
+                imageVector = Icons.Outlined.ArrowDropDown,
+                contentDescription = null,
+                modifier = Modifier.padding(start = 4.dp),
             )
         }
         Row {

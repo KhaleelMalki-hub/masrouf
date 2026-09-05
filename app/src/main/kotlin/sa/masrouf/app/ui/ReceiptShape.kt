@@ -1,5 +1,6 @@
 package sa.masrouf.app.ui
 
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
@@ -21,7 +22,17 @@ import androidx.compose.ui.unit.dp
  * rather than stretching, which is what makes a torn edge read as torn rather than
  * as decoration.
  */
-class TornEdgeShape(private val toothWidth: Dp = 12.dp) : Shape {
+class TornEdgeShape(
+    private val toothWidth: Dp = 12.dp,
+    /**
+     * The rounding at the top, matching the cards the slip sits between.
+     *
+     * Only the lower edge is torn. Left square, the top was the one hard corner in a
+     * column where every neighbour is a 16dp card - and a stack of thirty pending
+     * slips made that the loudest thing on the screen.
+     */
+    private val topRadius: Dp = 16.dp,
+) : Shape {
 
     override fun createOutline(
         size: Size,
@@ -33,9 +44,15 @@ class TornEdgeShape(private val toothWidth: Dp = 12.dp) : Shape {
         val count = kotlin.math.max(1, (size.width / tooth).toInt())
         val step = size.width / count
 
+        val radius = with(density) { topRadius.toPx() }
+            .coerceAtMost(size.width / 2f)
+            .coerceAtMost(size.height / 2f)
+
         val path = Path().apply {
-            moveTo(0f, 0f)
-            lineTo(size.width, 0f)
+            moveTo(0f, radius)
+            arcTo(Rect(0f, 0f, radius * 2f, radius * 2f), 180f, 90f, false)
+            lineTo(size.width - radius, 0f)
+            arcTo(Rect(size.width - radius * 2f, 0f, size.width, radius * 2f), 270f, 90f, false)
             lineTo(size.width, size.height - depth)
             // Walk back along the bottom, alternating down and up.
             for (i in count - 1 downTo 0) {

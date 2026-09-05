@@ -113,7 +113,8 @@ fun MonthStrip(
 }
 
 private fun DrawScope.drawStrip(bands: List<Band>, total: Long, progress: Float) {
-    val gap = GAP_PX
+    val gap = BAND_GAP.toPx()
+    val corner = BAND_CORNER.toPx()
     val usable = size.width - gap * (bands.size - 1).coerceAtLeast(0)
     // Canvas coordinates are always left-to-right, but a strip is read the way the
     // rest of the screen is read. In Arabic the largest band belongs on the right,
@@ -136,7 +137,7 @@ private fun DrawScope.drawStrip(bands: List<Band>, total: Long, progress: Float)
             // Grows from the baseline up, the direction a weft is beaten in.
             topLeft = Offset(left, size.height - grown),
             size = Size(width, grown),
-            cornerRadius = CornerRadius(CORNER_PX, CORNER_PX),
+            cornerRadius = CornerRadius(corner, corner),
         )
         consumed += width + gap
         if (consumed >= size.width) return
@@ -155,10 +156,11 @@ private fun EmptyStrip(modifier: Modifier) {
     ) {
         // The unwoven loom: present, so the strip's absence reads as "nothing yet"
         // rather than as a component that failed to load.
+        val corner = BAND_CORNER.toPx()
         drawRoundRect(
             color = empty,
             size = size,
-            cornerRadius = CornerRadius(CORNER_PX, CORNER_PX),
+            cornerRadius = CornerRadius(corner, corner),
         )
     }
 }
@@ -310,8 +312,15 @@ private val SWATCH_HEIGHT = 16.dp
 /** M3's minimum touch target; the rows are tappable filters. They were 38dp. */
 private val ROW_HEIGHT = 48.dp
 
-private const val GAP_PX = 3f
-private const val CORNER_PX = 6f
+/**
+ * Points, not pixels.
+ *
+ * These were raw pixel constants, which meant they shrank as the screen got denser:
+ * on a 2.6x phone a 3-pixel gap is barely one point, so the strip drew as one
+ * continuous bar where it was tuned to read as woven bands.
+ */
+private val BAND_GAP = 3.dp
+private val BAND_CORNER = 6.dp
 
 /** No category is allowed to vanish entirely; see [MonthStrip]. */
 private const val MIN_VISIBLE_FRACTION = 0.012f

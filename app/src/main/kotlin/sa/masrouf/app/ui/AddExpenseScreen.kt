@@ -15,7 +15,9 @@ import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.Icons
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.background
 import androidx.activity.compose.BackHandler
@@ -407,7 +409,7 @@ fun AddExpenseScreen(
                 // stretch at the end of a scroll stopped short of the screen edge
                 // on the spending screen while reaching it on the income screen -
                 // the same list, insetting itself two different ways.
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = FAB_CLEARANCE),
+                contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = FAB_CLEARANCE),
                 // One rhythm for the whole column. The sections used to add their
                 // own top and bottom padding on top of this, so the gaps went 36,
                 // 24 and 12 points with nothing deciding which was which.
@@ -749,10 +751,11 @@ private fun AddExpenseTopBar(
                 Icon(imageVector = Icons.Outlined.Translate, contentDescription = null)
             }
         },
+        // M3's own roles. The actions were painted `primary`, which put three
+        // saturated icons in a bar whose brief is to be quiet, competing with the one
+        // word that names the app.
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface,
             titleContentColor = MaterialTheme.colorScheme.onSurface,
-            actionIconContentColor = MaterialTheme.colorScheme.primary,
         ),
     )
 }
@@ -794,14 +797,20 @@ private fun ThemeMenu(mode: ThemeMode, onSelect: (ThemeMode) -> Unit) {
                         onSelect(option)
                         open = false
                     },
+                    // An Icon, not a check character in an icon slot: the glyph
+                    // sized to the font rather than to the 24dp beside it, so it sat
+                    // small and off the row's baseline. It also carries the selection
+                    // to a screen reader, which a decorative mark could not.
                     trailingIcon = {
                         if (option == mode) {
-                            Text(
-                                text = "\u2713",
-                                color = MaterialTheme.colorScheme.primary,
+                            Icon(
+                                imageVector = Icons.Outlined.Check,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
                             )
                         }
                     },
+                    modifier = Modifier.semantics { selected = option == mode },
                 )
             }
         }
