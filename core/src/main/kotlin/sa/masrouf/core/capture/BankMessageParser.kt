@@ -126,7 +126,14 @@ class BankMessageParser(private val profile: BankProfile) : MessageParser {
                 null
             },
             currency = amount.currency ?: "SAR",
-            rawText = message.body,
+            // What was PARSED, not the half of it the body happens to hold. The gate
+            // folds `fullText` and this parser normalises `fullText`, and for a
+            // notification that is the title joined to the body - so storing the body
+            // alone threw away text the decision was made on. Rule 2 says a marker
+            // added later must also remove what an earlier gate let through, and
+            // `purgeRejectedBodies` re-asks the gate about the stored text: a marker
+            // that appears only in a title could never be found again.
+            rawText = message.fullText,
         )
 
         return ParseResult.Parsed(draft, id, confidenceOf(party))

@@ -32,12 +32,15 @@ val Transaction.countsAsSpending: Boolean
  * relative repaying a loan; what separates them is the filing. Typing them SALARY
  * instead would make the dashboard read the newest one as the user's salary.
  */
-val Transaction.countsAsIncome: Boolean
-    get() = direction == Direction.CREDIT && categoryId in INCOME_CATEGORY_IDS
-
 /**
- * The categories [countsAsIncome] accepts, exposed so that SQL can bind them
- * rather than spell them. A query is the one caller that cannot ask the property.
+ * The categories that are income.
+ *
+ * A list rather than a property, because every reader of it is SQL: unlike
+ * spending, no Kotlin code decides this - the month aggregate and the deposit list
+ * are both queries, and a query is the one caller that cannot ask a property. There
+ * was a `countsAsIncome` here to mirror `countsAsSpending`; it had no callers, and
+ * a mirror nothing looks into only made the two queries look single-sourced when
+ * they are not. `IncomeIdentityTest` is what actually holds them together.
  */
 val INCOME_CATEGORY_IDS: List<String> =
     listOf(SaudiCategories.INCOME.id, SaudiCategories.BONUS.id)

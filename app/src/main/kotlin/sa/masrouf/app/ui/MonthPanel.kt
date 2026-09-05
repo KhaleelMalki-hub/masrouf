@@ -169,7 +169,7 @@ internal fun MonthPanel(
                     modifier = Modifier.padding(start = 10.dp, bottom = 4.dp),
                 )
             }
-            MonthComparison(current = total, previous = previousTotal, currencyLabel = currencyLabel)
+            MonthComparison(current = totalMoney, previous = previousTotal, currencyLabel = currencyLabel)
             SalaryShare(spent = totalMoney, salary = salary, currencyLabel = currencyLabel)
             if (pendingCount > 0) {
                 Text(
@@ -368,14 +368,16 @@ internal fun MonthNavigator(
  * less.
  */
 @Composable
-private fun MonthComparison(current: String, previous: Money?, currencyLabel: String) {
+private fun MonthComparison(current: Money, previous: Money?, currencyLabel: String) {
     if (previous == null) return
-    val currentValue = runCatching {
-        java.math.BigDecimal(current.replace(",", ""))
-    }.getOrNull() ?: return
 
+    // From the Money, not from the string the screen prints. This used to re-parse
+    // the formatted total - strip the commas and hand it to BigDecimal - with a
+    // `getOrNull() ?: return` underneath, so the day the display gained the riyal
+    // sign or a locale separator the comparison would simply have disappeared with
+    // nothing reporting it. The panel already receives both amounts.
     val previousValue = previous.toBigDecimal()
-    val difference = currentValue.subtract(previousValue)
+    val difference = current.toBigDecimal().subtract(previousValue)
     val magnitude = Money.ofMajor(difference.abs())
 
     // Under one percent of the previous month is noise, not a change worth a

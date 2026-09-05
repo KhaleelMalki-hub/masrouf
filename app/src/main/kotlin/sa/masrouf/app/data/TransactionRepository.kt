@@ -296,6 +296,13 @@ class TransactionRepository(
                 batch.forEach { row ->
                     val body = row.rawText ?: return@forEach
                     val message = RawMessage(body = body, receivedAt = Instant.EPOCH)
+                    // The gate first, as rule 2 says, and this is the pass that most
+                    // needs it: it is the only one that WRITES an amount. Rows the
+                    // gate now rejects are not all deleted - `shouldPurge` keeps any
+                    // the user filed by hand - so without this an advert the gate has
+                    // learned to refuse could still hand a figure to a raw parser and
+                    // have it stored as money.
+                    if (MessageGate.evaluate(message) is MessageGate.Decision.Reject) return@forEach
                     // Through the whole parser, never the extractor alone. The
                     // parser refuses an amount in a foreign currency and refuses a
                     // zero, and this pass writes money: reading "مبلغ 4.34 USD" with

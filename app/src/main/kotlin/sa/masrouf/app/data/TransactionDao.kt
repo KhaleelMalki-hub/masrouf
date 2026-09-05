@@ -166,12 +166,14 @@ interface TransactionDao {
      * Confirmed only. A pending row is a parser's reading that nobody has agreed
      * to, and this screen exists to be read as fact.
      *
-     * The category ids are BOUND, not spelled. They were literals here, again in
-     * the rows query below, and a third time in the test double - four copies of a
-     * decision that CLAUDE.md rule 5 says belongs in one place, two of them strings
-     * no Kotlin refactor can reach. They now come from
-     * [sa.masrouf.core.model.INCOME_CATEGORY_IDS], which is what
-     * [sa.masrouf.core.model.countsAsIncome] reads.
+     * The category ids are BOUND, not spelled - but this query binds them ONE BY
+     * ONE, because it also splits them: the screen shows salary and bonus as two
+     * segments of one bar, and a list cannot express that. So it takes the two ids
+     * separately while the rows query below takes the whole of
+     * [sa.masrouf.core.model.INCOME_CATEGORY_IDS], and the two can drift: add a
+     * third income category and the deposit list would show deposits this header
+     * does not count - the exact failure the comment two functions down describes.
+     * `IncomeIdentityTest` fails the moment that list stops being these two ids.
      *
      * The `+3 hours` is Riyadh, matching every other month boundary in this file;
      * a month bucketed in UTC puts a salary that arrived at 02:25 on the 1st into
