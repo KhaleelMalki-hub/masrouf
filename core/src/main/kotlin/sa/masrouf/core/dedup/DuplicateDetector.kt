@@ -165,7 +165,10 @@ class DuplicateDetector(
             // the same bank, only within seconds, and only when the two bodies are
             // not the same sentence with different numbers in it.
             if (a.body == b.body) gap <= messageRedeliveryWindow
-            else gap <= retellWindow && sameBank(a, b) && differentTemplate(a.body, b.body)
+            else {
+                gap <= retellWindow && sameBank(a, b) &&
+                    differentTemplate(a.body, b.body) && neitherReverses(a.body, b.body)
+            }
         } else {
             // Across routes - the bank's push and its SMS for one purchase - the
             // bodies always differ, so the text cannot decide. Time alone is not
@@ -194,6 +197,19 @@ class DuplicateDetector(
     private fun skeleton(body: String): String = body.replace(DIGITS, "#")
 
     /**
+     * Neither message undoes the other.
+     *
+     * A reversal is a differently-worded message from the same bank about the same
+     * amount seconds later - which is exactly the shape of a second telling, and it
+     * is the opposite of one: one is money arriving and the other is that money
+     * going back. Found in the owner's own history, where a hundred riyals arrived,
+     * was reversed eight seconds later, and was sent again a minute after that.
+     * Without this the reversal would be swallowed by the transfer it undoes.
+     */
+    private fun neitherReverses(a: String, b: String): Boolean =
+        !a.contains(REVERSAL) && !b.contains(REVERSAL)
+
+    /**
      * Something beyond the amount agrees: the card, or the party.
      *
      * A pair anonymous on card AND on party is not evidence of one event, whatever
@@ -217,5 +233,8 @@ class DuplicateDetector(
     private companion object {
         /** Arabic-Indic digits too: a stored body is folded, not transliterated. */
         val DIGITS = Regex("[0-9\u0660-\u0669]+")
+
+        /** How every Saudi bank in this corpus words a reversal. */
+        const val REVERSAL = "عكسي"
     }
 }

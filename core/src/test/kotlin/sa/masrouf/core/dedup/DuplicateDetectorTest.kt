@@ -392,6 +392,38 @@ class DuplicateDetectorTest {
         assertEquals(listOf(0), result.newIncoming)
     }
 
+    /**
+     * The case that nearly cost money, found in the owner's own history the moment
+     * the phone was plugged back in.
+     *
+     * A hundred riyals arrived at 17:24:42. Eight seconds later AlAhli sent
+     * "حوالة عكسية واردة داخلية" for the same hundred - the transfer being reversed,
+     * which is the money going back out. Different template, same bank, same amount,
+     * inside the window: the rule above would have read the reversal as a second
+     * telling of the arrival and swallowed it whole.
+     *
+     * A reversal is the one differently-worded message that is never a retelling. It
+     * is the opposite of the message it follows.
+     */
+    @Test
+    fun `a reversal is never a second telling of what it undoes`() {
+        val at = Instant.parse("2026-09-04T14:24:42Z")
+        val arrived = EventSignature.of(
+            Money.ofMajor("100.00"), Direction.CREDIT, at, Source.SMS,
+            last4 = null, merchantRaw = "اريج حلواني", bankId = "snb",
+            body = "حوالة واردة داخلية ب100 SAR\nمن8805* اريج حلواني\n04/09/26 17:24",
+        )
+        val reversed = EventSignature.of(
+            Money.ofMajor("100.00"), Direction.CREDIT, at.plusSeconds(8), Source.SMS,
+            last4 = null, merchantRaw = null, bankId = "snb",
+            body = "حوالة عكسية واردة داخلية\nمبلغ 100SAR\nحساب0104*\n04/09/26 17:24",
+        )
+
+        val result = DuplicateDetector().reconcile(existing = listOf(arrived), incoming = listOf(reversed))
+
+        assertEquals(listOf(0), result.newIncoming)
+    }
+
     /** And the same SMS delivered twice is still one event. */
     @Test
     fun `a redelivered message with an identical body is one event`() {
