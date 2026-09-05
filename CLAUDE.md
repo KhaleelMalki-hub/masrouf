@@ -9,7 +9,7 @@ starting work.
 ## Commands
 
 ```bash
-./gradlew :core:test              # 385 tests, runs anywhere with a JDK
+./gradlew :core:test              # 372 tests, runs anywhere with a JDK
 ./gradlew :app:testDebugUnitTest  # 181 tests, needs the Android SDK
 ./gradlew :app:assembleDebug      # needs local.properties with sdk.dir
 # DANGER: uninstalls the app when it finishes, which DELETES its database.
