@@ -337,14 +337,15 @@ class TransactionRepository(
      *
      * @return how many rows had their direction corrected.
      */
-    suspend fun retypeReversals(): Int {
+    suspend fun retypeMisreadDirections(): Int {
         val parsers = SaudiBanks.ALL.map(::BankMessageParser)
         var moved = 0
         forEachBodyPage { batch ->
             inTransaction {
                 batch.forEach { row ->
                     val body = row.rawText ?: return@forEach
-                    if (!ArabicText.foldForMatching(body).contains(REVERSAL_WORD)) return@forEach
+                    val folded = ArabicText.foldForMatching(body)
+                    if (DIRECTION_WORDS.none(folded::contains)) return@forEach
                     val message = RawMessage(body = body, receivedAt = Instant.EPOCH)
                     val draft = parsers.firstNotNullOfOrNull {
                         (it.parse(message) as? ParseResult.Parsed)?.draft
@@ -885,8 +886,15 @@ class TransactionRepository(
          */
         const val CARD_KIND_SAMPLE = 200
 
-        /** Folded, because that is the form a stored body is compared in. */
-        const val REVERSAL_WORD = "عكس"
+        /**
+         * The wordings whose direction the classifier once read backwards.
+         *
+         * Folded, because that is the form a stored body is compared in. A reversal
+         * moves money the opposite way from the entry it undoes; a transfer that says
+         * واردة between the owner's own accounts is money arriving, and was stored as
+         * leaving whenever the classifier rather than a later retype had read it.
+         */
+        val DIRECTION_WORDS = listOf("عكس", "بين حساباتك")
 
         /** A learned rule scoped to one bank: "AMMAR@barq". The bare key is the general rule. */
         fun ruleKey(merchantKey: String, bankId: String) = "$merchantKey@$bankId"

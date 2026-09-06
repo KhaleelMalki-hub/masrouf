@@ -80,7 +80,8 @@ class MasroufApp : Application() {
                 Repair.REPARSE_BODIES -> transactions.reparseStoredBodies()
                 Repair.RETYPE_SALARY -> transactions.retypeSalaryDeposits()
                 Repair.RETYPE_OWN_MONEY -> transactions.retypeOwnMoney()
-                Repair.RETYPE_REVERSALS -> transactions.retypeReversals()
+                Repair.RETYPE_REVERSALS -> transactions.retypeMisreadDirections()
+                Repair.RETYPE_OWN_DIRECTION -> transactions.retypeMisreadDirections()
                 Repair.REREAD_WHOLE_INBOX -> if (!rereadWholeInbox()) deferred = true
                 Repair.REFILE_ALL -> transactions.refileAll()
             }
@@ -198,6 +199,21 @@ class MasroufApp : Application() {
         RETYPE_REVERSALS(41),
 
         /**
+         * The other wording whose direction was read backwards.
+         *
+         * "حوالة واردة بين حساباتك" is money arriving in the account that received
+         * the message, and the rules called it money leaving - so eighty-seven
+         * identical messages were stored forty-five one way and forty-two the other,
+         * decided by whether the classifier or a later retype had read them. Neither
+         * counts as spending, which is why no total ever disagreed and nothing found
+         * it until the templates were grouped and compared with what they produced.
+         *
+         * The same pass as above: it re-reads a stored body and takes the parser's
+         * answer where the two disagree.
+         */
+        RETYPE_OWN_DIRECTION(42),
+
+        /**
          * The whole inbox, re-read once, because the app can now understand a
          * sender it never could.
          *
@@ -227,9 +243,10 @@ class MasroufApp : Application() {
         // 38: الدهام للساعات.
         // 39: مؤسسة عبود باحشوان, Nissan and Haval parts.
         // 40: الخزائن الاحترافية, the wardrobe.
+        // 42: the incoming own-transfers, which now carry the other direction.
         // 41: after the reversals below were corrected - a refund that becomes a
         //     credit has a different category from the transfer it used to be.
-        REFILE_ALL(41),
+        REFILE_ALL(42),
     }
 
     /**

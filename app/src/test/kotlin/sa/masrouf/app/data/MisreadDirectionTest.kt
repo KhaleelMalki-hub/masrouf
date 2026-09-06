@@ -21,7 +21,7 @@ import java.time.Instant
  *
  * Amounts and merchants here are invented; the template is the thing under test.
  */
-class RetypeReversalsTest {
+class MisreadDirectionTest {
 
     private val dao = FakeDao()
     private val repository = TransactionRepository(dao)
@@ -65,7 +65,7 @@ class RetypeReversalsTest {
     fun `a reversed card purchase becomes money coming back`() = runTest {
         repository.recordCaptured(stored("reversal", reversalBody))
 
-        val moved = repository.retypeReversals()
+        val moved = repository.retypeMisreadDirections()
 
         assertEquals(1, moved)
         assertEquals(Direction.CREDIT.name, row("reversal").direction)
@@ -78,7 +78,7 @@ class RetypeReversalsTest {
             stored("ordinary", "شراء\nمبلغ 640.00 SAR\nلدى A SHOP\nبطاقة *0000"),
         )
 
-        assertEquals(0, repository.retypeReversals())
+        assertEquals(0, repository.retypeMisreadDirections())
     }
 
     @Test
@@ -87,8 +87,23 @@ class RetypeReversalsTest {
         // own reading has no business touching a number a person entered.
         repository.recordCaptured(stored("mine", reversalBody, source = Source.MANUAL))
 
-        repository.retypeReversals()
+        repository.retypeMisreadDirections()
 
         assertEquals(Direction.DEBIT.name, row("mine").direction)
     }
+    @Test
+    fun `an incoming transfer between his own accounts arrives rather than leaves`() = runTest {
+        // "واردة" is the whole word: money reaching the account that got the message.
+        // Both own-transfer rules called it money leaving, so the same wording was
+        // stored one way or the other depending on which pass had read it.
+        repository.recordCaptured(
+            stored("own", "حوالة واردة بين حساباتك\nمبلغ 640 ريال\nحساب0000*\nفي 06/09/26 08:00"),
+        )
+
+        assertEquals(1, repository.retypeMisreadDirections())
+
+        assertEquals(Direction.CREDIT.name, row("own").direction)
+        assertEquals(TransactionType.OWN_TRANSFER.name, row("own").type)
+    }
+
 }

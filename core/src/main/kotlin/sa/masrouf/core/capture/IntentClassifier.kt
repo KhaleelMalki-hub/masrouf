@@ -71,6 +71,15 @@ object IntentClassifier {
     private val RULES = listOf(
         // Between the user's own accounts. Must come first - it is a transfer by
         // every other rule's standard, but it is not spending.
+        // Incoming, and the direction has to say so. "حوالة واردة بين حساباتك" is
+        // money ARRIVING in the account that got the message, and both rules below
+        // called it money leaving - so the same eighty-seven messages were stored
+        // forty-five one way and forty-two the other, depending only on whether the
+        // classifier had read them or a later retype had. Neither counts as spending,
+        // which is why nothing noticed; the row still drew a plus or did not.
+        Rule(TransactionType.OWN_TRANSFER, Direction.CREDIT, listOf("تحويل", "وارد", "بين", "حساباتك")),
+        Rule(TransactionType.OWN_TRANSFER, Direction.CREDIT, listOf("حوال", "وارد", "بين", "حساباتك")),
+
         Rule(TransactionType.OWN_TRANSFER, Direction.DEBIT, listOf("تحويل", "بين", "حساباتك")),
         // meem's noun for the same movement: "حوالة واردة: بين حساباتك" and
         // "حوالة صادرة: بين حساباتك". Before the واردة/صادرة rules, which would
