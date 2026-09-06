@@ -6,7 +6,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
 
 ## Where things stand
 
-- All tests green: **372** in `:core`, **185** in `:app`, **9** instrumented
+- All tests green: **372** in `:core`, **190** in `:app`, **9** instrumented
   (`:app:connectedDebugAndroidTest`).
 - **`connectedDebugAndroidTest` uninstalls the app and deletes its database.**
   It has already cost the owner's phone once. Use the `masrouf35` emulator, or
@@ -466,7 +466,7 @@ owner remember الخزائن الاحترافية in Al Rawdah.
 **Where the filing ended:** 728 unfiled debits, 129,868 riyals, across 466
 merchants; 245 of those records (32,580 riyals) are in the last 24 months. It began
 the day at 2,063 records and 580,669 riyals. Maintenance is at **40**, nothing is
-pending, and the tests stand at 372 in `:core` and 185 in `:app`.
+pending, and the tests stand at 372 in `:core` and 190 in `:app`.
 
 **A bug found in a screenshot he sent.** The home screen said he pays 102,890
 riyals a month across 14 recurring payments. `RecurringDetector` filtered on
@@ -682,6 +682,23 @@ the bank-scoped rules it supersedes, five bulk actions show a progress bar, coun
 strings became Arabic plurals, eighteen dead things went, three indexes landed, and
 every amount is now spoken with a currency - the riyal sign has no name in any
 speech engine yet.
+
+## What the council round left, and what closed it
+
+Everything the five reviewers raised is now either done or written below with its
+reason. The last of it: the month, the filter and the search text survive the
+process being killed (they were the only part of "where the user was" that did not,
+and the tab beside them already did); maintenance reads the history a page at a time
+rather than pulling twenty-two thousand bodies into a list twice per run; and a
+general merchant filing drops the bank-scoped rules it supersedes.
+
+**Still open, deliberately.** Four long functions (`MonthPanel`, `CardTile`,
+`TransactionRow`, `MainActivity.onCreate`) could be split; none of them is confusing
+today, so the split waits for a reason better than a line count. `AL MUASHA` -
+4,672.45 riyals, 5 October 2025, Google Pay - has exhausted every channel on the
+phone and needs the owner's memory. And a baseline profile would help the cold start
+further, but it does nothing for a debug build and the release build already took
+the launch from 677ms to about 200.
 
 ## Open items
 
