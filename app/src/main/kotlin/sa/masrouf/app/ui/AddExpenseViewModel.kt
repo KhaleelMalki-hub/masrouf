@@ -41,6 +41,9 @@ import java.time.YearMonth
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewmodel.CreationExtras
 
 /** The transaction types a person records by hand. Order is the order they appear in. */
 val MANUAL_TYPES: List<TransactionType> = listOf(
@@ -117,6 +120,19 @@ class AddExpenseViewModel(
      * before the test started". A flake with a cause, not a mystery.
      */
     private val background: CoroutineContext = Dispatchers.Default,
+    /**
+     * What survives the process being killed.
+     *
+     * Android kills a backgrounded app freely, and everything about where the user
+     * WAS lived in memory: the month they had paged to, the category they had
+     * filtered by, what they had typed into the search. Returning put them on this
+     * month with no filter and an empty box, which reads as the app having forgotten
+     * rather than as Android having reclaimed memory. The destination beside them was
+     * already saved, which made the mismatch worse - the right tab, the wrong month.
+     *
+     * Defaulted so that a test constructs the view model as it always did.
+     */
+    private val savedState: SavedStateHandle = SavedStateHandle(),
 ) : ViewModel() {
 
     /** What the one-off history import is doing, for the dashboard to report. */
@@ -149,7 +165,8 @@ class AddExpenseViewModel(
      * month's total above another month's transactions.
      */
     private val _selectedMonth = MutableStateFlow(
-        RiyadhTime.localDate(Instant.now(clock)).withDayOfMonth(1)
+        savedState.get<String>(SELECTED_MONTH)?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+            ?: RiyadhTime.localDate(Instant.now(clock)).withDayOfMonth(1)
     )
     val selectedMonth: StateFlow<LocalDate> = _selectedMonth.asStateFlow()
 
@@ -171,7 +188,9 @@ class AddExpenseViewModel(
     /** Jumps straight to a month, for the picker. Bounded like the arrows are. */
     fun showMonth(month: LocalDate) {
         val first = month.withDayOfMonth(1)
-        if (!first.isAfter(currentMonth)) _selectedMonth.value = first
+        if (first.isAfter(currentMonth)) return
+        _selectedMonth.value = first
+        savedState[SELECTED_MONTH] = first.toString()
     }
 
     val earliestMonth: StateFlow<LocalDate?> =
@@ -179,14 +198,35 @@ class AddExpenseViewModel(
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     /** A merchant substring the user is looking for, or blank for everything. */
-    private val _query = MutableStateFlow("")
+    private val _query = MutableStateFlow(savedState.get<String>(QUERY).orEmpty())
     val query: StateFlow<String> = _query.asStateFlow()
 
     /** What the list is narrowed to, set by tapping a row in the legend. */
-    private val _categoryFilter = MutableStateFlow<HistoryFilter?>(null)
+    private val _categoryFilter = MutableStateFlow(savedState.get<String>(FILTER)?.let(::filterOf))
     val categoryFilter: StateFlow<HistoryFilter?> = _categoryFilter.asStateFlow()
 
-    fun onQueryChanged(value: String) { _query.value = value }
+    /**
+     * A filter as one string, because a SavedStateHandle holds what a Bundle holds.
+     *
+     * "Unfiled" is its own value rather than an absent category: the two are
+     * different states, and the whole reason HistoryFilter exists rather than a
+     * nullable Category.
+     */
+    private fun filterOf(stored: String): HistoryFilter? = when (stored) {
+        UNFILED -> HistoryFilter.Unfiled
+        else -> SaudiCategories.byId(stored)?.let(HistoryFilter::OfCategory)
+    }
+
+    private fun HistoryFilter?.stored(): String? = when (this) {
+        null -> null
+        HistoryFilter.Unfiled -> UNFILED
+        is HistoryFilter.OfCategory -> category.id
+    }
+
+    fun onQueryChanged(value: String) {
+        _query.value = value
+        savedState[QUERY] = value
+    }
 
     /**
      * Tapping the same band again clears the filter, so it is its own undo.
@@ -196,12 +236,16 @@ class AddExpenseViewModel(
      */
     fun toggleCategoryFilter(category: Category?) {
         val next = category?.let(HistoryFilter::OfCategory) ?: HistoryFilter.Unfiled
-        _categoryFilter.value = if (_categoryFilter.value == next) null else next
+        val chosen = if (_categoryFilter.value == next) null else next
+        _categoryFilter.value = chosen
+        savedState[FILTER] = chosen.stored()
     }
 
     fun clearFilters() {
         _query.value = ""
         _categoryFilter.value = null
+        savedState[QUERY] = ""
+        savedState[FILTER] = null
     }
 
     /** The salary the bank last announced, for the month line until the user types one. */
@@ -646,8 +690,26 @@ class AddExpenseViewModel(
         private val readInbox: (suspend () -> List<sa.masrouf.core.capture.RawMessage>)? = null,
         private val maintenance: suspend () -> Unit = {},
     ) : ViewModelProvider.Factory {
+        // The overload that receives CreationExtras, because that is the only one
+        // that can hand over a SavedStateHandle. The old one stays deleted rather
+        // than left throwing: two create methods where one works is how a factory
+        // silently builds a view model with no saved state at all.
         @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel> create(modelClass: Class<T>): T =
-            AddExpenseViewModel(repository, readInbox = readInbox, maintenance = maintenance) as T
+        override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T =
+            AddExpenseViewModel(
+                repository,
+                readInbox = readInbox,
+                maintenance = maintenance,
+                savedState = extras.createSavedStateHandle(),
+            ) as T
+    }
+
+    private companion object {
+        const val SELECTED_MONTH = "selected_month"
+        const val QUERY = "query"
+        const val FILTER = "filter"
+
+        /** The filter that is not a category. See HistoryFilter. */
+        const val UNFILED = "unfiled"
     }
 }
