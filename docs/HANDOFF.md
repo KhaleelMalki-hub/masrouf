@@ -6,7 +6,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
 
 ## Where things stand
 
-- All tests green: **372** in `:core`, **190** in `:app`, **9** instrumented
+- All tests green: **374** in `:core`, **192** in `:app`, **9** instrumented
   (`:app:connectedDebugAndroidTest`).
 - **`connectedDebugAndroidTest` uninstalls the app and deletes its database.**
   It has already cost the owner's phone once. Use the `masrouf35` emulator, or
@@ -466,7 +466,7 @@ owner remember الخزائن الاحترافية in Al Rawdah.
 **Where the filing ended:** 728 unfiled debits, 129,868 riyals, across 466
 merchants; 245 of those records (32,580 riyals) are in the last 24 months. It began
 the day at 2,063 records and 580,669 riyals. Maintenance is at **40**, nothing is
-pending, and the tests stand at 372 in `:core` and 190 in `:app`.
+pending, and the tests stand at 374 in `:core` and 192 in `:app`.
 
 **A bug found in a screenshot he sent.** The home screen said he pays 102,890
 riyals a month across 14 recurring payments. `RecurringDetector` filtered on
@@ -699,6 +699,41 @@ today, so the split waits for a reason better than a line count. `AL MUASHA` -
 phone and needs the owner's memory. And a baseline profile would help the cold start
 further, but it does nothing for a debug build and the release build already took
 the launch from 677ms to about 200.
+
+## Three directions the wording stated and the rules did not read
+
+Found by turning the reversal method on the whole archive: every stored body
+skeletonised - digits masked - grouped into template families, and each family
+weighed against what it produced. 26,402 messages, 5,744 families, five that
+disagreed with themselves, and then the largest spending families read rather than
+counted.
+
+**1. "حوالة عكسية" - a card refund, stored as money leaving.** 105 rows, 12,568.63
+riyals, each counted as spending on top of the purchase it refunds. Maintenance 41.
+
+**2. "حوالة واردة بين حساباتك" - money arriving between his own accounts, stored as
+leaving in half the cases.** 87 identical messages, 45 one way and 42 the other,
+decided by which pass had read each one. Neither counts as spending, so no total
+ever disagreed: the row simply drew a plus, or did not. Maintenance 42, and lifetime
+spending was identical to the halala before and after - the control this one had to
+pass.
+
+**3. "تحويل من A PERSON" - money ARRIVING from his family, counted as spending since
+2014.** The sender is named on the first line and the account on the third is his.
+**639 rows, 920,075.40 riyals** - over a tenth of the lifetime total. Maintenance 43.
+
+The bank counts too, and that is what settled every one of them. For the third: of
+the rows in that family carrying a running balance, **332 show it rising by exactly
+the amount and not one shows it falling.**
+
+Applied to the phone on 2026-09-06 after a full backup. Lifetime spending
+**8,197,721.85 → 7,277,646.45**. The whole-database type distribution moved in
+exactly one place - TRANSFER_OUT down 639, OWN_TRANSFER down 32, TRANSFER_IN up 671
+- and no PURCHASE, BILL_PAYMENT, FEE or SALARY row changed at all.
+
+**The method is the finding.** Three defects of one shape, none of which any total
+disagreed about, all found by grouping messages by template and asking what each
+family produced. It is worth re-running whenever a bank changes its wording.
 
 ## Open items
 
