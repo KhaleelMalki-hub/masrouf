@@ -894,7 +894,7 @@ class TransactionRepository(
          * واردة between the owner's own accounts is money arriving, and was stored as
          * leaving whenever the classifier rather than a later retype had read it.
          */
-        val DIRECTION_WORDS = listOf("عكس", "بين حساباتك")
+        val DIRECTION_WORDS = listOf("عكس", "بين حساباتك", "تحويل من")
 
         /** A learned rule scoped to one bank: "AMMAR@barq". The bare key is the general rule. */
         fun ruleKey(merchantKey: String, bankId: String) = "$merchantKey@$bankId"

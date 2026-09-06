@@ -295,6 +295,19 @@ object IntentClassifier {
         // own phrases ("حوالة صادرة محلية", "حوالة محلية صادرة", "حوالات فورية
         // واردة"), and statements use a different noun than messages do - حوالة in
         // one, تحويل in the other - so both roots are listed.
+        // "تحويل من حنين طلال مقادمي / مبلغ 500 SAR / حساب 104*010" - the sender is
+        // named and the account is his, so this is money ARRIVING. It was read as an
+        // ordinary outgoing transfer: 567 records, 846,912 riyals, counted as
+        // spending for twelve years.
+        //
+        // The bank's own running balance settles it and leaves nothing to argue
+        // with. Of the rows in this family that carry a balance, 332 show it rising
+        // by exactly the amount and NOT ONE shows it falling. Placed above the
+        // outgoing rules, below the own-account ones, and phrased rather than
+        // tokenised - "تحويل" and "من" as separate tokens would match half the
+        // corpus.
+        Rule(TransactionType.TRANSFER_IN, Direction.CREDIT, listOf("تحويل من")),
+
         Rule(TransactionType.TRANSFER_IN, Direction.CREDIT, listOf("حوال", "وارد")),
         Rule(TransactionType.TRANSFER_IN, Direction.CREDIT, listOf("تحويل", "وارد")),
         Rule(TransactionType.TRANSFER_OUT, Direction.DEBIT, listOf("حوال", "صادر")),

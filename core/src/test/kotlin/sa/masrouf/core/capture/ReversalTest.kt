@@ -80,4 +80,48 @@ class ReversalTest {
         assertEquals(Direction.CREDIT, draft.direction)
         assertEquals(TransactionType.TRANSFER_IN, draft.type)
     }
+    /**
+     * A named sender means the money is arriving.
+     *
+     * "تحويل من A PERSON / مبلغ N / حساب 0000*" was read as an ordinary outgoing
+     * transfer - 567 records and 846,912 riyals counted as spending across twelve
+     * years - because the classifier saw a transfer and no marker saying which way.
+     *
+     * The bank's own running balance settles it: of the rows in this family that
+     * carry one, 332 show the balance rising by exactly the amount and not one shows
+     * it falling.
+     */
+    @Test
+    fun `a transfer from a named sender is money arriving`() {
+        val draft = captured(
+            """
+            تحويل من A PERSON
+            مبلغ 640 SAR
+            حساب 0000*
+            في 06/09/2026 08:00
+            """.trimIndent()
+        )
+
+        assertEquals(Direction.CREDIT, draft.direction)
+        assertEquals(TransactionType.TRANSFER_IN, draft.type)
+        assertEquals(false, draft.type.countsAsSpending)
+    }
+
+    /** And an outgoing one still says so. */
+    @Test
+    fun `a transfer addressed to someone is money leaving`() {
+        val draft = captured(
+            """
+            حوالة صادرة داخلية
+            مبلغ:640 SAR
+            إلى:A PERSON
+            إلى:0000*
+            في:06/09/2026 08:00
+            """.trimIndent()
+        )
+
+        assertEquals(Direction.DEBIT, draft.direction)
+        assertEquals(true, draft.type.countsAsSpending)
+    }
+
 }

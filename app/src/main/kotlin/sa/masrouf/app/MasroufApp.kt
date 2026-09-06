@@ -82,6 +82,7 @@ class MasroufApp : Application() {
                 Repair.RETYPE_OWN_MONEY -> transactions.retypeOwnMoney()
                 Repair.RETYPE_REVERSALS -> transactions.retypeMisreadDirections()
                 Repair.RETYPE_OWN_DIRECTION -> transactions.retypeMisreadDirections()
+                Repair.RETYPE_INBOUND -> transactions.retypeMisreadDirections()
                 Repair.REREAD_WHOLE_INBOX -> if (!rereadWholeInbox()) deferred = true
                 Repair.REFILE_ALL -> transactions.refileAll()
             }
@@ -214,6 +215,17 @@ class MasroufApp : Application() {
         RETYPE_OWN_DIRECTION(42),
 
         /**
+         * The largest of the three, and the same shape as the other two.
+         *
+         * "تحويل من <a person> / مبلغ / حساب <his>" is money arriving, and it was
+         * read as an ordinary outgoing transfer: 567 records, 846,912 riyals,
+         * counted as spending for twelve years. The bank's own running balance
+         * settles it - 332 of the rows that carry one show it rising by exactly the
+         * amount, and not one shows it falling.
+         */
+        RETYPE_INBOUND(43),
+
+        /**
          * The whole inbox, re-read once, because the app can now understand a
          * sender it never could.
          *
@@ -243,10 +255,11 @@ class MasroufApp : Application() {
         // 38: الدهام للساعات.
         // 39: مؤسسة عبود باحشوان, Nissan and Haval parts.
         // 40: الخزائن الاحترافية, the wardrobe.
+        // 43: the inbound transfers that were counted as spending.
         // 42: the incoming own-transfers, which now carry the other direction.
         // 41: after the reversals below were corrected - a refund that becomes a
         //     credit has a different category from the transfer it used to be.
-        REFILE_ALL(42),
+        REFILE_ALL(43),
     }
 
     /**
