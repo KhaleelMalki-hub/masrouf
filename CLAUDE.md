@@ -6,6 +6,11 @@ statements. Single user, on-device, offline. Not a product, not published.
 Session state and the open backlog live in `docs/HANDOFF.md`; read it before
 starting work.
 
+`docs/LESSONS_LEARNED.md` is the other one, and it is not optional reading. Every
+rule in it was paid for by a mistake made in this repository, and several of them
+were paid for twice - the second time by someone who had the document and did not
+read it. Read it whole before writing anything.
+
 ## Commands
 
 ```bash
