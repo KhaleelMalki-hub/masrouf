@@ -576,3 +576,160 @@ another. CLAUDE.md rule 11 already says a screen that compiles is not a screen
 that fits; this extends it to a screen that reviews cleanly.
 **How to apply:** Every layout, weight, or overflow change in Compose.
 **Source:** session 2026-09-03, `HistoryList.CardMark`.
+
+### 2026-09-05 — Built a rule on a diagnosis one question would have dismantled
+**Mistake:** The owner reported three rows for one hundred riyals. Diagnosed it as a
+bank announcing one transfer under three templates, shipped a dedup rule that merges
+same-bank messages with different wording inside thirty seconds, wrote four tests for
+it, and pushed. Then asked him whether the hundred had been sent once or twice. Once
+— so the three messages were an arrival, a reversal eight seconds later, and the
+arrival again: three real entries, and the app's only error was storing the reversal
+as a credit. Nothing needed merging, and the rule as shipped would have swallowed the
+reversal.
+**Why:** The three rows were consistent with two stories and the cheaper one was
+assumed. The question that separates them costs one sentence; the rule built on the
+wrong story cost a day and would have destroyed a real movement of money.
+**Rule:** Before writing a rule that MERGES or DISCARDS records, name the two stories
+the evidence fits and ask the owner the one question that separates them. He is
+sitting there and he was present at the event; the database was not.
+**How to apply:** Any deduplication, any "these are the same thing" heuristic, any
+change whose failure mode is a record disappearing.
+**Source:** session 2026-09-05, `DuplicateDetector` retell rule, added and removed.
+
+### 2026-09-05 — A warning in prose does not stop the hand that is already moving
+**Mistake:** Ran `connectedDebugAndroidTest` against the owner's phone to check a
+migration. The task uninstalls the app when it finishes, which deletes its database.
+CLAUDE.md says so in capital letters, with the incident that put it there. Twelve
+years of captured messages went; they came back only because a backup had been taken
+half an hour earlier for an unrelated reason.
+**Why:** This is the second time (see 2026-08-31). A document is read by whoever is
+not about to make the mistake; the person about to make it is thinking about the
+migration, not about the file that warns them.
+**Rule:** A destructive default gets a GATE, not a paragraph. The device serial lives
+in `local.properties` and the Gradle task fails before it installs anything, with an
+override flag that names what it costs. Any documented "never do X on the real
+device" that recurs should become a check that fires at the moment of X.
+**How to apply:** When a lesson repeats, stop writing the lesson and write the guard.
+**Source:** session 2026-09-05, `app/build.gradle.kts` connected-test guard.
+
+### 2026-09-05 — A search for a name cannot see an operator
+**Mistake:** Deleted `Money.unaryMinus` as dead code on the strength of a repository
+grep for `unaryMinus`, which returned only its declaration. `StatementImporter`
+writes it as `-amount`. The compiler found it in one build.
+**Why:** Kotlin operators are declared by name and used by symbol. The same is true
+of a Compose `Modifier` extension used through a builder, a resource used from XML, a
+Room method used through generated code.
+**Rule:** A negative finding is a claim about one SPELLING. Before deleting, name
+every syntax that can reach the thing, and let the resolver that actually resolves it
+answer — the compiler, the build, the generated code — never a second grep.
+**How to apply:** Every dead-code deletion. The cost of the check is one build.
+**Source:** session 2026-09-05, `Money.unaryMinus`.
+
+### 2026-09-05 — Group the messages by template and ask what each family produced
+**Mistake:** Nothing, and that is the point: three separate defects, each of them
+money read backwards, and not one of them made any total disagree with another. They
+were invisible to every test, every screen and every reconciliation the app performs.
+**Why:** Each was a whole FAMILY of messages classified consistently wrongly. A
+consistency check compares two answers; when one wording is always read the same
+wrong way, there is no second answer to compare it with.
+**Rule:** Periodically skeletonise every stored body — mask digit runs — group into
+template families, and weigh each family against what it produced. Two signals matter:
+a family whose rows disagree about direction or type, and a large family whose
+classification nobody has read in prose. 26,402 messages reduced to 5,744 families,
+five of which disagreed with themselves.
+**How to apply:** After any bank changes a template, and on a slow day. It found
+12,568 riyals of refunds counted as spending, 87 own-transfers stored in two
+directions, and 920,075 riyals of money arriving from family counted as money spent
+since 2014.
+**Source:** session 2026-09-05, maintenance 41, 42 and 43.
+
+### 2026-09-05 — The bank counts too; its balance line settles direction
+**Mistake:** Nearly argued about direction from wording alone — "عكسية" and "تحويل
+من" both read either way if you are determined enough.
+**Why:** The messages carry a running balance, and the balance is the bank's own
+arithmetic on the same event. It cannot be argued with and does not need the owner's
+memory.
+**Rule:** When a record's DIRECTION is in doubt, find the balance in the same message
+and compare it with the previous balance on that account. Rising by exactly the
+amount is money arriving; falling is money leaving; anything else is not evidence.
+Count the whole family, and report the split — "332 rows rose by the amount and none
+fell" is a finding, "it looks incoming" is not.
+**How to apply:** Any direction, type or refund question, before changing a rule and
+before running a repair over the history.
+**Source:** session 2026-09-05, `الرصيد` comparisons across 156 and 599 rows.
+
+### 2026-09-05 — `merge` fills the receiver's gaps, and thirteen call sites did nothing
+**Mistake:** `MoneyStyle.merge(MaterialTheme.typography.titleMedium)` was written at
+every money site in the app. `TextStyle.merge(other)` gives the ARGUMENT priority, and
+every M3 role sets a weight and a tracking — so the money treatment was inert
+everywhere, and the card's last-four was actually widened by `labelMedium`'s 0.8sp,
+the opposite of the intent.
+**Why:** The call reads like "apply my style, merged with that one". It does the
+reverse, and the result is plausible on screen: text that is simply the role's own
+style is not visibly broken.
+**Rule:** For any combine/merge/override API, write down which side wins before using
+it, and prove it on one visible case. An inert style, an ignored config, a lost
+override — all look like working code.
+**How to apply:** `TextStyle.merge`, `Modifier.then`, config merges, theme overrides.
+**Source:** session 2026-09-05, `Theme.MoneyStyle`.
+
+### 2026-09-05 — A flow transforms where it is collected
+**Mistake:** Eleven derived flows in the view model filtered rows, folded two strings
+per row for search, counted, summed and grouped — all inside `stateIn(viewModelScope,
+…)`, which is `Dispatchers.Main.immediate`. The repository's own flows carry
+`flowOn(computation)` and a comment naming the launch freeze it fixed; the transforms
+layered on top never inherited it.
+**Why:** `flowOn` is upstream-only, so a `map` added AFTER it runs on the collector.
+The code reads as though the dispatcher was already chosen.
+**Rule:** Every operator between a repository flow and `stateIn` runs on the
+collecting thread. If it touches every row, give it its own `flowOn`, and inject the
+context so a test can drive it.
+**How to apply:** Any `.map`/`.combine` over a list in a ViewModel.
+**Source:** session 2026-09-05, `AddExpenseViewModel`.
+
+### 2026-09-05 — The debug build is not the app
+**Mistake:** Spent the performance investigation entirely inside a debug build, and
+was about to propose a baseline profile — which does nothing without R8 and
+ahead-of-time compilation, i.e. nothing for the build the owner was running.
+**Why:** A debug build disables the optimisations that decide cold start, and Compose
+adds its own debug paths. Every measurement taken on it describes a configuration
+nobody uses.
+**Rule:** Measure and ship the build the user runs. Same phone, same data, same
+script: janky frames fell 15.9% → 2.68% and launch 677ms → 215ms with no code change
+at all. Sign the release with the debug key so an install replaces rather than
+removes — the key decides whether the database survives — and mark it
+`profileable` so it can still be measured.
+**How to apply:** Before any performance work, and before proposing a profile-guided
+optimisation.
+**Source:** session 2026-09-05, `app/build.gradle.kts` release build type.
+
+### 2026-09-05 — Replacing a tautological test with an assertion nobody required
+**Mistake:** Found a test asserting that an enum's entries are unique — which the
+language guarantees — and replaced it with "no two repairs share a version". It went
+red immediately: two repairs added in one release are MEANT to run together, because
+the selector is `done < introducedIn`.
+**Why:** A test that cannot fail is a real finding, but the replacement was invented
+from the shape of the code rather than from the rule the code implements.
+**Rule:** When deleting an assertion that cannot fail, either delete it or replace it
+with a property you can state in one sentence AND point to the code that requires it.
+If the new assertion goes red on first run, the assertion is the suspect.
+**How to apply:** Every "this test cannot fail" finding.
+**Source:** session 2026-09-05, `MaintenanceOrderTest`.
+
+### 2026-09-05 — Two comments disagreed; the one written from an observation won
+**Mistake:** `ReceiptSlip` set `reverseScrolling = isRtl` under a comment saying a
+horizontal scroll always starts at the left edge. `CardsPanel` says the opposite and
+records it as a bug someone watched happen. Both had been true-looking for weeks.
+Separately, the month strip's entrance carried a comment claiming an unkeyed
+`remember` stops the animation replaying when the item scrolls back — it does not; a
+disposed `remember` is gone whatever its key was.
+**Why:** A comment is written once, at the moment of a change, and is never re-run.
+It outlives the behaviour it describes and is trusted more than code because it reads
+like a decision.
+**Rule:** When two comments in one repository contradict each other, the one written
+against an OBSERVED failure wins, and the loser gets deleted rather than left to
+confuse the next reader. When a comment cannot be verified now, say so in it —
+"argued, not photographed" is worth more than a confident sentence.
+**How to apply:** Any time a comment is the reason to believe something.
+**Source:** session 2026-09-05, `ReceiptSlip` and `MonthStrip`.
+
