@@ -59,7 +59,7 @@ class RetypeReversalsTest {
         rawText = body,
     )
 
-    private suspend fun row(id: String) = dao.allWithBody().single { it.id == id }
+    private fun row(id: String) = dao.rows.single { it.id == id }
 
     @Test
     fun `a reversed card purchase becomes money coming back`() = runTest {

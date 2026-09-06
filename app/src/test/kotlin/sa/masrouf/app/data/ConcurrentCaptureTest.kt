@@ -79,7 +79,7 @@ class ConcurrentCaptureTest {
         override suspend fun latestSmsMillis(): Long? = null
         override fun observeLatestSalary(): Flow<Long?> = MutableStateFlow(null)
         override suspend fun fillParty(id: String, merchantRaw: String?, merchantKey: String?, last4: String?) = 0
-        override suspend fun allWithBody() = emptyList<TransactionEntity>()
+        override suspend fun bodiesAfter(afterId: String, limit: Int) = emptyList<TransactionEntity>()
         override suspend fun cardsSeen() = emptyList<String>()
         override suspend fun newestBodiesForCard(last4: String, limit: Int) = emptyList<String>()
         override suspend fun clearNumericParties() = 0

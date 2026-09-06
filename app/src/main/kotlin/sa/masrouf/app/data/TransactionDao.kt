@@ -412,9 +412,24 @@ interface TransactionDao {
     @Query("UPDATE transactions SET amount_halalas = :halalas WHERE id = :id AND source <> 'MANUAL'")
     suspend fun setAmount(id: String, halalas: Long): Int
 
-    /** Rows whose stored body is a credential. They should never have existed. */
-    @Query("SELECT * FROM transactions WHERE raw_text IS NOT NULL")
-    suspend fun allWithBody(): List<TransactionEntity>
+    /**
+     * One page of stored bodies, ordered by id, after the id given.
+     *
+     * A page rather than the whole table. Every maintenance pass reads these, and
+     * reading them whole put twenty-two thousand rows - each with its full message
+     * text - into one list, twice over in a single run. Keyset rather than OFFSET
+     * because a purge deletes rows as it goes and an offset would then step over the
+     * rows that shuffled up into the gap.
+     */
+    @Query(
+        """
+        SELECT * FROM transactions
+        WHERE raw_text IS NOT NULL AND id > :afterId
+        ORDER BY id
+        LIMIT :limit
+        """
+    )
+    suspend fun bodiesAfter(afterId: String, limit: Int): List<TransactionEntity>
 
     @Query("DELETE FROM transactions WHERE id IN (:ids)")
     suspend fun deleteAll(ids: List<String>): Int

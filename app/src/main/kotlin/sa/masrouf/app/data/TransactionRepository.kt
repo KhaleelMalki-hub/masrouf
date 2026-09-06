@@ -291,7 +291,7 @@ class TransactionRepository(
     suspend fun repairAmounts(): Int {
         val parsers = SaudiBanks.ALL.map(::BankMessageParser)
         var fixed = 0
-        dao.allWithBody().chunked(REPARSE_BATCH).forEach { batch ->
+        forEachBodyPage { batch ->
             inTransaction {
                 batch.forEach { row ->
                     val body = row.rawText ?: return@forEach
@@ -340,7 +340,7 @@ class TransactionRepository(
     suspend fun retypeReversals(): Int {
         val parsers = SaudiBanks.ALL.map(::BankMessageParser)
         var moved = 0
-        dao.allWithBody().chunked(REPARSE_BATCH).forEach { batch ->
+        forEachBodyPage { batch ->
             inTransaction {
                 batch.forEach { row ->
                     val body = row.rawText ?: return@forEach
@@ -530,16 +530,19 @@ class TransactionRepository(
      * @return how many rows were removed.
      */
     suspend fun purgeRejectedBodies(): Int {
-        val doomed = dao.allWithBody()
-            .filter { row ->
-                val decision = MessageGate.evaluate(
-                    RawMessage(body = row.rawText!!, receivedAt = Instant.EPOCH)
-                )
-                decision is MessageGate.Decision.Reject && shouldPurge(decision.reason, row)
-            }
-            .map { it.id }
-        if (doomed.isEmpty()) return 0
-        return dao.deleteAll(doomed)
+        var removed = 0
+        forEachBodyPage { page ->
+            val doomed = page
+                .filter { row ->
+                    val decision = MessageGate.evaluate(
+                        RawMessage(body = row.rawText!!, receivedAt = Instant.EPOCH)
+                    )
+                    decision is MessageGate.Decision.Reject && shouldPurge(decision.reason, row)
+                }
+                .map { it.id }
+            if (doomed.isNotEmpty()) removed += dao.deleteAll(doomed)
+        }
+        return removed
     }
 
     /**
@@ -845,6 +848,24 @@ class TransactionRepository(
      * become an edit that keeps `rawText` and records what was changed.
      */
     suspend fun delete(id: String): Boolean = dao.delete(id) == 1
+
+    /**
+     * Every stored body, a page at a time, oldest id first.
+     *
+     * The page is the unit of work as well as the unit of reading: each one is handed
+     * to [action] and forgotten, so a pass over the whole history holds one batch in
+     * memory rather than all of it. Two passes used to read the entire table into a
+     * list, in one maintenance run, each row carrying its full message text.
+     */
+    private suspend fun forEachBodyPage(action: suspend (List<TransactionEntity>) -> Unit) {
+        var after = ""
+        while (true) {
+            val page = dao.bodiesAfter(after, REPARSE_BATCH)
+            if (page.isEmpty()) return
+            action(page)
+            after = page.last().id
+        }
+    }
 
     companion object {
         const val RECENT_LIMIT = 50

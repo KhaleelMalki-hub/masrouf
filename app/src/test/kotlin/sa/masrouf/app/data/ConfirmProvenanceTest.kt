@@ -50,7 +50,7 @@ class ConfirmProvenanceTest {
     )
 
     private suspend fun storedSource(): String? =
-        dao.allWithBody().single { it.id == "guessed" }.categorySource
+        dao.rows.single { it.id == "guessed" }.categorySource
 
     @Test
     fun `confirming without touching the chips leaves the guess the app's own`() = runTest {
@@ -70,7 +70,7 @@ class ConfirmProvenanceTest {
         assertEquals(CategorySource.MANUAL.name, storedSource())
         assertEquals(
             SaudiCategories.GROCERIES.id,
-            dao.allWithBody().single { it.id == "guessed" }.categoryId,
+            dao.rows.single { it.id == "guessed" }.categoryId,
         )
     }
 
@@ -82,7 +82,7 @@ class ConfirmProvenanceTest {
 
         assertEquals(
             Status.CONFIRMED.name,
-            dao.allWithBody().single { it.id == "guessed" }.status,
+            dao.rows.single { it.id == "guessed" }.status,
         )
     }
 }

@@ -238,7 +238,13 @@ class FakeDao : TransactionDao {
         return doomed.size
     }
 
-    override suspend fun allWithBody(): List<TransactionEntity> = state.value.filter { it.rawText != null }
+    // Ordered by id and bounded, like the query: a double that returned everything
+    // would let a paged pass look right while never testing the paging.
+    override suspend fun bodiesAfter(afterId: String, limit: Int): List<TransactionEntity> =
+        state.value
+            .filter { it.rawText != null && it.id > afterId }
+            .sortedBy { it.id }
+            .take(limit)
 
     override suspend fun cardsSeen(): List<String> =
         state.value.mapNotNull { it.accountLast4 }.distinct()
