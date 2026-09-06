@@ -261,5 +261,27 @@ object ConfirmedMerchants20260902 {
         // No search would ever have reached it: the terminal sends nine
         // characters of an English word that thousands of businesses use.
         "PROFESSIO" to SHOPPING,
+
+        // ---- Read from the terminal string and confirmed by the owner, 2026-09-06.
+
+        // "OPERATOR" is the terminal's literal English for مشغل, which in Saudi
+        // usage is a women's atelier - tailoring, hair, beauty. Two charges on one
+        // afternoon in November 2019, 2,000 and 600.
+        //
+        // The keyword is the whole name, and MUASHGAL below is the transliteration
+        // that generalises. "OPERATOR" alone is deliberately NOT a keyword: it is an
+        // ordinary English word, and a telecom operator would walk straight into it.
+        "OPERATOR RAJAA SALEH" to SERVICES,
+        "MUASHGAL" to SERVICES,
+
+        // Vehicle tracking hardware - the GPRS in the name is the giveaway, and the
+        // owner confirmed it. Filed with the car for the same reason as the parts
+        // shops: it is spending the car causes.
+        "GLOBAL GROUP GPRS" to TRANSPORT,
+
+        // An eye clinic in Jeddah. The owner recognised it, and his own history
+        // agrees from a second direction: "ITQAN MEDICAL CENTER JEDDAH" is in the
+        // corpus too, filed health, on a different card five years earlier.
+        "ITQAN AL SAFWA" to HEALTH,
     )
 }

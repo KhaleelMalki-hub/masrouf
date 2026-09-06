@@ -2,6 +2,7 @@ package sa.masrouf.core.model
 
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 
 /**
  * The 2026-09-02 web-identified merchants the owner confirmed, against the exact
@@ -161,4 +162,35 @@ class ConfirmedMerchants20260902Test {
         assertEquals(SaudiCategories.GROCERIES, CategoryGuess.forMerchant("AJWAD AL KARAM CO"))
         assertEquals(SaudiCategories.GROCERIES, CategoryGuess.forMerchant("AJWAD ALKRM COM"))
     }
+    /**
+     * The four the owner placed on 2026-09-06, from the terminal string alone.
+     *
+     * "OPERATOR" is the terminal's literal English for مشغل - a women's atelier -
+     * which is why the transliteration generalises and the English word must not.
+     */
+    @Test
+    fun `the September the sixth readings`() {
+        assertEquals(SaudiCategories.SERVICES, CategoryGuess.forMerchant("OPERATOR RAJAA SALEH A"))
+        assertEquals(SaudiCategories.SERVICES, CategoryGuess.forMerchant("HOWAIDA MUASHGAL"))
+        assertEquals(SaudiCategories.TRANSPORT, CategoryGuess.forMerchant("GLOBAL GROUP GPRS"))
+        assertEquals(SaudiCategories.HEALTH, CategoryGuess.forMerchant("ITQAN AL SAFWA COMPANY"))
+    }
+
+    /**
+     * And the word "operator" on its own claims nothing.
+     *
+     * It is an ordinary English word: a telecom operator, an operator fee, a crane
+     * operator. The keyword is the atelier's whole name and the Arabic
+     * transliteration beside it, never the English word alone.
+     */
+    @Test
+    fun `a telecom operator is not an atelier`() {
+        // Not "returns null" - "MOBILE OPERATOR" is a phone company and the bills
+        // keyword claims it, correctly. The property under test is narrower: the
+        // English word never means an atelier.
+        assertNotEquals(SaudiCategories.SERVICES, CategoryGuess.forMerchant("MOBILE OPERATOR LTD"))
+        assertNotEquals(SaudiCategories.SERVICES, CategoryGuess.forMerchant("CRANE OPERATOR CO"))
+        assertNotEquals(SaudiCategories.SERVICES, CategoryGuess.forMerchant("OPERATOR FEE"))
+    }
+
 }
