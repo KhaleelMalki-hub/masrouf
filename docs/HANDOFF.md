@@ -791,6 +791,34 @@ one thing open:
   makes this worth repeating over the other months - the same move that found the
   STC Pay wallet, one layer up.
 
+**The six-year statement, reconciled (2026-09-10).** He then exported the whole
+card history, 2024-10-07 to 2026-09-09, 3,204 transactions. Matched against the
+database by amount and date (a stored row may satisfy only one statement row), and
+scoped to the card now that 7404 and 2383 are one:
+
+| | rows | riyals |
+|---|---|---|
+| on the statement, no row in the app | 513 debits | **145,704.12** |
+| " | 58 credits | 25,989.86 |
+| in the app, no row on the statement | 104 purchases | 29,313.31 |
+
+So the app **under-counts this card by roughly 116,000 riyals over two years**. The
+uncaptured are not exotic: HungerStation 107 times, `VAT on Markup` 24 times (the
+bank sends no SMS for it at all), Dr Soliman Fakeeh 14, and single large ones -
+OUNASS 4,887.50, a charity 5,600.00, BVLGARI 2,350.00.
+
+Two caveats on the figure, both in the direction of "measure again before acting":
+the totals do not fully close (statement debits 784,709.00 against 583,804.28 of
+stored purchases on the card, a 200,905 gap where this method accounts for 145,704),
+and the 104 the other way are unexplained - some will be a date outside the
+four-day window, some a purchase the statement posts differently.
+
+**Nothing was imported.** Statement import is not wired into the app, and CLAUDE.md
+says why that is not a small job: `DuplicateDetector.reconcile` takes a LIST on
+purpose, so a whole file must reconcile inside one lock, and importing with
+`forEach { recordCaptured(it) }` would silently merge real money. This is now the
+largest known gap in the history and the reason to do it.
+
 **Also measured, not chased:** the database is **17.0 MB** and Auto Backup's
 ceiling is 25 MB. See the backup section.
 
