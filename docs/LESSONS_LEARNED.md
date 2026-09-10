@@ -788,3 +788,38 @@ run it over the corpus before writing it into the code: the expected count is a 
 and a diff four times larger than the prediction is the finding.
 **How to apply:** Any rule that reads a party's role from the field it sits in.
 **Source:** session 2026-09-10, `IntentClassifier.namesABeneficiary`
+
+### 2026-09-10 — The document with the longer field is a different search, not another try
+**Mistake (of scope, not of code):** `AL MUASHA` had been called exhausted. Four channels
+on the phone were tried and re-tried across sessions - the one-time-password message that
+spells a merchant out, the shop's own SMS on the same day, the same shop under a second
+name in another year, the context of the trip around it - and a research pass spent about
+fifteen searches on the fragment itself. All of it searched the same nine characters,
+because that is all the SMS holds: Al Rajhi truncates a merchant to nine. The name was in
+the owner's card statement, untruncated, and one `pdftotext | grep` found it. The same file
+also showed that a card the app had as two was one, and that 15 of its 298 transactions had
+no row in the database at all.
+**Why:** "Every channel is exhausted" was true of one SOURCE. The phone holds messages; a
+statement is a different document with a different field width, and nobody had asked for one
+because the message store had always been enough before.
+**Rule:** When a string cannot be identified, ask what the string is a TRUNCATION of, and
+find the document that stores it untruncated - before searching the fragment again. A
+search of a truncation cannot succeed however many times it is run, and repeating it looks
+like diligence.
+**How to apply:** Any unidentified merchant, and any field that a sender abbreviates.
+**Source:** session 2026-09-10, `AL MUASHAH TRADINJ C`
+
+### 2026-09-10 — Two numbers for one card, and the app believed both
+**Mistake:** 7404 was in the history 2,088 times over sixteen months, `CardIssuers` did not
+list it, and the handover recorded it as a cancelled card - an inference from the SMS
+switching to 2383 in February 2026, which is exactly where 7404 stops. It is 2383. The
+statement is headed `445521******2383` and 277 of its 298 transactions for two months of
+2025 are stored under 7404, only 75 of them through Google Pay. Those 2,088 rows carried no
+bank mark, no tile and no share of a credit limit that was configured under the other number.
+**Why:** A card's last four digits were treated as the card's identity. They are what the
+message PRINTED, and a bank prints different things for the same card at different times.
+**Rule:** An identifier a sender writes is a name for the thing, not the thing. When two of
+them cover disjoint date ranges and never appear together, suspect one object, and settle it
+with a document that carries both - a statement, not another message.
+**How to apply:** Card numbers, account fragments, wallet ids, merchant ids.
+**Source:** session 2026-09-10, maintenance 48 and `CardIssuers.REISSUED`

@@ -225,6 +225,12 @@ class FakeDao : TransactionDao {
             .sortedByDescending { it.occurredAtMillis }
     }
 
+    override suspend fun renumberCard(from: String, to: String): Int {
+        val doomed = state.value.filter { it.accountLast4 == from }
+        state.value = state.value.map { if (it in doomed) it.copy(accountLast4 = to) else it }
+        return doomed.size
+    }
+
     override suspend fun clearImpossibleParties(): Int {
         val doomed = state.value.filter {
             it.rawText != null &&

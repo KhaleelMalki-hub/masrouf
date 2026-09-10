@@ -10,6 +10,7 @@ import android.content.pm.PackageManager
 import android.Manifest
 import sa.masrouf.app.data.MasroufDatabase
 import sa.masrouf.app.data.CURRENT_MAINTENANCE_VERSION
+import sa.masrouf.app.ui.CardIssuers
 import sa.masrouf.app.data.Preferences
 import sa.masrouf.app.data.TransactionRepository
 import sa.masrouf.app.ui.CreditCards
@@ -84,6 +85,7 @@ class MasroufApp : Application() {
                 Repair.RETYPE_OWN_DIRECTION -> transactions.retypeMisreadDirections()
                 Repair.RETYPE_INBOUND -> transactions.retypeMisreadDirections()
                 Repair.RETYPE_WAGES -> transactions.retypeMisreadDirections()
+                Repair.RENUMBER_CARDS -> transactions.renumberCards(CardIssuers.REISSUED)
                 Repair.REREAD_WHOLE_INBOX -> if (!rereadWholeInbox()) deferred = true
                 Repair.REFILE_ALL -> transactions.refileAll()
             }
@@ -289,6 +291,19 @@ class MasroufApp : Application() {
          * Raised to 26 for urpay, Vision Bank and meem - 950 messages between them,
          * 2015 to 2026, none ever claimed.
          */
+        /**
+         * One card, under the two numbers the bank printed for it.
+         *
+         * 7404 and 2383 are the same AlRajhi credit card - his statement is headed
+         * 2383 and 277 of its 298 transactions for September and October 2025 are
+         * stored here under 7404. The app had 2,088 rows on a card it did not
+         * recognise: no bank mark, no tile, no share of the limit.
+         *
+         * Before the filing, which reads nothing from the card, and after the
+         * retypes, which do not touch it.
+         */
+        RENUMBER_CARDS(48),
+
         REREAD_WHOLE_INBOX(26),
 
         /** Last: filing reads the merchant and the type everything above corrects. */
@@ -316,7 +331,9 @@ class MasroufApp : Application() {
         // 46: the 119 rows whose card came back, on the six banks the first fix
         //     did not reach.
         // 47: the seventeen rows a link to the bank's app had filed as bills.
-        REFILE_ALL(47),
+        // 48: اي هوم للمفروشات, the last merchant on the unplaced list, named by his
+        //     card statement and confirmed by him.
+        REFILE_ALL(48),
     }
 
     /**

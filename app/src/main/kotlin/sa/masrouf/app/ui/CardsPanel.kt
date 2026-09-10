@@ -344,10 +344,37 @@ object CardIssuers {
         "7285" to "barq",
         "2166" to "barq",
         "9941" to "barq",
-        // Not here: urpay's 4322, Vision Bank's 2455 and meem's 5654/0891/0883,
+        // Not here: 7404. It is not a card at all - see REISSUED below.
+        // Not here either: urpay's 4322, Vision Bank's 2455 and meem's 5654/0891/0883,
         // read off those senders' templates on 2026-09-02. This list is for cards
         // the owner says are OPEN (CreditCardLabelTest holds that), and he has not
         // said so; their rows carry a bank_id from the sender regardless.
+    )
+
+    /**
+     * Card numbers that are the same card under a different four digits.
+     *
+     * 7404 was in the history 2,088 times, from October 2024 to February 2026, and
+     * this list did not know it: no bank mark on any of those rows, and a tile for
+     * a card the owner was told had been cancelled. It is 2383. His own card
+     * statement settles it - the statement is headed `445521******2383`, and of its
+     * 298 transactions for September and October 2025, **277 are stored here under
+     * 7404**, only 75 of them through Google Pay. The SMS printed one number and
+     * the statement another for the same card, and the SMS changed over to 2383 in
+     * February 2026, which is exactly where 7404 stops.
+     *
+     * Applied to the stored rows by a repair rather than at read time: the card is
+     * grouped in SQL in four places - the tiles, the balances, the bank marks, the
+     * kinds - and an alias consulted at the point of USE is a truth in four copies,
+     * which is the shape that had two defects in it earlier the same day. One
+     * UPDATE and every reader is right at once.
+     *
+     * No parser change to go with it: the bank has not printed 7404 since February
+     * 2026. If it ever does, the row will stand out as a card nobody recognises,
+     * which is how this was found.
+     */
+    val REISSUED: Map<String, String> = mapOf(
+        "7404" to "2383",
     )
 }
 

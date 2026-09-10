@@ -7,6 +7,7 @@ import sa.masrouf.core.capture.RawMessage
 import sa.masrouf.core.capture.SaudiBanks
 import java.time.Instant
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertFalse
 
 /**
@@ -212,5 +213,31 @@ class OwnerNamedMerchantsTest {
             as ParseResult.Parsed).draft
 
         assertEquals(TransactionType.PURCHASE, draft.type)
+    }
+
+    /**
+     * The shop the SMS could never name, reached through the truncation it made.
+     *
+     * Al Rajhi cuts the merchant to nine characters, so the stored name is
+     * "AL MUASHA" and no search of that string finds anything. His card statement
+     * carries the untruncated "AL MUASHAH TRADINJ C", which reaches a furniture
+     * company in Jeddah, and he confirmed it. The keyword is the LONGER form:
+     * MerchantMatch accepts a truncation when the keyword starts with the stored
+     * name, so the rule has to be at least as long as the shop's real name and the
+     * stored fragment reaches it, not the other way round.
+     */
+    @Test
+    fun `the truncated furniture shop reaches its keyword`() {
+        assertEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("AL MUASHA"))
+    }
+
+    /**
+     * And the keyword is long enough not to reach anything else. Written because a
+     * four-letter keyword took three unrelated companies once before.
+     */
+    @Test
+    fun `the furniture keyword does not reach an unrelated name`() {
+        assertNotEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("AL MUSBAH"))
+        assertNotEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("ALMU"))
     }
 }

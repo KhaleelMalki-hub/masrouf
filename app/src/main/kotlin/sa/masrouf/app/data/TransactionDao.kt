@@ -435,6 +435,21 @@ interface TransactionDao {
     suspend fun clearImpossibleParties(): Int
 
     /**
+     * Moves every row from a card's old four digits to its current ones.
+     *
+     * A reissued card is one card, and the app had it as two: 2,088 rows under the
+     * old number with no issuer, no tile and no share of the credit limit. See
+     * `CardIssuers.REISSUED` for what proves which pairs belong together.
+     *
+     * The whole row set moves, manual records included - unlike a party or a type,
+     * the card is not a reading the app made and the user might have corrected. It
+     * is which piece of plastic the money left from, and that does not change
+     * because someone typed the row by hand.
+     */
+    @Query("UPDATE transactions SET account_last4 = :to WHERE account_last4 = :from")
+    suspend fun renumberCard(from: String, to: String): Int
+
+    /**
      * Corrects one row's amount.
      *
      * The only write in this file that touches a figure the user may have seen, so

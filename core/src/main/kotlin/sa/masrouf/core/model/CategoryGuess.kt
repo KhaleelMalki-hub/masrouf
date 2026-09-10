@@ -886,6 +886,19 @@ object CategoryGuess {
         // string could ever have reached it. He had filed the one visit by hand and
         // no rule existed, so the next one would have arrived unfiled again.
         "MDHAR ALRBWAH" to SaudiCategories.SERVICES,
+        // اي هوم للمفروشات - furniture and home decor, Jeddah. The largest unfiled
+        // record in the history at 4,672.45 riyals, and the last one on the list:
+        // every channel on the phone had been exhausted, because the SMS truncates
+        // the shop to nine characters and "AL MUASHA" names nothing. His CARD
+        // STATEMENT carries the untruncated string - "AL MUASHAH TRADINJ C", the
+        // terminal's own misspelling of TRADING CO - and that reaches the company,
+        // whose domain redirects to the shop. He confirmed it: furniture.
+        //
+        // The keyword is the longer form on purpose. MerchantMatch accepts a
+        // truncation when the KEYWORD starts with the stored name, so "ALMUASHAH"
+        // reaches the stored "AL MUASHA" while staying long enough not to reach
+        // anything else.
+        "AL MUASHAH" to SaudiCategories.SHOPPING,
 
         // Money sent abroad through Western Union out of the STC Pay wallet: 68
         // transfers, 94,126 riyals, every one of them wages for domestic staff, as

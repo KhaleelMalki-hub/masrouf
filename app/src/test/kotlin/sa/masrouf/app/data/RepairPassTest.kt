@@ -28,6 +28,7 @@ class RepairPassTest {
         merchantRaw: String? = null,
         merchantKey: String? = null,
         categorySource: String? = "AUTOMATIC",
+        last4: String? = null,
     ) = TransactionEntity(
         id = "t-${nextId++}",
         amountHalalas = Money.ofMajor(riyals).halalas,
@@ -35,7 +36,7 @@ class RepairPassTest {
         type = "PURCHASE",
         occurredAtMillis = 1_756_000_000_000L,
         accountId = null,
-        accountLast4 = null,
+        accountLast4 = last4,
         categoryId = "food",
         categorySource = categorySource,
         merchantRaw = merchantRaw,
@@ -181,5 +182,30 @@ class RepairPassTest {
 
         assertEquals(0, repository.repairNumericParties())
         assertEquals("104*010", dao.rows.single().merchantRaw)
+    }
+
+    // ---- renumberCards -----------------------------------------------------
+
+    /**
+     * A reissued card is one card, and the rows follow the number it has now.
+     *
+     * 7404 and 2383 are the same AlRajhi credit card: the statement is headed 2383
+     * and 277 of its 298 transactions for two months of 2025 are stored under 7404.
+     * Left alone, the app has 2,088 rows on a card with no issuer, no tile and no
+     * share of the credit limit.
+     */
+    @Test
+    fun `a reissued card takes its rows with it`() = runTest {
+        dao.replaceAll(
+            listOf(
+                stored("شراء", "10", last4 = "7404"),
+                stored("شراء", "20", last4 = "2383"),
+                stored("شراء", "30", last4 = "1887"),
+            ),
+        )
+
+        assertEquals(1, repository.renumberCards(mapOf("7404" to "2383")))
+
+        assertEquals(listOf("2383", "2383", "1887"), dao.rows.map { it.accountLast4 })
     }
 }

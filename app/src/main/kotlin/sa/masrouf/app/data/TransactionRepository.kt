@@ -612,6 +612,22 @@ class TransactionRepository(
     }
 
     /**
+     * Renumbers reissued cards, so one card reads as one card.
+     *
+     * The pairs are passed in rather than held here: they are facts about the
+     * owner's own cards and they live beside the rest of them, in `CardIssuers`.
+     *
+     * @return how many rows moved.
+     */
+    suspend fun renumberCards(pairs: Map<String, String>): Int {
+        var moved = 0
+        inTransaction {
+            pairs.forEach { (from, to) -> moved += dao.renumberCard(from, to) }
+        }
+        return moved
+    }
+
+    /**
      * Reads a balance out of every stored body that has not been read yet.
      *
      * For the history captured before balances were recorded. Bodies that say

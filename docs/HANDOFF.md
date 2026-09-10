@@ -6,7 +6,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
 
 ## Where things stand
 
-- All tests green: **381** in `:core`, **197** in `:app`, **9** instrumented
+- All tests green: **383** in `:core`, **198** in `:app`, **9** instrumented
   (`:app:connectedDebugAndroidTest`).
 - **`connectedDebugAndroidTest` uninstalls the app and deletes its database.**
   It has already cost the owner's phone once. Use the `masrouf35` emulator, or
@@ -15,7 +15,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
   off adb often; check `adb devices` before installing.
 - Database schema version 6. One-off repairs are a set in `MasroufApp.Repair`,
   each stamped with the version that introduced it, taken as a union and run once
-  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **47**.
+  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **48**.
 - Real data on the phone: ~22,014 transactions, ~2,190 unfiled, and the owner's
   own learned merchant rules (34 and growing — he files one whenever a shop the
   shipped list cannot name comes up).
@@ -84,7 +84,12 @@ the party's real name in place of an account number on 1,300 rows.
   All three are his own, so a payment to them is not spending.
 - Cards: 2383 (AlRajhi, credit), 8134 (AlRajhi, credit, now settled), 9994
   (Emirates NBD, credit), 5763 (AlRajhi, mada), 1887 (AlAhli, mada), 8202 (D360,
-  mada), 7285/2166/9941 (three separate barq cards). **7404 is cancelled.**
+  mada), 7285/2166/9941 (three separate barq cards). **7404 was never a card of its
+  own - it is 2383**, and "cancelled" was an inference from the SMS switching over
+  to the other number in February 2026. His card statement settles it: headed
+  `445521******2383`, and 277 of its 298 transactions for September and October
+  2025 were stored here under 7404 (only 75 of them through Google Pay). Maintenance
+  48 moved all 2,088 rows; `CardIssuers.REISSUED` holds the pair.
   7536 and 3761 appear only as the funding card in a barq top-up and their issuer
   is unknown — a digital card from a bank he was trying.
 - He settles the AlRajhi card from the Emirates NBD card and the reverse.
@@ -773,6 +778,19 @@ adb shell pm grant sa.masrouf.app android.permission.READ_SMS
 adb shell pm grant sa.masrouf.app android.permission.RECEIVE_SMS
 ```
 
+**The card statement, and what one grep found.** He exported an AlRajhi credit-card
+statement for 2025-09-01 to 2025-11-01 (`pdftotext -layout` reads it as it stands).
+It closed the last unplaced merchant, corrected a card the app had as two, and left
+one thing open:
+
+- **15 of its 298 transactions have no row in the app** - 11 debits (1,235.14
+  riyals) and 4 credits (248.91). Four are `VAT on Markup`, which the bank sends no
+  SMS for at all; the rest are ordinary purchases (MANGO 458.00, Ziddy 272.00,
+  Express Food 163.13, ASAL WA SORAH 113.85) whose message never arrived or never
+  parsed. Not chased. A statement is the only document that can see them, which
+  makes this worth repeating over the other months - the same move that found the
+  STC Pay wallet, one layer up.
+
 **Also measured, not chased:** the database is **17.0 MB** and Auto Backup's
 ceiling is 25 MB. See the backup section.
 
@@ -805,8 +823,18 @@ ceiling is 25 MB. See the backup section.
    about two records each, almost all local shops registered in their owner's
    name, so no keyword list reaches them: they need his memory, one at a time,
    and filing one files every record from it. 120 still carry no party at all.
-1. **One merchant he has not placed**: `AL MUASHA`, 4,672.45 riyals, one visit,
-   5 October 2025 at 18:10 on the cancelled 7404 through Google Pay. The other
+1. ~~One merchant he has not placed: `AL MUASHA`~~ **PLACED 2026-09-10, by his
+   card statement.** The statement carries the untruncated string -
+   `AL MUASHAH TRADINJ C`, the terminal's own misspelling of TRADING CO - which
+   reaches Al Muashah Trading Company Limited, a furniture and home-décor company
+   in Jeddah whose domain `almuashah.com` redirects to `ihomestore.com` (اي هوم
+   للمفروشات). He confirmed it: furniture. Filed as shopping, maintenance 48.
+
+   **The method is the finding, and it is new here.** Every channel on the PHONE
+   had been exhausted - the SMS truncates a merchant to nine characters and no
+   search of the fragment reaches anything. The statement is a different document
+   with a longer field, and it was one grep away. The original note, for the record:
+   4,672.45 riyals, one visit, 5 October 2025 at 18:10 through Google Pay. The other
    four on this list were resolved before it was written and the list was never
    corrected - `AL NOUJAI` is Chanel (23,240, he named it), `ALATLAL T` is الأطلال
    للاتصالات, `OBOUD BAH` is العامودي for Nissan and Haval parts, and `AL RASHED`
