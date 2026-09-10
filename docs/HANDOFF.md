@@ -1009,12 +1009,18 @@ message and that nothing can recreate.
 - The settings file is included so `maintenanceVersion` survives; a restored
   database that came back at 43 must not have every repair pass run over it again.
 
-**The one thing left to verify, and it needs the phone.** Auto Backup's ceiling is
-**25 MB per app**, and a dataset over it is simply not backed up — the system calls
-`onQuotaExceeded` and stops, which reads as a backup that works right up to the day
-it is needed. ~26,000 rows each carrying a message body could plausibly be near it.
-Measure after a checkpoint, and if it is over, the cloud half is off in practice and
-an explicit export is back on the table (the device-to-device half is unaffected):
+**VERIFIED END TO END, 2026-09-10.** `adb shell bmgr backupnow sa.masrouf.app` returns
+`Package sa.masrouf.app with result: Success`, the app is in the system's backup set,
+and `masrouf.db-wal` is **0 bytes** on disk — the agent's checkpoint runs. The database
+is **17.0 MB** against Auto Backup's **25 MB per-app ceiling**, so it fits today with
+about 8 MB of headroom.
+
+**The headroom is the thing to watch, and it fails silently.** A dataset over the
+ceiling is simply not backed up: the system calls `onQuotaExceeded` and stops, which
+reads as a backup that works right up to the day it is needed. At roughly 640 bytes a
+row that is another ~12,000 messages. Re-measure with the commands below; if it ever
+goes over, the cloud half is off in practice and an explicit export is back on the
+table (the device-to-device half is unaffected):
 
 ```bash
 adb shell run-as sa.masrouf.app ls -l databases/
