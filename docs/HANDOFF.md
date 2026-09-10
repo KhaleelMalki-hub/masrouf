@@ -838,9 +838,14 @@ ceiling is 25 MB. See the backup section.
    on, and on mada Pay's template - which names the card, the account and the
    bank's link, and no shop at all - the walk reached
    "للتفاصيل http://alah.li/mobile". Seventeen purchases were filed as BILLS by a
-   link. `NOT_A_PARTY` now refuses a URL as well as a card. **Maintenance 47 is
-   installed and runs on his next launch** (the phone dropped off adb); expect
-   those seventeen to lose the link and be re-filed.
+   link. `NOT_A_PARTY` now refuses a URL as well as a card. **Maintenance 47 ran and is
+   verified**: rows carrying a URL as their party went 17 to 0, rows carrying a
+   card stayed at 0, no type moved anywhere, and the seventeen lost the category a
+   link had given them.
+
+   **Where this item now stands:** nothing in the history has a card or a link
+   where a merchant belongs. What is left under this number is the 227 rows
+   carrying an ACCOUNT NUMBER, on templates none of the profiles reads.
 
    Still open under this number: **227 rows carry an account number** as their
    party, on templates none of the profiles reads.
