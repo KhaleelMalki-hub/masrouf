@@ -224,4 +224,36 @@
     </plurals>
     <string name="currency_spoken">ريال</string>
     <string name="refile_action">تصنيف العملية</string>
+
+    <!-- The ask screen. -->
+    <string name="nav_ask">اسأل</string>
+    <string name="ask_hint">اسأل عن مصروفك</string>
+    <string name="ask_action">ابحث</string>
+    <string name="ask_examples_title">جرّب</string>
+    <string name="ask_example_fuel_month">كم صرفت بنزين هذا الشهر</string>
+    <string name="ask_example_coffee_year">كم صرفت على القهوة 2025</string>
+    <string name="ask_example_largest">أكبر مبلغ صرفته الشهر الماضي</string>
+    <string name="ask_example_count">كم مرة صرفت توصيل هذا الشهر</string>
+    <string name="ask_example_merchant">كم صرفت في امازون</string>
+    <string name="ask_not_understood">ما فهمت السؤال</string>
+    <string name="ask_not_understood_hint">أسأل عن فئة أو متجر أو مدة — والأمثلة فوق تعطيك الصيغة.</string>
+    <string name="ask_no_such_merchant">ما لقيت متجراً بهذا الاسم في سجلك</string>
+    <string name="ask_nothing_here">ما فيه عمليات في هذي المدة</string>
+    <string name="ask_count_label">عدد العمليات</string>
+    <string name="ask_largest_label">أكبر عملية</string>
+    <string name="ask_more_rows">و%1$d عملية أخرى</string>
+    <string name="ask_thinking">لحظة…</string>
+    <string name="ask_answered_spending">المصروف</string>
+    <string name="ask_answered_income">الدخل</string>
+    <string name="period_all_time">منذ البداية</string>
+    <string name="period_today">اليوم</string>
+    <string name="period_yesterday">أمس</string>
+    <string name="period_this_week">هذا الأسبوع</string>
+    <string name="period_this_month">هذا الشهر</string>
+    <string name="period_last_month">الشهر الماضي</string>
+    <string name="period_this_year">هذي السنة</string>
+    <string name="period_last_year">السنة الماضية</string>
+    <string name="period_named_month">%1$s</string>
+    <string name="period_named_year">%1$s</string>
+    <string name="period_last_n_days">آخر %1$d يوم</string>
 </resources>

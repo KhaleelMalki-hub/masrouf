@@ -179,4 +179,36 @@
     </plurals>
     <string name="currency_spoken">riyals</string>
     <string name="refile_action">File this transaction</string>
+
+    <!-- The ask screen. -->
+    <string name="nav_ask">Ask</string>
+    <string name="ask_hint">Ask about your spending</string>
+    <string name="ask_action">Search</string>
+    <string name="ask_examples_title">Try</string>
+    <string name="ask_example_fuel_month">how much on petrol this month</string>
+    <string name="ask_example_coffee_year">how much on coffee 2025</string>
+    <string name="ask_example_largest">largest amount last month</string>
+    <string name="ask_example_count">how many times delivery this month</string>
+    <string name="ask_example_merchant">how much at amazon</string>
+    <string name="ask_not_understood">I did not understand that</string>
+    <string name="ask_not_understood_hint">Ask about a category, a shop or a period - the examples above show the shape.</string>
+    <string name="ask_no_such_merchant">No shop by that name in your history</string>
+    <string name="ask_nothing_here">Nothing in that period</string>
+    <string name="ask_count_label">Transactions</string>
+    <string name="ask_largest_label">Largest</string>
+    <string name="ask_more_rows">and %1$d more</string>
+    <string name="ask_thinking">One moment…</string>
+    <string name="ask_answered_spending">Spending</string>
+    <string name="ask_answered_income">Income</string>
+    <string name="period_all_time">all time</string>
+    <string name="period_today">today</string>
+    <string name="period_yesterday">yesterday</string>
+    <string name="period_this_week">this week</string>
+    <string name="period_this_month">this month</string>
+    <string name="period_last_month">last month</string>
+    <string name="period_this_year">this year</string>
+    <string name="period_last_year">last year</string>
+    <string name="period_named_month">%1$s</string>
+    <string name="period_named_year">%1$s</string>
+    <string name="period_last_n_days">last %1$d days</string>
 </resources>

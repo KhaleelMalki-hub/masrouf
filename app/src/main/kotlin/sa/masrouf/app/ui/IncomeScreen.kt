@@ -13,6 +13,7 @@ import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.TrendingUp
 import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material.icons.Icons
@@ -472,6 +473,14 @@ private fun YearMonth.arabicSafeLabel(): String = atDay(1).monthLabel()
 enum class Destination(@get:StringRes val label: Int, val icon: ImageVector) {
     SPENDING(R.string.nav_spending, Icons.Outlined.Payments),
     INCOME(R.string.nav_income, Icons.Outlined.TrendingUp),
+
+    /**
+     * Ask a question and get the figure, with the records it came from underneath.
+     *
+     * Last in the bar because it is the one you go to on purpose: the other two are
+     * where the app opens and where the month lives.
+     */
+    ASK(R.string.nav_ask, Icons.Outlined.Search),
 }
 
 /**

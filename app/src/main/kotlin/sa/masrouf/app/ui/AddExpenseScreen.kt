@@ -111,6 +111,8 @@ fun AddExpenseScreen(
 ) {
     val form by viewModel.form.collectAsStateWithLifecycle()
     val recent by viewModel.recent.collectAsStateWithLifecycle()
+    val question by viewModel.question.collectAsStateWithLifecycle()
+    val askState by viewModel.answer.collectAsStateWithLifecycle()
     val monthTotal by viewModel.monthTotal.collectAsStateWithLifecycle()
     val invested by viewModel.monthInvested.collectAsStateWithLifecycle()
     val cardBalances by viewModel.cardBalances.collectAsStateWithLifecycle()
@@ -406,6 +408,23 @@ fun AddExpenseScreen(
                     // opened month closed - on every switch.
                     state = incomeState,
                     modifier = Modifier.padding(padding),
+                )
+
+                Destination.ASK ->
+                AskScreen(
+                    question = question,
+                    state = askState,
+                    currencyLabel = currency,
+                    cardBanks = cardBanks,
+                    cardKinds = cardKinds,
+                    salary = salary,
+                    // The bars' insets plus room for nothing else: this screen has
+                    // no floating button, so it does not pay for one.
+                    contentPadding = padding,
+                    onQuestionChanged = viewModel::onQuestionChanged,
+                    onAsk = viewModel::askQuestion,
+                    onRefile = { refiling = it },
+                    modifier = Modifier.fillMaxSize(),
                 )
 
                 Destination.SPENDING ->

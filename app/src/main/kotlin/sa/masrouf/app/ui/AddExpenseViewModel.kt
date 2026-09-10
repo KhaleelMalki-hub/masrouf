@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.flow.MutableSharedFlow
+import sa.masrouf.core.ask.AskAnswer
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -200,6 +201,56 @@ class AddExpenseViewModel(
     /** A merchant substring the user is looking for, or blank for everything. */
     private val _query = MutableStateFlow(savedState.get<String>(QUERY).orEmpty())
     val query: StateFlow<String> = _query.asStateFlow()
+
+    // ---- the ask screen ----------------------------------------------------
+
+    /**
+     * The question as typed. Survives the process being killed, like the month and
+     * the filter beside it: Android takes a backgrounded app freely and a question
+     * someone composed is exactly the kind of work that must not evaporate.
+     */
+    private val _question = MutableStateFlow(savedState.get<String>(QUESTION).orEmpty())
+    val question: StateFlow<String> = _question.asStateFlow()
+
+    private val _answer = MutableStateFlow<AskState>(AskState.Unasked)
+    val answer: StateFlow<AskState> = _answer.asStateFlow()
+
+    fun onQuestionChanged(text: String) {
+        _question.value = text
+        savedState[QUESTION] = text
+        // An edited question makes the answer on screen stale, and a stale answer
+        // beside a different question is the screen lying quietly. It goes.
+        if (_answer.value != AskState.Unasked) _answer.value = AskState.Unasked
+    }
+
+    /**
+     * Runs the question. Blank asks nothing rather than answering about everything.
+     */
+    fun askQuestion() {
+        val text = _question.value.trim()
+        if (text.isBlank()) return
+        _answer.value = AskState.Thinking
+        viewModelScope.launch {
+            val today = LocalDate.now(clock)
+            val answered = repository.answer(text, today)
+            _answer.value = answered?.let(AskState::Answered) ?: AskState.NotUnderstood
+        }
+    }
+
+    /** What the ask screen is showing. */
+    sealed interface AskState {
+        /** Nothing asked yet, or the question has been edited since. */
+        data object Unasked : AskState
+        data object Thinking : AskState
+
+        /**
+         * The question was not one the app can answer. Deliberately its own state
+         * rather than an empty answer: "I did not understand" and "you spent
+         * nothing" are different sentences and the screen must not confuse them.
+         */
+        data object NotUnderstood : AskState
+        data class Answered(val answer: AskAnswer) : AskState
+    }
 
     /** What the list is narrowed to, set by tapping a row in the legend. */
     private val _categoryFilter = MutableStateFlow(savedState.get<String>(FILTER)?.let(::filterOf))
@@ -708,6 +759,7 @@ class AddExpenseViewModel(
         const val SELECTED_MONTH = "selected_month"
         const val QUERY = "query"
         const val FILTER = "filter"
+        const val QUESTION = "question"
 
         /** The filter that is not a category. See HistoryFilter. */
         const val UNFILED = "unfiled"
