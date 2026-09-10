@@ -1,3 +1,4 @@
+import org.gradle.api.tasks.PathSensitivity
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -36,4 +37,17 @@ tasks.test {
     testLogging {
         events("passed", "failed", "skipped")
     }
+
+    // BuildGatesTest reads two files that are not Kotlin sources, so Gradle would
+    // otherwise call this task up to date after either of them changed - and the
+    // test that exists to catch a disarmed CI check would itself go stale, passing
+    // against the version it last saw. Found by breaking the build message on
+    // purpose and watching the suite stay green.
+    //
+    // A clean CI checkout always runs it; this is for the machine where the file is
+    // actually edited.
+    inputs.files(
+        rootProject.file(".github/workflows/ci.yml"),
+        rootProject.file("settings.gradle.kts"),
+    ).withPropertyName("repositoryGates").withPathSensitivity(PathSensitivity.RELATIVE)
 }

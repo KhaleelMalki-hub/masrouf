@@ -1,0 +1,88 @@
+# Every test this project has that can run without a phone.
+#
+# There was no CI at all until 2026-09-10, and the two suites had only ever run on
+# the machine that wrote them.
+#
+# The one thing this file has to get right is the skip. `settings.gradle.kts`
+# includes `:app` only when an Android SDK is present, so that `:core` still builds
+# on a machine without one - and that means a runner with no SDK produces a GREEN
+# build that ran half the tests and said so in one line of log nobody reads. The
+# project's own rule for gates is that a gate which cannot run must FAIL rather than
+# skip, so the skip is checked for explicitly below.
+name: tests
+
+on:
+  push:
+  pull_request:
+
+# Only what is needed to read the code. No token is used for anything else.
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 21 to run Gradle; the modules themselves target 17, which the toolchain
+      # settings in the build files pin independently of this.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # Named explicitly rather than `./gradlew test`, so that a module silently
+      # dropping out of the build is a missing task rather than a smaller run.
+      - name: Run both suites
+        run: ./gradlew --no-daemon :core:test :app:testDebugUnitTest 2>&1 | tee build.log
+
+      # The gate on the gate. `settings.gradle.kts` prints this line when it leaves
+      # :app out, and a build that leaves :app out has not tested the app.
+      #
+      # The durable remedy, since a skip message should say how to make the gate RUN:
+      # GitHub's ubuntu runners ship an Android SDK and set ANDROID_HOME. If this
+      # ever fires, add `android-actions/setup-android@v3` above rather than
+      # relaxing this check.
+      - name: Refuse a build that skipped the app module
+        run: |
+          if grep -q "skipping :app" build.log; then
+            echo "::error::The Android SDK was not found, so :app was left out of the"
+            echo "::error::build and its 198 tests did not run. This job is green only"
+            echo "::error::because it tested half the project. Add"
+            echo "::error::android-actions/setup-android@v3 to this workflow."
+            exit 1
+          fi
+
+      # Second layer, because the first depends on a log line that could be reworded.
+      # A test task that ran leaves results behind; one that never ran leaves none.
+      - name: Both suites left results behind
+        run: |
+          for module in core app; do
+            case "$module" in
+              core) results="core/build/test-results/test" ;;
+              app)  results="app/build/test-results/testDebugUnitTest" ;;
+            esac
+            count=$(find "$results" -name 'TEST-*.xml' 2>/dev/null | wc -l | tr -d ' ')
+            if [ "$count" -eq 0 ]; then
+              echo "::error::$module produced no test results at $results."
+              exit 1
+            fi
+            echo "$module: $count test classes"
+          done
+
+      - name: Keep the reports when something fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            core/build/reports/tests/
+            app/build/reports/tests/
+          retention-days: 7
