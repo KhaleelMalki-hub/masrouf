@@ -146,6 +146,9 @@ fun AddExpenseScreen(
     val monthRows by viewModel.monthTransactions.collectAsStateWithLifecycle()
     val cardBanks by viewModel.cardBanks.collectAsStateWithLifecycle()
     val cardKinds by viewModel.cardKinds.collectAsStateWithLifecycle()
+    // One value the compiler can trust, built once per change of either map rather
+    // than per row and per frame. See CardLookup.
+    val cardLookup = remember(cardBanks, cardKinds) { CardLookup(cardBanks, cardKinds) }
     val monthLoaded by viewModel.monthLoaded.collectAsStateWithLifecycle()
     val incomeLoaded by viewModel.incomeLoaded.collectAsStateWithLifecycle()
     val byCardKind by viewModel.monthByCardKind.collectAsStateWithLifecycle()
@@ -486,8 +489,7 @@ fun AddExpenseScreen(
                     question = question,
                     state = askState,
                     currencyLabel = currency,
-                    cardBanks = cardBanks,
-                    cardKinds = cardKinds,
+                    cards = cardLookup,
                     // The same salary the history uses. Passing the raw preference
                     // meant a bank-announced salary showed the above-salary pill in
                     // the history and not in an answer about the same row.
@@ -716,8 +718,7 @@ fun AddExpenseScreen(
                             ),
                             transaction = transaction,
                             currencyLabel = currency,
-                            cardBanks = cardBanks,
-                            cardKinds = cardKinds,
+                            cards = cardLookup,
                             salary = effectiveSalary,
                             onRefile = { refilingId = transaction.id },
                         )

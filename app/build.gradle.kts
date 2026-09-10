@@ -48,6 +48,13 @@ plugins {
  */
 composeCompiler {
     stabilityConfigurationFile = rootProject.file("app/compose_stability.conf")
+    // To find out which composables can skip and which parameters are unstable,
+    // uncomment these and read `app/build/compose_reports/*-composables.txt`. They
+    // are off by default because they are a diagnostic, not a build output - but
+    // they are how the `sa.masrouf.core.*` wildcard was found to be one level too
+    // shallow, which had left every history row unable to skip.
+    // reportsDestination = layout.buildDirectory.dir("compose_reports")
+    // metricsDestination = layout.buildDirectory.dir("compose_metrics")
 }
 
 android {

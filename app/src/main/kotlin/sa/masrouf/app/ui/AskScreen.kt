@@ -39,7 +39,6 @@ import sa.masrouf.core.ask.Measure
 import sa.masrouf.core.ask.PeriodLabel
 import sa.masrouf.core.ask.Subject
 import sa.masrouf.core.ask.Topic
-import sa.masrouf.core.model.CardKind
 import sa.masrouf.core.model.Transaction
 import sa.masrouf.core.money.Money
 
@@ -65,8 +64,7 @@ internal fun AskScreen(
     question: String,
     state: AskState,
     currencyLabel: String,
-    cardBanks: Map<String, String>,
-    cardKinds: Map<String, CardKind>,
+    cards: CardLookup,
     salary: Money?,
     contentPadding: PaddingValues,
     /**
@@ -227,8 +225,7 @@ internal fun AskScreen(
                 TransactionRow(
                     transaction = transaction,
                     currencyLabel = currencyLabel,
-                    cardBanks = cardBanks,
-                    cardKinds = cardKinds,
+                    cards = cards,
                     salary = salary,
                     onRefile = { onRefile(transaction) },
                 )

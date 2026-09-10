@@ -114,8 +114,10 @@ internal fun TransactionRow(
     transaction: Transaction,
     modifier: Modifier = Modifier,
     currencyLabel: String,
-    cardBanks: Map<String, String>,
-    cardKinds: Map<String, CardKind> = emptyMap(),
+    // One value rather than two maps: a Map is an interface the compiler cannot
+    // trust not to mutate, and this row is the one composable built hundreds of
+    // times in a scroll. See CardLookup.
+    cards: CardLookup,
     salary: Money?,
     onRefile: () -> Unit,
 ) {
@@ -134,7 +136,7 @@ internal fun TransactionRow(
     // belongs to one bank, so a record that names both answers it for every other
     // record on that card - including the years captured before the app recorded a
     // bank at all.
-    val mark = bankMark(transaction.bankId ?: transaction.accountLast4?.let(cardBanks::get))
+    val mark = bankMark(transaction.bankId ?: cards.bankOf(transaction.accountLast4))
 
     ListItem(
         modifier = modifier
@@ -231,7 +233,7 @@ internal fun TransactionRow(
                     CardMark(
                         mark = mark,
                         last4 = transaction.accountLast4,
-                        kind = transaction.accountLast4?.let(cardKinds::get),
+                        kind = cards.kindOf(transaction.accountLast4),
                         modifier = Modifier.weight(1f, fill = false),
                     )
                     Spacer(Modifier.width(8.dp))

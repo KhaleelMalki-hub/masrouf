@@ -733,6 +733,26 @@ and the tab beside them already did); maintenance reads the history a page at a 
 rather than pulling twenty-two thousand bodies into a list twice per run; and a
 general merchant filing drops the bank-scoped rules it supersedes.
 
+**Compose stability, checked with the compiler rather than by eye (2026-09-10).**
+`app/compose_stability.conf` said `sa.masrouf.core.*` - one star, which matches only
+the classes directly in that package, while every type the file exists for lives one
+level deeper: `core.model.Transaction`, `core.money.Money`, `core.ask.AskAnswer`. The
+comment above the line described exactly what was intended and the pattern did none
+of it, so the compiler went on reporting `unstable transaction: Transaction` on the
+history row - the one composable built hundreds of times in a single scroll. It is
+`sa.masrouf.core.**` now, `java.time.YearMonth` was missing beside Instant and
+LocalDate, and the row's two `Map` parameters became one `@Immutable CardLookup`,
+because a Map is an interface the compiler cannot trust not to mutate.
+`TransactionRow` is now stable in every parameter.
+
+**And it made no measurable difference**, which is worth writing down. Scroll jank
+went 1.69% to 1.78% - noise. The frame budget was not the binding constraint once
+the AOT profile had removed the JIT cost: 50th 6ms, 90th 11ms, 95th 14ms against a
+16.7ms budget. The change is kept because it is correct and because the guard was
+lying, not because it bought frames. The remaining unstable parameters are all raw
+`List`/`Map` types on the income and month screens, which recompose per state change
+rather than per frame; fixing them would mean a new dependency for no measured gain.
+
 **Still open, deliberately.** Four long functions (`MonthPanel`, `CardTile`,
 `TransactionRow`, `MainActivity.onCreate`) could be split; none of them is confusing
 today, so the split waits for a reason better than a line count.
