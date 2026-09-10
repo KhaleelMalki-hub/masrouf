@@ -172,13 +172,41 @@ class BankMessageParser(private val profile: BankProfile) : MessageParser {
         RegexOption.IGNORE_CASE,
     )
 
+    /**
+     * The first capture that is a party, skipping any that is the CARD.
+     *
+     * Seven profiles carry the same `^من ...` line pattern, because seven banks
+     * write a party that way. Several of them also write the card that way, on the
+     * line above: SNB's 2017-2018 point-of-sale message is
+     * `من بطاقة مدى رقم ***939` and then `من دانكن دوناتس`, and taking the first
+     * match stored a card where a shop belonged - 179 purchases, none of them
+     * fileable, since a category is learned from a merchant.
+     *
+     * So the skip is here rather than in each profile's regex. One truth in seven
+     * hand-written copies is how a guard ends up on the profile that was being
+     * debugged and on none of the others - which is exactly what happened when this
+     * was first fixed on SNB alone and 113 rows on the other banks stayed wrong.
+     *
+     * Skipping rather than refusing: `findAll` walks on to the NEXT line the same
+     * pattern matches, which is the shop.
+     */
     private fun firstMatch(patterns: List<Regex>, text: String): String? {
         for (pattern in patterns) {
-            val value = pattern.find(text)?.groupValues?.getOrNull(1)?.let(::cleanCaptured)
-            if (!value.isNullOrBlank()) return value
+            val value = pattern.findAll(text)
+                .mapNotNull { it.groupValues.getOrNull(1)?.let(::cleanCaptured) }
+                .firstOrNull { it.isNotBlank() && !NAMES_A_CARD.containsMatchIn(it) }
+            if (value != null) return value
         }
         return null
     }
+
+    /**
+     * A captured value that is a payment card rather than a party.
+     *
+     * Anchored at the start, so a shop whose name merely contains the word is out
+     * of reach. Matched after [cleanCaptured] has stripped the masking.
+     */
+    private val NAMES_A_CARD = Regex("""^بطاق""")
 
     /**
      * Banks mask identifiers with asterisks on either side ("****NAME", "NAME****",

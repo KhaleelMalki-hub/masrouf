@@ -36,6 +36,56 @@ class OwnMoneyTest {
         IntentClassifier.classify(body)?.type
             ?: error("no rule matched, which is itself the bug:\n$body")
 
+    // ---- Who is paid, not who is paying ------------------------------------
+
+    /**
+     * A wage sent abroad is money leaving, however clearly the message names the
+     * sender.
+     *
+     * barq writes `من: <him>` because he is sending and `الى: <her>` because she is
+     * paid. The demotion asked whether his name appeared anywhere, so thirty-one
+     * of these - 49,580 riyals over a year and a half - were filed as his own money
+     * moving between his own accounts and left his spending entirely.
+     */
+    @Test
+    fun `a named beneficiary who is not the owner keeps the transfer outgoing`() {
+        assertEquals(
+            TransactionType.TRANSFER_OUT,
+            typeOf(RealMessages.BARQ_INTERNATIONAL_WAGE),
+        )
+    }
+
+    /**
+     * The same fix must not reach a message whose beneficiary is an ACCOUNT.
+     *
+     * AlRajhi announces money moving in from another of the owner's banks with the
+     * destination written as four digits and his name on the `من:` line - where it
+     * is the only thing in the message saying the money never left him. A rule that
+     * strips that line whenever an `الى:` label is present turns eighty-nine
+     * transfers, 221,895 riyals, into spending; the shadow-diff over the stored
+     * history caught it before the rule shipped, and this is what stops it coming
+     * back.
+     */
+    @Test
+    fun `a beneficiary written as an account number leaves the owner's name readable`() {
+        assertEquals(
+            TransactionType.OWN_TRANSFER,
+            typeOf(RealMessages.RAJHI_OWN_TRANSFER_TO_ACCOUNT),
+        )
+    }
+
+    /**
+     * And the case the demotion exists for still works when the beneficiary is
+     * named: a transfer he makes to himself names HIM on the beneficiary line.
+     */
+    @Test
+    fun `a named beneficiary who is the owner is still his own money`() {
+        assertEquals(
+            TransactionType.OWN_TRANSFER,
+            typeOf(RealMessages.BARQ_TRANSFER_TO_SELF),
+        )
+    }
+
     // ---- Settling a credit card -------------------------------------------
 
     /**

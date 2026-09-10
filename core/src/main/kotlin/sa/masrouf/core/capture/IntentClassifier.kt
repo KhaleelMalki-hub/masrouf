@@ -429,9 +429,13 @@ object IntentClassifier {
      * the owner makes to himself still names him on a beneficiary line, which is
      * what the demotion is for.
      */
-    private fun withoutSenderLines(text: String): String =
-        text.lineSequence().filterNot(SENDER_LINE::containsMatchIn).joinToString("\n")
+    private fun withoutSenderLines(text: String): String {
+        val lines = text.lines()
+        val addressed = lines.any(::namesABeneficiary)
+        val sender = if (addressed) SENDER_LINE_WHEN_ADDRESSED else SENDER_LINE
+        return lines.filterNot(sender::containsMatchIn).joinToString("\n")
             .let(ArabicText::foldForMatching)
+    }
 
     // `\b` only on the Latin alternative. Java defines a word boundary over
     // [A-Za-z0-9_], so between an Arabic letter and a colon there is no boundary at
@@ -439,6 +443,53 @@ object IntentClassifier {
     // nothing, which is the same defect a lookahead had here once before.
     private val SENDER_LINE =
         Regex("""^\s*(?:اسم\s+المرسل|المرسل|مرسل|FROM\b)""", RegexOption.IGNORE_CASE)
+
+    /**
+     * `من:` is a sender line only in a message that says who it is going TO.
+     *
+     * Alone, the word is ambiguous - half the templates use it for the funding
+     * ACCOUNT rather than for a person, which is why it was left out of
+     * [SENDER_LINE] and has to stay out of it. barq's international transfer is
+     * where that ambiguity cost money: it writes `من: <the owner>` because he is
+     * the one sending, and `الى: <a worker abroad>` because she is the one paid,
+     * and the demotion saw his name and called thirty-one months of wages his own
+     * money moving between his own accounts.
+     *
+     * A beneficiary line resolves it. When the message names a recipient, the role
+     * of every other party in it is settled, and `من:` can only be the sender - so
+     * the demotion goes on to ask the question it exists to ask, which is whether
+     * the RECIPIENT is the owner. A transfer he really does make to himself still
+     * names him on that beneficiary line and is still demoted.
+     *
+     * The colon is required. `من0018;KHALEEL MALKI` on an incoming AlRajhi transfer
+     * is the same two letters carrying the opposite meaning, and it never writes
+     * the separator.
+     */
+    private val SENDER_LINE_WHEN_ADDRESSED =
+        Regex("""^\s*(?:اسم\s+المرسل|المرسل|مرسل|من\s*:|FROM\b)""", RegexOption.IGNORE_CASE)
+
+    /**
+     * Whether a line says who the money is going to, and says it as a NAME.
+     *
+     * An account number is not a name, and the distinction is the whole rule.
+     * AlRajhi announces a movement between the owner's own banks as
+     * `الى:3016 / من:KHALEEL MALKI` - the destination is his account, written as
+     * four digits, and his name on the `من:` line is the only thing in the message
+     * that says the money never left him. Strip that line on the strength of the
+     * `الى:` label alone and eighty-nine transfers, 221,895 riyals, become
+     * spending. Measured, on the stored history, before this was written.
+     *
+     * So a beneficiary line counts only when it carries a letter after the label.
+     * barq's `الى: <a worker abroad>` does; `الى:3016` does not, and a message like
+     * that keeps the older reading, where the owner's name anywhere is enough.
+     */
+    private fun namesABeneficiary(line: String): Boolean {
+        val label = BENEFICIARY_LABEL.find(line) ?: return false
+        return line.drop(label.value.length).any(Char::isLetter)
+    }
+
+    private val BENEFICIARY_LABEL =
+        Regex("""^\s*(?:اسم\s+المستفيد|المستفيد|الى\s*:|إلى\s*:|TO\b)""", RegexOption.IGNORE_CASE)
 
     /** Whether folded text names the account holder. See [AccountOwner]. */
     private fun namesOwner(foldedText: String): Boolean =

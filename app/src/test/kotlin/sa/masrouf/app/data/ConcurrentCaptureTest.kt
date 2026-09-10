@@ -83,6 +83,7 @@ class ConcurrentCaptureTest {
         override suspend fun cardsSeen() = emptyList<String>()
         override suspend fun newestBodiesForCard(last4: String, limit: Int) = emptyList<String>()
         override suspend fun clearNumericParties() = 0
+        override suspend fun clearCardParties() = 0
         override fun observeIncomeByMonth(salaryId: String, bonusId: String): Flow<List<IncomeMonthRow>> = MutableStateFlow(emptyList())
         override fun observeIncomeRows(incomeIds: List<String>): Flow<List<TransactionEntity>> = MutableStateFlow(emptyList())
         override suspend fun setAmount(id: String, halalas: Long) = 0

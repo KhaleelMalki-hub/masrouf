@@ -364,7 +364,8 @@ class TransactionRepository(
     }
 
     /**
-     * Replaces account numbers standing in for a party with the name beside them.
+     * Replaces an account number or a card standing in for a party with the name
+     * beside it.
      *
      * The pattern that read the party matched the account line, so 2,014 records
      * carried "104*010" or "3016" where a person or a company belonged. Nothing can
@@ -379,7 +380,7 @@ class TransactionRepository(
      * @return how many rows lost an account number as their party.
      */
     suspend fun repairNumericParties(): Int {
-        val cleared = dao.clearNumericParties()
+        val cleared = dao.clearNumericParties() + dao.clearCardParties()
         if (cleared > 0) reparseStoredBodies()
         return cleared
     }
@@ -894,7 +895,7 @@ class TransactionRepository(
          * واردة between the owner's own accounts is money arriving, and was stored as
          * leaving whenever the classifier rather than a later retype had read it.
          */
-        val DIRECTION_WORDS = listOf("عكس", "بين حساباتك", "تحويل من")
+        val DIRECTION_WORDS = listOf("عكس", "بين حساباتك", "تحويل من", "دولي")
 
         /** A learned rule scoped to one bank: "AMMAR@barq". The bare key is the general rule. */
         fun ruleKey(merchantKey: String, bankId: String) = "$merchantKey@$bankId"

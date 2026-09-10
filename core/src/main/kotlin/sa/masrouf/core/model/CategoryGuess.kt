@@ -881,6 +881,11 @@ object CategoryGuess {
         // order, so this sits last, below both spellings of the restaurant and
         // below RESTAUR. Moving it up re-opens the old defect.
         "REEFI" to SaudiCategories.SHOPPING,
+        // لمسة شفرة, a barber, named by the owner on 2026-09-10. The terminal sends
+        // "Mdhar alrbwah" - the plaza it sits in, not the shop - so nothing in the
+        // string could ever have reached it. He had filed the one visit by hand and
+        // no rule existed, so the next one would have arrived unfiled again.
+        "MDHAR ALRBWAH" to SaudiCategories.SERVICES,
 
         // Money sent abroad through Western Union out of the STC Pay wallet: 68
         // transfers, 94,126 riyals, every one of them wages for domestic staff, as

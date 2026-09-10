@@ -83,6 +83,7 @@ class MasroufApp : Application() {
                 Repair.RETYPE_REVERSALS -> transactions.retypeMisreadDirections()
                 Repair.RETYPE_OWN_DIRECTION -> transactions.retypeMisreadDirections()
                 Repair.RETYPE_INBOUND -> transactions.retypeMisreadDirections()
+                Repair.RETYPE_WAGES -> transactions.retypeMisreadDirections()
                 Repair.REREAD_WHOLE_INBOX -> if (!rereadWholeInbox()) deferred = true
                 Repair.REFILE_ALL -> transactions.refileAll()
             }
@@ -141,8 +142,26 @@ class MasroufApp : Application() {
         /** Amounts the extractor now reads differently. Before anything reads them. */
         REPAIR_AMOUNTS(10),
 
-        /** Account numbers standing in for a party. Re-parses, so before filing. */
-        REPAIR_PARTIES(13),
+        /**
+         * An account number or a card standing in for a party. Re-parses, so before
+         * filing.
+         *
+         * Raised to 45 for the card: SNB's 2017-2018 point-of-sale template names
+         * the card on one `من` line and the shop on the next, and the party pattern
+         * took the first. 179 purchases carried a card where a shop belonged - all
+         * of them filed as transfers, none of them fileable - and 59 refunds
+         * carried the credit card. Measured old-against-new over all 26,429 stored
+         * bodies: 179 gain a real merchant, 59 lose a wrong one, nothing else in the
+         * history moves.
+         *
+         * Raised to 46 the same day, because 45 fixed one bank. The clear ran and
+         * the re-parse put the card straight back: seven profiles carry the same
+         * `^من` line pattern and the guard had gone into SNB's copy of it, so 113
+         * rows on the other banks were cleared and refilled with the same card.
+         * The guard is now in `BankMessageParser.firstMatch`, where all seven
+         * route through, and those rows lose the card for good.
+         */
+        REPAIR_PARTIES(46),
 
         /** Balances never read out of bodies that carry one. */
         BACKFILL_BALANCES(1),
@@ -165,8 +184,17 @@ class MasroufApp : Application() {
          *
          * Raised to 27 for SNB's 2014-2015 one-line template, whose shop sits
          * after فى with an alef maksura: 30 records, 62,000 riyals, no party.
+         *
+         * Raised to 45 with REPAIR_PARTIES above: that pass clears a party that is
+         * a card, and this one is what reads the shop out of the body afterwards.
+         * The two are one repair in two halves and their versions must move
+         * together - clearing without re-reading leaves 238 rows with no party at
+         * all.
+         *
+         * Raised to 46 with it, for the same reason and by the same rule: the two
+         * halves of one repair move together.
          */
-        REPARSE_BODIES(27),
+        REPARSE_BODIES(46),
 
         /** Salary deposits an older classifier read as transfers. */
         RETYPE_SALARY(3),
@@ -226,6 +254,22 @@ class MasroufApp : Application() {
         RETYPE_INBOUND(43),
 
         /**
+         * Wages abroad, read as the owner moving money to himself.
+         *
+         * barq names him on the `من:` line of every international transfer, because
+         * he is the one sending it, and the demotion asked only whether his name
+         * appeared. Thirty-one transfers, 49,580 riyals of a domestic worker's pay,
+         * were filed as his own money and left his spending entirely.
+         *
+         * Same pass as the three above: re-read the stored body, take the parser's
+         * answer where the two disagree. Measured before it shipped by running the
+         * old and new classifiers over all 26,429 stored bodies - 31 rows move, all
+         * of them barq international transfers, and nothing else in the history
+         * changes at all.
+         */
+        RETYPE_WAGES(44),
+
+        /**
          * The whole inbox, re-read once, because the app can now understand a
          * sender it never could.
          *
@@ -259,7 +303,12 @@ class MasroufApp : Application() {
         // 42: the incoming own-transfers, which now carry the other direction.
         // 41: after the reversals below were corrected - a refund that becomes a
         //     credit has a different category from the transfer it used to be.
-        REFILE_ALL(43),
+        // 44: the wages abroad, which stop being own-money and become transfers out.
+        // 45: the 179 shops recovered from behind a card, and لمسة شفرة, the barber
+        //     the owner named - the plaza's name is what the terminal sends.
+        // 46: the 119 rows whose card came back, on the six banks the first fix
+        //     did not reach.
+        REFILE_ALL(46),
     }
 
     /**

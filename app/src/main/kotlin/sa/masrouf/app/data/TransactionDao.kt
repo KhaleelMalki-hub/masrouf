@@ -402,6 +402,35 @@ interface TransactionDao {
     suspend fun clearNumericParties(): Int
 
     /**
+     * Clears a party that is the CARD the money was paid with.
+     *
+     * SNB's 2017-2018 point-of-sale template writes the card on one `من` line and
+     * the shop on the next, and the pattern that read the party took the first:
+     * 179 purchases stored "بطاقة مدى رقم ***939" where a shop belonged, and 59
+     * refunds stored the credit card. Neither can be filed - a category is learned
+     * from a merchant - and the fallback put all 179 in transfers.
+     *
+     * Same shape as the clear above and for the same reason: a wrong party is only
+     * ever replaced by clearing it and letting [reparseStoredBodies] - which fills
+     * a gap and never overwrites - read the corrected pattern. A party the user
+     * filed by hand is never touched.
+     *
+     * `LIKE 'بطاق%'` anchors at the start, so a shop whose name merely contains the
+     * word is out of reach.
+     */
+    @Query(
+        """
+        UPDATE transactions
+        SET merchant_raw = NULL, merchant_key = NULL
+        WHERE raw_text IS NOT NULL
+          AND merchant_key IS NOT NULL
+          AND merchant_key LIKE 'بطاق%'
+          AND (category_source IS NULL OR category_source <> 'MANUAL')
+        """
+    )
+    suspend fun clearCardParties(): Int
+
+    /**
      * Corrects one row's amount.
      *
      * The only write in this file that touches a figure the user may have seen, so

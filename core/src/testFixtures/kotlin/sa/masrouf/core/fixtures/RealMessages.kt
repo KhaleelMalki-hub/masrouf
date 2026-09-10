@@ -384,6 +384,20 @@ Date:23-9-7 11:03"""
 لحساب2207
 2026-08-27 08:03"""
 
+    /**
+     * SNB's 2017-2018 point-of-sale template, which names two things with `من`.
+     *
+     * The first is the CARD and the second is the shop, and the pattern that read
+     * the party took the first: 179 purchases carried "بطاقة مدى رقم ***939" where
+     * a merchant belonged, unfileable, and filed as transfers by the fallback.
+     */
+    const val SNB_POS_CARD_THEN_SHOP = """دفع عبر نقاط بيع
+مبلغ 38ريال
+من بطاقة مدى رقم***939
+من دانكن دوناتس
+في 02/06/2018 19:46
+الرصيد 2452 ريال"""
+
     /** The same, with the surname masked mid-word by a different bank. */
     const val D360_TRANSFER_TO_SELF = """حوالة مالية صادرة مقبولة
 خصمت من حساب: ****2207
@@ -507,6 +521,50 @@ Date:23-9-7 11:03"""
 بنكRAJHI BANK
 لحساب3016
 2026-08-27 08:04"""
+
+    /**
+     * Wages to a domestic worker abroad, which barq sends as an international
+     * transfer - and which read as the owner moving money to himself for a year
+     * and a half.
+     *
+     * Every field the demotion could see named him: he is the sender, so `من:`
+     * carries his name, and the rule that spots a transfer to oneself asked only
+     * whether the name appeared. Thirty-one of these, 49,580 riyals of someone's
+     * pay, left his spending entirely.
+     *
+     * Both names are placeholders and the account numbers and country are invented;
+     * what this fixture holds is the SHAPE - a named sender line above a named
+     * beneficiary line - because that is what the rule reads.
+     */
+    const val BARQ_INTERNATIONAL_WAGE = """حوالة دولية صادرة
+المبلغ: 1400 ر.س
+الرسوم: 0 ر.س
+من: OWNER NAME
+حساب المرسل: 000000000000000
+الى: RECIPIENT NAME
+حساب المستفيد: 000000000000
+الدولة: A COUNTRY
+شركة الحوالات: WesternUnion
+طريقة الاستلام: Bank Account
+بتاريخ: 7/23/2026 ,8:19:34 PM"""
+
+    /**
+     * The message that says why the fix above cannot be "drop every `من:` line".
+     *
+     * AlRajhi announces money arriving into one of the owner's accounts from
+     * another of his banks like this: the destination is an account NUMBER and his
+     * name sits on the `من:` line, where it is the only evidence in the message
+     * that the money never left him. Eighty-nine of these - 221,895 riyals - turn
+     * into spending if that line is stripped on the strength of the `الى:` label
+     * alone, which a shadow-diff over the stored history caught before the rule
+     * shipped.
+     */
+    const val RAJHI_OWN_TRANSFER_TO_ACCOUNT = """حوالة محلية
+عبر:ANB
+مبلغ:SAR 5000
+الى:3016
+من:OWNER NAME
+في:25-9-6 14:45"""
 
     /** Wallet top-up, sent in English. */
     const val BARQ_TOPUP_EN = """Money Added to your Barq wallet
@@ -1068,6 +1126,7 @@ www.baj.com.sa/epp"""
         Sample(SENDER_D360, D360_TRANSFER_OUT),
         Sample(SENDER_D360, D360_OWN_ACCOUNTS_TRANSFER),
         Sample(SENDER_BARQ, BARQ_TRANSFER_OUT),
+        Sample(SENDER_BARQ, BARQ_INTERNATIONAL_WAGE),
         Sample(SENDER_BARQ, BARQ_TOPUP_EN),
         Sample(SENDER_BARQ, BARQ_ONLINE_PURCHASE),
         Sample(SENDER_STC_PAY, STC_ONLINE_PURCHASE),
@@ -1126,7 +1185,7 @@ www.baj.com.sa/epp"""
         SNB_ATM_WITHDRAWAL_BY_CARD, CASH_ADVANCE_ON_CREDIT_CARD, CARD_PURCHASE_WRITTEN_AS_SAHB,
         SNB_ONLINE_PURCHASE, SNB_TRANSFER_IN, SNB_TRANSFER_OUT, SNB_ATM_DEPOSIT,
         D360_TRANSFER_IN, D360_TRANSFER_OUT, D360_OWN_ACCOUNTS_TRANSFER,
-        BARQ_TRANSFER_OUT, BARQ_TOPUP_EN, BARQ_ONLINE_PURCHASE,
+        BARQ_TRANSFER_OUT, BARQ_INTERNATIONAL_WAGE, BARQ_TOPUP_EN, BARQ_ONLINE_PURCHASE,
         ENBD_ATHIR_PURCHASE, ENBD_ATHIR_PURCHASE_CARET, SNB_MADA_PAY_PIPES,
         SNB_POS_TERMINAL_ID, RAJHI_FLAT_POS,
         STC_ONLINE_PURCHASE, STC_POS_PURCHASE, STC_CARD_PURCHASE, STC_WALLET_TOPUP,

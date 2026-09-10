@@ -225,6 +225,18 @@ class FakeDao : TransactionDao {
             .sortedByDescending { it.occurredAtMillis }
     }
 
+    override suspend fun clearCardParties(): Int {
+        val doomed = state.value.filter {
+            it.rawText != null &&
+                it.merchantKey?.startsWith("بطاق") == true &&
+                it.categorySource != "MANUAL"
+        }
+        state.value = state.value.map {
+            if (it in doomed) it.copy(merchantRaw = null, merchantKey = null) else it
+        }
+        return doomed.size
+    }
+
     override suspend fun clearNumericParties(): Int {
         val doomed = state.value.filter {
             val key = it.merchantKey

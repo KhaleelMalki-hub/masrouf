@@ -3,6 +3,7 @@ package sa.masrouf.app.data
 import kotlin.test.assertEquals
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import sa.masrouf.core.capture.AccountOwner
 import sa.masrouf.core.dedup.Fingerprint
 import sa.masrouf.core.model.Direction
 import sa.masrouf.core.model.Source
@@ -39,12 +40,13 @@ class MisreadDirectionTest {
         id: String,
         body: String,
         source: Source = Source.SMS,
+        type: TransactionType = TransactionType.TRANSFER_OUT,
     ) = Transaction(
         id = id,
         amount = Money.ofMajor("640.00"),
         // As the old classifier read it: money leaving.
         direction = Direction.DEBIT,
-        type = TransactionType.TRANSFER_OUT,
+        type = type,
         occurredAt = at,
         accountId = null,
         categoryId = null,
@@ -106,4 +108,37 @@ class MisreadDirectionTest {
         assertEquals(TransactionType.OWN_TRANSFER.name, row("own").type)
     }
 
+    /**
+     * The prefilter is a second truth, and it can silently switch the pass off.
+     *
+     * `retypeMisreadDirections` skips any body without one of a handful of words,
+     * for speed. A classifier fix whose family is not in that list produces a pass
+     * that runs, reports success, and rewrites nothing - the shape this repo has
+     * been bitten by twice. So the wage transfer goes through the repository, not
+     * through the classifier, and this test fails if the word is ever dropped.
+     */
+    @Test
+    fun `a wage sent abroad reaches the pass and stops being his own money`() = runTest {
+        AccountOwner.configure("OWNER|NAME")
+        repository.recordCaptured(
+            stored(
+                "wage",
+                type = TransactionType.OWN_TRANSFER,
+                body = """
+                حوالة دولية صادرة
+                المبلغ: 640 ر.س
+                الرسوم: 0 ر.س
+                من: OWNER NAME
+                الى: RECIPIENT NAME
+                شركة الحوالات: WesternUnion
+                بتاريخ: 7/23/2026 ,8:19:34 PM
+                """.trimIndent(),
+            ),
+        )
+
+        assertEquals(1, repository.retypeMisreadDirections())
+
+        assertEquals(TransactionType.TRANSFER_OUT.name, row("wage").type)
+        assertEquals(Direction.DEBIT.name, row("wage").direction)
+    }
 }

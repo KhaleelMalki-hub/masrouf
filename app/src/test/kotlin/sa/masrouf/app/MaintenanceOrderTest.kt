@@ -44,6 +44,7 @@ class MaintenanceOrderTest {
                 MasroufApp.Repair.RETYPE_REVERSALS,
                 MasroufApp.Repair.RETYPE_OWN_DIRECTION,
                 MasroufApp.Repair.RETYPE_INBOUND,
+                MasroufApp.Repair.RETYPE_WAGES,
                 MasroufApp.Repair.REREAD_WHOLE_INBOX,
                 MasroufApp.Repair.REFILE_ALL,
             ),

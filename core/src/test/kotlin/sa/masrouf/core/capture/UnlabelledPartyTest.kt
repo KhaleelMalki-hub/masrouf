@@ -105,4 +105,21 @@ class UnlabelledPartyTest {
             assertNotNull(party(profile, body), "no party read from a ${profile.id} message")
         }
     }
+
+    /**
+     * The card is not the shop.
+     *
+     * SNB writes two `من` lines on its 2017-2018 point-of-sale message - the card
+     * it was paid with, then the shop - and the party pattern took whichever came
+     * first. 179 purchases were stored with a card where a merchant belonged: not
+     * fileable, since a category is learned from a merchant, and swept into
+     * transfers by the fallback.
+     */
+    @Test
+    fun `a card on the line above the shop is not the party`() {
+        assertEquals(
+            "دانكن دوناتس",
+            party(SaudiBanks.SNB, RealMessages.SNB_POS_CARD_THEN_SHOP),
+        )
+    }
 }

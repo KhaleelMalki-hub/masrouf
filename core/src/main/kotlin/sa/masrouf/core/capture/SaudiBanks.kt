@@ -114,6 +114,10 @@ object SaudiBanks {
         // honest.
         senderIds = setOf("SNB ALAHLI", "SNBALAHLI", "SNB NEO", "ALAHLI"),
         merchantPatterns = listOf(
+            // "من بطاقة مدى رقم ***939" then "من دانكن دوناتس": the card, then
+            // the shop. Skipping the card is BankMessageParser's job, not this
+            // pattern's - seven profiles carry this same line and every one of
+            // them needed it. See `firstMatch`.
             Regex("""(?m)^من\s+(?!\**\d)(?!X{2,}\d)(.+)$"""),
             Regex("""(?m)^لدى\s*:?\s*(.+)$"""),
             // mada Pay names the field outright. 50 records carried it and not one

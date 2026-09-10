@@ -1,6 +1,7 @@
 package sa.masrouf.app.data
 
 import kotlinx.coroutines.test.runTest
+import sa.masrouf.core.fixtures.RealMessages
 import org.junit.jupiter.api.Test
 import sa.masrouf.core.money.Money
 import kotlin.test.assertEquals
@@ -120,6 +121,32 @@ class RepairPassTest {
 
         assertEquals(1, repository.repairNumericParties())
         assertEquals("BENEFICIARY NAME", dao.rows.single().merchantRaw)
+    }
+
+    /**
+     * The card the purchase was paid with is not the shop it was paid to.
+     *
+     * The whole pass in one row: clear a party that cannot be one, then let the
+     * re-parse read the shop out of the body it already has. 179 purchases were
+     * stored this way, all of them filed as transfers because nothing could be
+     * learned from a card number.
+     */
+    @Test
+    fun `a card standing in for a party is replaced by the shop below it`() = runTest {
+        val body = RealMessages.SNB_POS_CARD_THEN_SHOP
+        dao.replaceAll(
+            listOf(
+                stored(
+                    body,
+                    "38",
+                    merchantRaw = "بطاقة مدى رقم***939",
+                    merchantKey = "بطاقه مدي رقم",
+                ),
+            ),
+        )
+
+        assertEquals(1, repository.repairNumericParties())
+        assertEquals("دانكن دوناتس", dao.rows.single().merchantRaw)
     }
 
     @Test
