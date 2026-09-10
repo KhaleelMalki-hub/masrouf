@@ -63,6 +63,15 @@ the party's real name in place of an account number on 1,300 rows.
 
 ## Facts the owner confirmed (do not re-ask)
 
+- **`Abdullah` (barq, POS) is a flowers and decoration shop → shopping.** Confirmed
+  2026-09-10. **Filed as THIS ONE only, and deliberately not as a keyword**: the
+  stored key is the bare first name `ABDULLAH`, which thirteen other merchants in
+  this history contain - `ABDULLAH ALHARTHI`, `MAJED ABDULLAH`, `YAQOOB
+  SAYEDABDULLAH` (3,015 riyals), `Abdulaziz Abdullah Est` (1,175) - most of them
+  transfers to people. A whole-merchant rule on it would file those as shopping.
+  There are two rows under this key, 250 and 50 riyals; nothing in either message
+  says whether the smaller one is the same shop.
+
 - `Ammar` via Al Rajhi = café (weekly, 24 SAR); `AMMAR` via barq = bakery
   (rule `AMMAR@barq` → groceries).
 - `BR-…` = Baskin Robbins. `Fourth frame EST` = بنشر (tyre shop).
