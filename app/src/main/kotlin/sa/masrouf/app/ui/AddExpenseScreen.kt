@@ -351,11 +351,11 @@ fun AddExpenseScreen(
             }
         },
         bottomBar = {
-            // Two destinations, which is M3's floor for a navigation bar and the
-            // reason there was none until now: a bar over one screen is a control
-            // with nothing to control. Income earned it by being a different
-            // question over a different span - what arrives, over years, rather
-            // than where one month went.
+            // Three destinations. There was no bar at all while there was one
+            // screen - a bar over one screen is a control with nothing to control -
+            // and two was M3's floor. Each of the three is a different QUESTION
+            // rather than a different view of one: where this month went, what
+            // arrives over years, and anything asked of the whole history.
             //
             // It does not hide on scroll, and it does not float. Both were tried.
             //

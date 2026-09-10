@@ -465,10 +465,12 @@ private fun YearMonth.arabicSafeLabel(): String = atDay(1).monthLabel()
 /**
  * The app's top-level destinations.
  *
- * Two, deliberately. M3 puts a navigation bar's floor at two and its ceiling at
- * five; this app had one screen until income needed a span of years, which is a
- * different question from where a month went and cannot share a screen with it
- * without one of the two becoming a panel on the other.
+ * Three, each a different question rather than a different view of one. M3 puts a
+ * navigation bar's floor at two and its ceiling at five; this app had one screen
+ * until income needed a span of years, which cannot share a screen with "where did
+ * this month go" without one of them becoming a panel on the other, and then until
+ * asking the whole history a question needed a span the month screen does not have.
+ * Two more and the bar is full, which is the constraint that now matters.
  */
 enum class Destination(@get:StringRes val label: Int, val icon: ImageVector) {
     SPENDING(R.string.nav_spending, Icons.Outlined.Payments),

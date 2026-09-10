@@ -537,12 +537,19 @@ text on `surface` a contrast failure. That is the pairing M3's own TextButton
 uses, and the accent roles sit at tone 40 against a tone-98 surface. A reviewer's
 confidence is not a resolver.
 
-**All of that list is now closed (2026-09-03).** The legend stops at six rows and
-offers the rest on a tap, except when the active filter is one of the rows the
-ceiling would hide - hiding it would narrow the history below with nothing on
-screen saying what by, so that case opens the whole legend instead. The decision
-is a pure `legendRows`, tested; the composable only remembers whether the user
-asked for all of it.
+**All of that list is now closed (2026-09-03)** - except the legend ceiling, and
+this paragraph claimed the opposite for six months. It shipped in `3fb868f` and was
+REVERTED in `cfcb65d` the same round, because the owner read it on his own screen
+and said he did not want it: the months it fired on had eight or nine categories, so
+it cost a tap and a line of chrome to hide two rows the card had room for. There is
+no `legendRows` anywhere in the tree and there has not been since.
+
+**And the evidence that revert rested on has expired.** Measured 2026-09-10 on the
+live database: August and July 2026 carry **sixteen** spending categories, April
+fifteen, May and June thirteen. Thirteen to sixteen rows at 48dp is 620-770dp of
+legend, which pushes the pending queue and the history off the screen. The decision
+is the owner's and it stands until he changes it, but it was made about a different
+month than the one he has now.
 
 Every size that fenced text in became a floor: `heightIn` on the legend row with
 its fill sized by `matchParentSize` rather than to the same constant, `widthIn` on

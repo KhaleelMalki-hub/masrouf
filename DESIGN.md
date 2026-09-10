@@ -50,11 +50,20 @@ rejected reference uses.
 
 ### Category colours
 
-Eight, one per spending category, and they are data rather than decoration: the
-strip is unreadable if two categories are hard to tell apart. Specified per theme,
-because a colour legible on `#121318` is often invisible on `#FBF8FF`. Adjacent
-categories in display order are kept far apart in hue, since they sit next to each
-other in the strip.
+Nineteen, one per category, and they are data rather than decoration: the strip is
+unreadable if two categories are hard to tell apart. Specified per theme, because a
+colour legible on `#121318` is often invisible on `#FBF8FF`.
+
+The rule is MUTUAL distance, not adjacency. It was written as "adjacent categories
+are kept far apart in hue" when there were eight; with nineteen, and with the strip
+sorted largest-share-first, any two categories can end up side by side in some
+month, so adjacency is not a property the palette can be designed against. Every
+pair clears a CIE76 floor of 13 instead, asserted by `CategoryCoverageTest` - which
+measures it rather than checking the colours are merely different, as it did while
+two pairs shipped 5.8 and 4.2 apart.
+
+Lightness is what carries legibility against the surface, so a colour is retuned by
+rotating its hue and leaving its lightness alone.
 
 Uncategorised is deliberately the dimmest, closest to the surface: it should read
 as absence, not as a ninth category.
@@ -66,9 +75,12 @@ face is a Naskh and makes the app look like a default; Plex Arabic shares a
 skeleton with its Latin, so Arabic labels and the Western numerals this app insists
 on sit on one line without looking like two typefaces.
 
-- Display for the two figures a screen is built around - the month total and the
-  amount being typed - with tight tracking so a five-figure number reads
-  as one object.
+- Display for the figures a screen is built around - the month total, the amount
+  being typed, an answer's result - with tight tracking so a five-figure number
+  reads as one object.
+- Headline where a figure's currency mark has to be sized against it, and for the
+  slip's own amount: a mark whose height IS the digit height of its style comes out
+  a speck at title size beside a display-size total.
 - Title for section headings.
 - Body for transaction rows.
 - Label, widely tracked, for captions and metadata.
