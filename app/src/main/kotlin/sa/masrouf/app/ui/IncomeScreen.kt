@@ -40,6 +40,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -318,7 +319,7 @@ private fun MonthRow(
             overflow = TextOverflow.Ellipsis,
             // A minimum, not a width: at a large font scale a fixed 108 points
             // truncated "September" to an ellipsis on one line.
-            modifier = Modifier.widthIn(min = 108.dp),
+            modifier = Modifier.widthIn(min = MONTH_LABEL_WIDTH),
         )
         // Two segments of one bar rather than two bars: the month's total is what
         // arrived, and the split is how it arrived. A bonus month reads as a longer
@@ -387,10 +388,14 @@ private fun DepositRow(deposit: Transaction, currencyLabel: String) {
             .padding(start = 24.dp, top = 2.dp, bottom = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        // A dot, not a side stripe. The history row was a 3dp stripe down its edge
+        // until PRODUCT.md named side-stripe borders as the thing this app must not
+        // look like, and it became a tinted disc; this row was the one survivor of
+        // the shape the document bans.
         Box(
             modifier = Modifier
-                .size(width = 3.dp, height = 12.dp)
-                .clip(RoundedCornerShape(2.dp))
+                .size(8.dp)
+                .clip(CircleShape)
                 .background(
                     bandColour(if (isBonus) SaudiCategories.BONUS else SaudiCategories.INCOME)
                 ),
@@ -511,4 +516,12 @@ enum class Destination(@get:StringRes val label: Int, val icon: ImageVector) {
  * so it begins exactly under the bar in either direction. Derived rather than
  * typed, because the label's width moved once already and this did not follow it.
  */
-private val SPLIT_LINE_INDENT = 108.dp + 8.dp
+/**
+ * How wide the month label is allowed to get before its row gives way.
+ *
+ * One constant because two literals of the same number drift, and this pair already
+ * describes itself as "derived rather than typed" while being typed twice.
+ */
+internal val MONTH_LABEL_WIDTH = 108.dp
+
+private val SPLIT_LINE_INDENT = MONTH_LABEL_WIDTH + 8.dp

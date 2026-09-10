@@ -263,4 +263,7 @@
     <string name="topic_pharmacy">صيدلية</string>
     <string name="ask_example_unfiled">اعرض غير المصنف</string>
     <string name="subject_unfiled">غير المصنف</string>
+    <string name="source_manual">إدخال يدوي</string>
+    <string name="source_statement">كشف حساب</string>
+    <string name="import_examined">قُرئت %1$s رسالة</string>
 </resources>

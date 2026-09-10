@@ -31,6 +31,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.material3.Text
@@ -103,12 +105,20 @@ internal fun MonthPanel(
         )
     }
 
+    // A Card, not a Column dressed as one. DESIGN.md asks for M3's components
+    // rather than lookalikes, and the difference is load-bearing rather than
+    // stylistic: `Modifier.background` sets no `LocalContentColor`, so every
+    // descendant has to name its own colour and a wrong one is invisible until
+    // someone changes the container. It happens to be correct here today.
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        ),
+    ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(MaterialTheme.shapes.large)
-            .background(MaterialTheme.colorScheme.surfaceContainer)
-            .padding(PANEL_PADDING),
+        modifier = Modifier.fillMaxWidth().padding(PANEL_PADDING),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         MonthNavigator(
@@ -275,6 +285,7 @@ internal fun MonthPanel(
                 )
             }
         }
+    }
     }
 }
 

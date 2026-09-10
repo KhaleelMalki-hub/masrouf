@@ -82,6 +82,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.material3.LocalTextStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -181,7 +182,15 @@ fun AddExpenseScreen(
     var confirming by remember { mutableStateOf<DestructiveAction?>(null) }
     var confirmingAll by rememberSaveable { mutableStateOf(false) }
     var pickingMonth by rememberSaveable { mutableStateOf(false) }
-    var refiling by remember { mutableStateOf<Transaction?>(null) }
+    // The id, saveable, resolved back to the row - not the Transaction itself, which
+    // a Bundle cannot hold. The comment three lines above says "rememberSaveable,
+    // ALL of them: this app's own language toggle recreates the activity", and these
+    // two were the exceptions it did not mention: a rotation or a tap on the
+    // language button silently closed an open filing sheet.
+    var refilingId by rememberSaveable { mutableStateOf<String?>(null) }
+    val refiling = remember(refilingId, recent, pending) {
+        refilingId?.let { id -> (recent + pending).firstOrNull { it.id == id } }
+    }
     var editingSalary by rememberSaveable { mutableStateOf(false) }
 
     if (editingSalary) {
@@ -202,10 +211,10 @@ fun AddExpenseScreen(
         // always fine: M3 runs the hide itself and calls onDismissRequest after.
         val refileSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         val closeRefile: () -> Unit = {
-            scope.launch { refileSheetState.hide() }.invokeOnCompletion { refiling = null }
+            scope.launch { refileSheetState.hide() }.invokeOnCompletion { refilingId = null }
         }
         ModalBottomSheet(
-            onDismissRequest = { refiling = null },
+            onDismissRequest = { refilingId = null },
             sheetState = refileSheetState,
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         ) {
@@ -337,12 +346,27 @@ fun AddExpenseScreen(
                 onEditSalary = { editingSalary = true },
             )
               // Work in progress, where M3 puts it: a linear indicator under the bar.
-              // Determinate while the inbox is being read, because the count is
-              // known; indeterminate while re-filing, because it is one transaction.
+              // Indeterminate in both cases, and honestly so: nothing reaches this
+              // point knowing how many messages the inbox holds, so there is no
+              // denominator to fill a bar with. What IS known while reading is how
+              // many have been examined, and the state has been publishing that
+              // count all along while the screen threw it away - on the app's
+              // longest operation, over twenty-two thousand records, reporting only
+              // "busy". The comment here used to claim a determinate bar that was
+              // never drawn.
               when (val st = importState) {
-                  is AddExpenseViewModel.ImportState.Running -> LinearProgressIndicator(
-                      modifier = Modifier.fillMaxWidth(),
-                  )
+                  is AddExpenseViewModel.ImportState.Running -> {
+                      LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                      Text(
+                          text = stringResource(R.string.import_examined, st.examined.toString()),
+                          style = MaterialTheme.typography.labelSmall,
+                          color = MaterialTheme.colorScheme.onSurfaceVariant,
+                          modifier = Modifier
+                              .fillMaxWidth()
+                              .padding(horizontal = PANEL_PADDING, vertical = 2.dp),
+                          textAlign = TextAlign.Center,
+                      )
+                  }
                   AddExpenseViewModel.ImportState.Refiling -> LinearProgressIndicator(
                       modifier = Modifier.fillMaxWidth(),
                   )
@@ -474,7 +498,7 @@ fun AddExpenseScreen(
                     listState = askListState,
                     onQuestionChanged = viewModel::onQuestionChanged,
                     onAsk = viewModel::askQuestion,
-                    onRefile = { refiling = it },
+                    onRefile = { refilingId = it.id },
                     modifier = Modifier.fillMaxSize(),
                 )
 
@@ -695,7 +719,7 @@ fun AddExpenseScreen(
                             cardBanks = cardBanks,
                             cardKinds = cardKinds,
                             salary = effectiveSalary,
-                            onRefile = { refiling = transaction },
+                            onRefile = { refilingId = transaction.id },
                         )
                     }
                 }
@@ -962,7 +986,8 @@ private fun AccessPrompt(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(MaterialTheme.shapes.medium)
+            // `large`, with the cards it sits between. It was `medium`.
+            .clip(MaterialTheme.shapes.large)
             .background(MaterialTheme.colorScheme.surfaceContainer)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),

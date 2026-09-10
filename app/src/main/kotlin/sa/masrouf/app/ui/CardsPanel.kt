@@ -153,7 +153,17 @@ private fun CardTile(card: CardBalance, currencyLabel: String) {
     Card(
         modifier = Modifier
             .widthIn(min = 168.dp)
-            .fillMaxHeight(),
+            .fillMaxHeight()
+            // One stop, not five. The bank, the last four, the label, the figure and
+            // the as-of date were five separate TalkBack nodes; the history row and
+            // the receipt slip both merge, and a tile is one thing the same way.
+            .semantics(mergeDescendants = true) {},
+        // The same corner as the month card below it. These are peers in one
+        // scrolling column and were at two radii - 12 here, 16 there - with nothing
+        // choosing between them; the slip's own comment even defends its 16dp by
+        // saying every neighbour is a 16dp card, which was not true of the tile
+        // directly above it.
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
     ) {
       Column(

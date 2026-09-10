@@ -179,12 +179,12 @@ internal fun BankWords(raw: String, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
+            .clip(MaterialTheme.shapes.small)
             .background(MaterialTheme.colorScheme.surfaceContainer)
             .border(
                 width = 1.dp,
                 color = MaterialTheme.colorScheme.outlineVariant,
-                shape = RoundedCornerShape(8.dp),
+                shape = MaterialTheme.shapes.small,
             )
             .padding(horizontal = 12.dp, vertical = 10.dp),
     ) {
@@ -221,7 +221,11 @@ private val Source.slipLabel: Int
     get() = when (this) {
         Source.SMS -> R.string.source_sms
         Source.NOTIFICATION -> R.string.source_notification
-        Source.MANUAL, Source.STATEMENT -> R.string.source_notification
+        // Each says what it was. A record the user typed captioned itself
+        // "notification", which is a small lie on the one surface whose whole job is
+        // to show where a figure came from.
+        Source.MANUAL -> R.string.source_manual
+        Source.STATEMENT -> R.string.source_statement
     }
 
 private val SLIP_PADDING = 16.dp

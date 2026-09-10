@@ -218,4 +218,7 @@
     <string name="topic_pharmacy">Pharmacy</string>
     <string name="ask_example_unfiled">show unfiled</string>
     <string name="subject_unfiled">Unfiled</string>
+    <string name="source_manual">Typed in</string>
+    <string name="source_statement">Statement</string>
+    <string name="import_examined">%1$s messages read</string>
 </resources>

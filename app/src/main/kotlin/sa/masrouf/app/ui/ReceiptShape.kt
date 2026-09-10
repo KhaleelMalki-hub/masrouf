@@ -30,6 +30,12 @@ class TornEdgeShape(
      * Only the lower edge is torn. Left square, the top was the one hard corner in a
      * column where every neighbour is a 16dp card - and a stack of thirty pending
      * slips made that the loudest thing on the screen.
+     *
+     * The claim about the neighbours was true of the month card and false of the
+     * card tile above it, which sat at 12dp until they were brought together. The
+     * literal stays a literal because a Shape is built outside composition and
+     * cannot read `MaterialTheme`; if the theme's shapes are ever set, this is the
+     * line that will not follow on its own.
      */
     private val topRadius: Dp = 16.dp,
 ) : Shape {
