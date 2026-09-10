@@ -89,10 +89,22 @@ Two custom pieces earn their place:
 
 ## Layout
 
-Two destinations, and a navigation bar only because there are two. **Spending** is
+Three destinations, and a navigation bar because there are three. **Spending** is
 a single scrolling screen in reading order: cards, month, what needs you, history.
 **Income** is salary and bonuses over the years — a different question over a
-different span, which is the whole reason it is not a panel on the other.
+different span, which is the whole reason it is not a panel on the other. **Ask**
+is a typed question and the figure it comes to, with the records underneath.
+
+Ask is a destination rather than a search field on the spending screen, and the
+argument is that it does not narrow that screen — it answers a different question
+over a span the spending screen does not have. "How much on petrol in 2024" is not
+the current month filtered; it is its own view of the history, and giving it the
+top of the spending screen would make the month total the answer to a question
+nobody asked. The history's own search box stays where it is and does what it has
+always done: narrow the list in front of you.
+
+Three is also the point at which the bar is unarguable. Two destinations can be a
+toggle; three want a bar, which is what M3 says a bar is for.
 
 The bar persists. It does not hide on scroll and it does not float, and both were
 tried on a real screen before being refused.
