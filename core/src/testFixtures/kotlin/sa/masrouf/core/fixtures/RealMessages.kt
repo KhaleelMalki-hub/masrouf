@@ -398,6 +398,22 @@ Date:23-9-7 11:03"""
 في 02/06/2018 19:46
 الرصيد 2452 ريال"""
 
+    /**
+     * mada Pay's point-of-sale message, which names no shop at all.
+     *
+     * The card, the account, the balance and the bank's own link - and nothing
+     * else. It is here because skipping the card makes the party pattern walk on,
+     * and on this body the walk reached the footer: seventeen purchases were filed
+     * as bills by a link to the bank's app.
+     */
+    const val SNB_MADA_PAY_NO_SHOP = """دفع عبر نقاط بيع (مدى Pay)
+مبلغ ريال 86
+من بطاقة مدى رقم***907
+حساب 104*010
+في13/08/2019 07:29
+الرصيد 298.95 ريال
+للتفاصيل http://alah.li/mobile"""
+
     /** The same, with the surname masked mid-word by a different bank. */
     const val D360_TRANSFER_TO_SELF = """حوالة مالية صادرة مقبولة
 خصمت من حساب: ****2207

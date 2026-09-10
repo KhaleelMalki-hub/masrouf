@@ -160,8 +160,14 @@ class MasroufApp : Application() {
          * rows on the other banks were cleared and refilled with the same card.
          * The guard is now in `BankMessageParser.firstMatch`, where all seven
          * route through, and those rows lose the card for good.
+         *
+         * Raised to 47 for what 46 produced. Skipping the card makes the pattern
+         * walk on, and a walk that keeps going finds something: on a body naming
+         * no shop at all it reached "للتفاصيل http://alah.li/mobile", so seventeen
+         * purchases were filed as BILLS by a link to the bank's app. Measured at
+         * exactly those seventeen over all 26,434 stored bodies.
          */
-        REPAIR_PARTIES(46),
+        REPAIR_PARTIES(47),
 
         /** Balances never read out of bodies that carry one. */
         BACKFILL_BALANCES(1),
@@ -192,9 +198,10 @@ class MasroufApp : Application() {
          * all.
          *
          * Raised to 46 with it, for the same reason and by the same rule: the two
-         * halves of one repair move together.
+         * halves of one repair move together. And to 47 with it, for the same
+         * reason a third time.
          */
-        REPARSE_BODIES(46),
+        REPARSE_BODIES(47),
 
         /** Salary deposits an older classifier read as transfers. */
         RETYPE_SALARY(3),
@@ -308,7 +315,8 @@ class MasroufApp : Application() {
         //     the owner named - the plaza's name is what the terminal sends.
         // 46: the 119 rows whose card came back, on the six banks the first fix
         //     did not reach.
-        REFILE_ALL(46),
+        // 47: the seventeen rows a link to the bank's app had filed as bills.
+        REFILE_ALL(47),
     }
 
     /**

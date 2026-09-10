@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import sa.masrouf.core.fixtures.RealMessages
 import java.time.Instant
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertNotNull
 
 /**
@@ -121,5 +122,17 @@ class UnlabelledPartyTest {
             "دانكن دوناتس",
             party(SaudiBanks.SNB, RealMessages.SNB_POS_CARD_THEN_SHOP),
         )
+    }
+
+    /**
+     * A body that names no shop must produce no party, not the nearest text.
+     *
+     * The fix above made the pattern walk past the card, and a walk that keeps
+     * going finds something: on this template it found the bank's own link, and
+     * seventeen purchases were filed as bills by a URL.
+     */
+    @Test
+    fun `a footer link is not the party`() {
+        assertNull(party(SaudiBanks.SNB, RealMessages.SNB_MADA_PAY_NO_SHOP))
     }
 }

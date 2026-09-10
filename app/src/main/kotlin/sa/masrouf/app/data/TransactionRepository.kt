@@ -380,7 +380,7 @@ class TransactionRepository(
      * @return how many rows lost an account number as their party.
      */
     suspend fun repairNumericParties(): Int {
-        val cleared = dao.clearNumericParties() + dao.clearCardParties()
+        val cleared = dao.clearNumericParties() + dao.clearImpossibleParties()
         if (cleared > 0) reparseStoredBodies()
         return cleared
     }

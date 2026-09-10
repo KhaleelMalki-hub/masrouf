@@ -188,25 +188,35 @@ class BankMessageParser(private val profile: BankProfile) : MessageParser {
      * was first fixed on SNB alone and 113 rows on the other banks stayed wrong.
      *
      * Skipping rather than refusing: `findAll` walks on to the NEXT line the same
-     * pattern matches, which is the shop.
+     * pattern matches, which is the shop - or, on a body that names no shop at
+     * all, to nothing, which is why [NOT_A_PARTY] also refuses the bank's own
+     * footer. A walk that keeps going will find something.
      */
     private fun firstMatch(patterns: List<Regex>, text: String): String? {
         for (pattern in patterns) {
             val value = pattern.findAll(text)
                 .mapNotNull { it.groupValues.getOrNull(1)?.let(::cleanCaptured) }
-                .firstOrNull { it.isNotBlank() && !NAMES_A_CARD.containsMatchIn(it) }
+                .firstOrNull { it.isNotBlank() && !NOT_A_PARTY.containsMatchIn(it) }
             if (value != null) return value
         }
         return null
     }
 
     /**
-     * A captured value that is a payment card rather than a party.
+     * A captured value that cannot be a party.
      *
-     * Anchored at the start, so a shop whose name merely contains the word is out
-     * of reach. Matched after [cleanCaptured] has stripped the masking.
+     * Two things, and the second was found by shipping the first. `^بطاق` is the
+     * payment card, anchored at the start so a shop whose name merely contains the
+     * word is out of reach.
+     *
+     * The URL is the bank's own footer. Skipping the card means walking on, and on
+     * a body with no shop in it at all - mada Pay's point-of-sale message names the
+     * card and the account and nothing else - the walk reached
+     * "للتفاصيل http://alah.li/mobile", which another profile's `^ل` pattern reads
+     * as a party. Seventeen purchases were filed as BILLS by a link to the bank's
+     * app. No merchant name contains a URL, so this costs nothing.
      */
-    private val NAMES_A_CARD = Regex("""^بطاق""")
+    private val NOT_A_PARTY = Regex("""^بطاق|https?://""")
 
     /**
      * Banks mask identifiers with asterisks on either side ("****NAME", "NAME****",

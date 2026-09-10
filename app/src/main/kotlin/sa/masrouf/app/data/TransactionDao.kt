@@ -402,7 +402,8 @@ interface TransactionDao {
     suspend fun clearNumericParties(): Int
 
     /**
-     * Clears a party that is the CARD the money was paid with.
+     * Clears a party that cannot be one: the CARD the money was paid with, or
+     * the bank's own footer link.
      *
      * SNB's 2017-2018 point-of-sale template writes the card on one `من` line and
      * the shop on the next, and the pattern that read the party took the first:
@@ -415,8 +416,11 @@ interface TransactionDao {
      * a gap and never overwrites - read the corrected pattern. A party the user
      * filed by hand is never touched.
      *
-     * `LIKE 'بطاق%'` anchors at the start, so a shop whose name merely contains the
-     * word is out of reach.
+     * `LIKE 'بطاق%'` anchors at the start, so a shop whose name merely contains
+     * the word is out of reach. The URL clause is for the seventeen rows that the
+     * first version of this repair produced: skipping the card made the party
+     * pattern walk on, and on a body naming no shop it reached
+     * "للتفاصيل http://alah.li/mobile" - filed, by a link, as bills.
      */
     @Query(
         """
@@ -424,11 +428,11 @@ interface TransactionDao {
         SET merchant_raw = NULL, merchant_key = NULL
         WHERE raw_text IS NOT NULL
           AND merchant_key IS NOT NULL
-          AND merchant_key LIKE 'بطاق%'
+          AND (merchant_key LIKE 'بطاق%' OR merchant_key LIKE '%HTTP%')
           AND (category_source IS NULL OR category_source <> 'MANUAL')
         """
     )
-    suspend fun clearCardParties(): Int
+    suspend fun clearImpossibleParties(): Int
 
     /**
      * Corrects one row's amount.
