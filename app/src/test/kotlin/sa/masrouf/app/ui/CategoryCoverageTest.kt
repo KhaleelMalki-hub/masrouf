@@ -4,6 +4,9 @@ import org.junit.jupiter.api.Test
 import androidx.compose.ui.graphics.Color
 import sa.masrouf.core.model.SaudiCategories
 import kotlin.test.assertEquals
+import kotlin.math.cbrt
+import kotlin.math.pow
+import kotlin.math.sqrt
 import kotlin.test.assertTrue
 
 /**
@@ -20,6 +23,16 @@ import kotlin.test.assertTrue
  * shipped as a byte-identical copy of INCOME in the light theme.
  */
 class CategoryCoverageTest {
+
+    /**
+     * The floor two bands must clear to be told apart.
+     *
+     * 13 rather than a textbook 15: the light palette reaches 15.5 and the dark
+     * 14.5, and the gap between the floor and what the palette achieves is the room
+     * a future colour has to be tuned in. Raise it if a palette is ever retuned
+     * higher; do not lower it to admit a colour.
+     */
+    private val MIN_BAND_DISTANCE = 13.0
 
     private val all = SaudiCategories.ALL
 
@@ -61,20 +74,68 @@ class CategoryCoverageTest {
     }
 
     /**
-     * Not merely present but DISTINGUISHABLE. Two categories sharing a colour are a
-     * chart that cannot be read, which is worse than one with a gap in it.
+     * Not merely present but DISTINGUISHABLE - and now actually measured.
+     *
+     * This said the same sentence for months and asserted byte equality: it caught
+     * only the exact-duplicate case (bonus shipped as a copy of income once) and
+     * passed everything else. Under it, transport and investment sat 5.8 apart in
+     * the light theme and bills and bonus 4.2 apart in the dark - both of them
+     * indistinguishable in a 12dp band, both of them shipped, both of them past a
+     * guard whose own docstring promised to stop exactly that. A guard that asserts
+     * IDENTITY while claiming to assert CONTENT is the shape this repository has
+     * been bitten by more than once.
+     *
+     * CIE76 in CIE Lab, which is the metric the palette's own comments quote. The
+     * floor is what the palette actually achieves with a little headroom: nineteen
+     * colours confined to one lightness band (so each stays legible against its
+     * theme's surface) cannot all be far apart, and a floor set where no palette
+     * can reach it is a guard that gets deleted rather than obeyed.
      */
     private fun assertDistinctColours(theme: String, bands: Map<String, Color>) {
         val missing = all.map { it.id }.filter { it !in bands && it != SaudiCategories.OTHER.id }
         assertEquals(emptyList(), missing, "$theme: categories with no band colour")
 
-        val byColour = all.filter { it.id in bands }.groupBy { bands.getValue(it.id) }
-            .filterValues { it.size > 1 }
+        val present = all.filter { it.id in bands }
+        val tooClose = present.indices.flatMap { i ->
+            (i + 1 until present.size).mapNotNull { j ->
+                val a = present[i]
+                val b = present[j]
+                val distance = deltaE(bands.getValue(a.id), bands.getValue(b.id))
+                if (distance < MIN_BAND_DISTANCE) Triple(a.id, b.id, distance) else null
+            }
+        }
+
         assertTrue(
-            byColour.isEmpty(),
-            "$theme: categories sharing one colour: " +
-                byColour.values.joinToString { group -> group.joinToString("/") { it.id } },
+            tooClose.isEmpty(),
+            "$theme: bands too close to tell apart (CIE76 floor $MIN_BAND_DISTANCE): " +
+                tooClose.joinToString { (a, b, d) -> "$a/$b ${"%.1f".format(d)}" },
         )
+    }
+
+    /** CIE76. Enough to separate two flat fills; nobody is proofing print here. */
+    private fun deltaE(one: Color, other: Color): Double {
+        val (l1, a1, b1) = lab(one)
+        val (l2, a2, b2) = lab(other)
+        return sqrt((l1 - l2).pow(2) + (a1 - a2).pow(2) + (b1 - b2).pow(2))
+    }
+
+    private fun lab(colour: Color): Triple<Double, Double, Double> {
+        fun linear(channel: Float): Double {
+            val c = channel.toDouble()
+            return if (c <= 0.04045) c / 12.92 else ((c + 0.055) / 1.055).pow(2.4)
+        }
+        val r = linear(colour.red)
+        val g = linear(colour.green)
+        val b = linear(colour.blue)
+        // sRGB to CIE XYZ, D65.
+        val x = (r * 0.4124564 + g * 0.3575761 + b * 0.1804375) / 0.95047
+        val y = r * 0.2126729 + g * 0.7151522 + b * 0.0721750
+        val z = (r * 0.0193339 + g * 0.1191920 + b * 0.9503041) / 1.08883
+        fun f(t: Double) = if (t > 216.0 / 24389.0) cbrt(t) else (841.0 / 108.0) * t + 4.0 / 29.0
+        val fx = f(x)
+        val fy = f(y)
+        val fz = f(z)
+        return Triple(116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz))
     }
 
     @Test
@@ -90,5 +151,35 @@ class CategoryCoverageTest {
         val missing = all.filter { it.icon == fallback }.map { it.id }
 
         assertEquals(emptyList(), missing, "categories falling through to the default glyph")
+    }
+
+    /**
+     * No `%d` in any string resource, in either language.
+     *
+     * `Resources.getString(id, args)` formats with the CONFIGURATION locale, and
+     * under `ar-SA` that renders Arabic-Indic digits - ٣٠ where every other number
+     * in this app is 30. This app's one absolute typographic rule is Western
+     * numerals in both languages, matching what Saudi banks print, and every count
+     * elsewhere is passed pre-converted into a `%s` for exactly that reason.
+     *
+     * Two `%d`s shipped on the ask screen the day it was written, and neither the
+     * strings nor the Kotlin looked wrong on its own: the defect lives in the seam.
+     * This is the only place that can see both sides.
+     */
+    @Test
+    fun `no string resource formats a number with the locale's own digits`() {
+        val offenders = listOf("src/main/res/values/strings.xml", "src/main/res/values-en/strings.xml")
+            .flatMap { path ->
+                Regex("""<string name="([^"]+)">([^<]*)</string>""")
+                    .findAll(java.io.File(path).readText())
+                    .filter { Regex("""%\d+[$]d""").containsMatchIn(it.groupValues[2]) }
+                    .map { "$path: ${it.groupValues[1]}" }
+            }
+
+        assertEquals(
+            emptyList(),
+            offenders,
+            "these format a number with %d, which is Arabic-Indic under ar-SA; pass a String into %s",
+        )
     }
 }

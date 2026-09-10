@@ -147,7 +147,7 @@ private val MasroufTypography = Typography().run {
         bodySmall = bodySmall.copy(fontFamily = MasroufArabic),
         labelLarge = labelLarge.copy(fontFamily = MasroufArabic, fontWeight = FontWeight.Medium),
         labelMedium = labelMedium.copy(
-            fontFamily = MasroufArabic, fontWeight = FontWeight.Medium, letterSpacing = 0.8.sp,
+            fontFamily = MasroufArabic, fontWeight = FontWeight.Medium, letterSpacing = 0.5.sp,
         ),
         labelSmall = labelSmall.copy(fontFamily = MasroufArabic, fontWeight = FontWeight.Medium),
     )
@@ -160,7 +160,9 @@ private val MasroufTypography = Typography().run {
  * `merge` fills the RECEIVER's gaps from the argument, and every role in this scale
  * sets a weight and a tracking - so written the other way it was inert at thirteen
  * call sites, and the card's last-four was actually WIDENED by `labelMedium`'s
- * 0.8sp, the opposite of what this style is for.
+ * tracking, the opposite of what this style is for. (That tracking was 0.8sp when
+ * this was written and is now M3's own 0.5: the override was pushing joined Arabic
+ * letters apart, and every string this role draws is Arabic by default.)
  *
  * The two headline amounts take their role plain: the month total and the entry
  * field carry their weight in the scale itself, and are heavier than this.

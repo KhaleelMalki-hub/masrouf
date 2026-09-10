@@ -495,3 +495,17 @@ private val FIRST_STRONG_ISOLATE = Char(0x2068).toString()
 
 /** POP DIRECTIONAL ISOLATE - closes it. */
 private val POP_ISOLATE = Char(0x2069).toString()
+
+/**
+ * Text from outside the app, fenced so it cannot reorder the sentence around it.
+ *
+ * A bank descriptor that BEGINS with digits is the case: "21192 CENTREPOINT" is a
+ * real merchant in this history, and dropped un-isolated into an Arabic line it
+ * renders "CENTREPOINT 21192" - the number walks to the far end. Pinning a text
+ * direction does not fix it; only an isolate does, because the run has to carry its
+ * own direction rather than inherit the paragraph's.
+ *
+ * Declared as code points rather than literals, per CLAUDE.md rule 7: these are
+ * invisible in an editor and in a diff.
+ */
+internal fun String.bidiIsolated(): String = FIRST_STRONG_ISOLATE + this + POP_ISOLATE

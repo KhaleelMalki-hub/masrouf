@@ -122,6 +122,7 @@ fun AddExpenseScreen(
     val monthUnfiled by viewModel.monthUnfiled.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     val incomeState = rememberLazyListState()
+    val askListState = rememberLazyListState()
     // The bar leaves on the way down and returns on the way up, as M3 top bars do
     // over a scrolling list; the month is the thing to look at, not the title.
     val topBarScroll = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -417,10 +418,14 @@ fun AddExpenseScreen(
                     currencyLabel = currency,
                     cardBanks = cardBanks,
                     cardKinds = cardKinds,
-                    salary = salary,
+                    // The same salary the history uses. Passing the raw preference
+                    // meant a bank-announced salary showed the above-salary pill in
+                    // the history and not in an answer about the same row.
+                    salary = effectiveSalary,
                     // The bars' insets plus room for nothing else: this screen has
                     // no floating button, so it does not pay for one.
                     contentPadding = padding,
+                    listState = askListState,
                     onQuestionChanged = viewModel::onQuestionChanged,
                     onAsk = viewModel::askQuestion,
                     onRefile = { refiling = it },

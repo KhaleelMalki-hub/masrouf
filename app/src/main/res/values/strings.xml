@@ -241,7 +241,7 @@
     <string name="ask_nothing_here">ما فيه عمليات في هذي المدة</string>
     <string name="ask_count_label">عدد العمليات</string>
     <string name="ask_largest_label">أكبر عملية</string>
-    <string name="ask_more_rows">و%1$d عملية أخرى</string>
+    <string name="ask_more_rows">و%1$s عملية أخرى</string>
     <string name="ask_thinking">لحظة…</string>
     <string name="ask_answered_spending">المصروف</string>
     <string name="ask_answered_income">الدخل</string>
@@ -255,5 +255,11 @@
     <string name="period_last_year">السنة الماضية</string>
     <string name="period_named_month">%1$s</string>
     <string name="period_named_year">%1$s</string>
-    <string name="period_last_n_days">آخر %1$d يوم</string>
+    <string name="period_last_n_days">آخر %1$s يوم</string>
+
+    <!-- Subjects an answer can be about, for the line above the figure. -->
+    <string name="topic_fuel">بنزين</string>
+    <string name="topic_coffee">قهوة</string>
+    <string name="topic_delivery">توصيل</string>
+    <string name="topic_pharmacy">صيدلية</string>
 </resources>

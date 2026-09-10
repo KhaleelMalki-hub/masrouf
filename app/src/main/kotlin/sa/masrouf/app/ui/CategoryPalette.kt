@@ -22,14 +22,14 @@ import sa.masrouf.core.model.SaudiCategories
  */
 internal val LightBands = mapOf(
     SaudiCategories.FOOD.id to Color(0xFFB3261E),
-    SaudiCategories.GROCERIES.id to Color(0xFF2E6B4F),
-    SaudiCategories.TRANSPORT.id to Color(0xFF2B5CA8),
+    SaudiCategories.GROCERIES.id to Color(0xFF3A6A47),
+    SaudiCategories.TRANSPORT.id to Color(0xFF125EA9),
     SaudiCategories.BILLS.id to Color(0xFF8A5A00),
     SaudiCategories.HEALTH.id to Color(0xFF6C4E9C),
     SaudiCategories.SHOPPING.id to Color(0xFF9A4A2F),
     SaudiCategories.HOUSING.id to Color(0xFF1F5F8B),
-    SaudiCategories.EDUCATION.id to Color(0xFF3F6E2E),
-    SaudiCategories.SERVICES.id to Color(0xFF00696E),
+    SaudiCategories.EDUCATION.id to Color(0xFF4A6C27),
+    SaudiCategories.SERVICES.id to Color(0xFF006971),
     // Blue-violet, not the teal it started as: teal put it 5.9 from charity and
     // 5.8 from groceries in the same strip. Measured against every other light
     // band, its nearest neighbour is now investment at 15.7.
@@ -40,40 +40,40 @@ internal val LightBands = mapOf(
     // was false in one of the two themes it ships with. Nearest other band is now
     // bills at 20.3.
     SaudiCategories.BONUS.id to Color(0xFFB5891C),
-    SaudiCategories.ENTERTAINMENT.id to Color(0xFF7A3E8F),
+    SaudiCategories.ENTERTAINMENT.id to Color(0xFF833A88),
     SaudiCategories.FEES.id to Color(0xFF8C4A6B),
     SaudiCategories.CHARITY.id to Color(0xFF1F7A6B),
     SaudiCategories.CASH.id to Color(0xFF6B5B2E),
-    SaudiCategories.INVESTMENT.id to Color(0xFF4A5FA8),
-    SaudiCategories.INCOME.id to Color(0xFF2F7A3A),
-    SaudiCategories.TRANSFERS.id to Color(0xFF4A6572),
-    SaudiCategories.OTHER.id to Color(0xFF6E6E76),
+    SaudiCategories.INVESTMENT.id to Color(0xFF5B5E99),
+    SaudiCategories.INCOME.id to Color(0xFF2B7A3C),
+    SaudiCategories.TRANSFERS.id to Color(0xFF456576),
+    SaudiCategories.OTHER.id to Color(0xFF736D75),
 )
 
 internal val DarkBands = mapOf(
     SaudiCategories.FOOD.id to Color(0xFFFF897D),
-    SaudiCategories.GROCERIES.id to Color(0xFF7DDBA8),
-    SaudiCategories.TRANSPORT.id to Color(0xFFAEC6FF),
-    SaudiCategories.BILLS.id to Color(0xFFF5C264),
-    SaudiCategories.HEALTH.id to Color(0xFFCDB4F5),
+    SaudiCategories.GROCERIES.id to Color(0xFF6FDCB2),
+    SaudiCategories.TRANSPORT.id to Color(0xFFA1C9FF),
+    SaudiCategories.BILLS.id to Color(0xFFF6C264),
+    SaudiCategories.HEALTH.id to Color(0xFFD5B2F1),
     SaudiCategories.SHOPPING.id to Color(0xFFFFB59B),
-    SaudiCategories.HOUSING.id to Color(0xFF8FC9EE),
-    SaudiCategories.EDUCATION.id to Color(0xFFAEDB94),
-    SaudiCategories.SERVICES.id to Color(0xFF6FD4DA),
+    SaudiCategories.HOUSING.id to Color(0xFF83CBEE),
+    SaudiCategories.EDUCATION.id to Color(0xFFB8D98F),
+    SaudiCategories.SERVICES.id to Color(0xFF6ED4DD),
     // Periwinkle, for the reason its light twin changed: the teal was 2.1 from
     // charity, which is invisible. Nearest other dark band is investment at 9.7.
-    SaudiCategories.TRAVEL.id to Color(0xFFB0B8FF),
+    SaudiCategories.TRAVEL.id to Color(0xFFAFB8FF),
     // Gold, matching its light twin. The old pale green cleared INCOME by 11.9,
     // which is a difference you can measure and not one you can see at 3dp - a
     // deposit chip is a 3x12dp sliver. Nearest other dark band is bills at 19.9.
-    SaudiCategories.BONUS.id to Color(0xFFEBC15F),
-    SaudiCategories.ENTERTAINMENT.id to Color(0xFFE0AEF5),
+    SaudiCategories.BONUS.id to Color(0xFFDAC75F),
+    SaudiCategories.ENTERTAINMENT.id to Color(0xFFF4A8E4),
     SaudiCategories.FEES.id to Color(0xFFF3A8C8),
     SaudiCategories.CHARITY.id to Color(0xFF7FD8C6),
     SaudiCategories.CASH.id to Color(0xFFDCC98A),
-    SaudiCategories.INVESTMENT.id to Color(0xFFA9B8EE),
-    SaudiCategories.INCOME.id to Color(0xFF8FD99B),
-    SaudiCategories.TRANSFERS.id to Color(0xFFA8C8D8),
+    SaudiCategories.INVESTMENT.id to Color(0xFFB9B5E1),
+    SaudiCategories.INCOME.id to Color(0xFF91D999),
+    SaudiCategories.TRANSFERS.id to Color(0xFFA8C8D7),
     SaudiCategories.OTHER.id to Color(0xFFA8A8B2),
 )
 

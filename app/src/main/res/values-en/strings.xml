@@ -196,7 +196,7 @@
     <string name="ask_nothing_here">Nothing in that period</string>
     <string name="ask_count_label">Transactions</string>
     <string name="ask_largest_label">Largest</string>
-    <string name="ask_more_rows">and %1$d more</string>
+    <string name="ask_more_rows">and %1$s more</string>
     <string name="ask_thinking">One moment…</string>
     <string name="ask_answered_spending">Spending</string>
     <string name="ask_answered_income">Income</string>
@@ -210,5 +210,11 @@
     <string name="period_last_year">last year</string>
     <string name="period_named_month">%1$s</string>
     <string name="period_named_year">%1$s</string>
-    <string name="period_last_n_days">last %1$d days</string>
+    <string name="period_last_n_days">last %1$s days</string>
+
+    <!-- Subjects an answer can be about, for the line above the figure. -->
+    <string name="topic_fuel">Petrol</string>
+    <string name="topic_coffee">Coffee</string>
+    <string name="topic_delivery">Delivery</string>
+    <string name="topic_pharmacy">Pharmacy</string>
 </resources>
