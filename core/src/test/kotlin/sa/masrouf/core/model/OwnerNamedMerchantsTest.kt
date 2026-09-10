@@ -7,6 +7,7 @@ import sa.masrouf.core.capture.RawMessage
 import sa.masrouf.core.capture.SaudiBanks
 import java.time.Instant
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertNotEquals
 import kotlin.test.assertFalse
 
@@ -239,5 +240,66 @@ class OwnerNamedMerchantsTest {
     fun `the furniture keyword does not reach an unrelated name`() {
         assertNotEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("AL MUSBAH"))
         assertNotEquals(SaudiCategories.SHOPPING, CategoryGuess.forMerchant("ALMU"))
+    }
+
+    // ---- Named by the card statement, 2026-09-10 ---------------------------
+
+    /**
+     * Each of these is stored under the nine characters the SMS allowed, and the
+     * keyword is the full name the statement gave. The assertion is on the STORED
+     * form, because that is the string the app will actually be asked about.
+     */
+    @Test
+    fun `the shops the statement named reach their categories`() {
+        val expected = mapOf(
+            // the owner corrected this one: a tyre and car-service shop, not a
+            // government-transactions office as the search had it
+            "AL ENJAZ A" to SaudiCategories.TRANSPORT,
+            "SALT U WA" to SaudiCategories.FOOD,
+            "THE BLAK" to SaudiCategories.FOOD,
+            "Address C" to SaudiCategories.FOOD,
+            "Miraqe Ga" to SaudiCategories.FOOD,
+            "MYSR*Amma" to SaudiCategories.FOOD,
+            "American" to SaudiCategories.SHOPPING,
+            "SAIF EL D" to SaudiCategories.SHOPPING,
+            "NEWMAX" to SaudiCategories.SHOPPING,
+            "Binat-alh" to SaudiCategories.SHOPPING,
+            "MYSR*Easi" to SaudiCategories.SHOPPING,
+            "ALNABEA A" to SaudiCategories.SHOPPING,
+            "Arwan for" to SaudiCategories.SHOPPING,
+            "BILLY BEE" to SaudiCategories.ENTERTAINMENT,
+            "Future Pa" to SaudiCategories.ENTERTAINMENT,
+            "COMPANY A" to SaudiCategories.ENTERTAINMENT,
+            "Ban Holdi" to SaudiCategories.ENTERTAINMENT,
+            "WOQOOF CO" to SaudiCategories.TRANSPORT,
+            "Safari Te" to SaudiCategories.BILLS,
+            "ARABIAN G" to SaudiCategories.GROCERIES,
+            "MECCA COM" to SaudiCategories.HEALTH,
+            "ALESAYI H" to SaudiCategories.TRAVEL,
+        )
+
+        val wrong = expected.mapNotNull { (stored, want) ->
+            val got = CategoryGuess.forMerchant(stored)
+            if (got == want) null else "$stored: wanted ${want.id}, got ${got?.id}"
+        }
+
+        assertEquals(emptyList(), wrong)
+    }
+
+    /**
+     * And none of them reaches a shop it has no business filing.
+     *
+     * "COMPANY A" is the one to watch: it is a nine-character truncation of a
+     * generic prefix, and it is only safe because the keyword behind it is long.
+     * The day a second "COMPANY A..." appears in the history, this test is where it
+     * will show up.
+     */
+    @Test
+    fun `the statement keywords do not reach a different company`() {
+        assertNull(CategoryGuess.forMerchant("COMPANY ALKHALEEJ"))
+        // not "AMERICAN GARAGE": a shipped "GARAGE" rule files that as transport, and
+        // correctly - the control has to be a name no OTHER rule claims either.
+        assertNull(CategoryGuess.forMerchant("AMERICAN WIDGET CO"))
+        assertNull(CategoryGuess.forMerchant("SALT LAKE SUPPLIES"))
     }
 }

@@ -900,6 +900,68 @@ object CategoryGuess {
         // anything else.
         "AL MUASHAH" to SaudiCategories.SHOPPING,
 
+        // ---- Named by the card statement, confirmed by the owner, 2026-09-10 ----
+        //
+        // Twenty-one shops the SMS could not name, because Al Rajhi truncates a
+        // merchant to nine characters. The statement carries the whole descriptor,
+        // and each of these was searched from THAT string and then put to the owner.
+        // Every keyword below was run against the whole merchant list before it was
+        // added: not one of them reaches a second shop, and the three that appear to
+        // (MECCA COM/MECCA COMPLEX MEDICAL, FUTURE PA/FUTURE PATH, AL ENJAZ/AL ENJAZ
+        // A) are two truncations of the same one.
+        //
+        // Written long rather than short on purpose. MerchantMatch accepts a
+        // truncation when the KEYWORD starts with the stored name, so the rule has
+        // to be at least as long as the shop's real name; a short keyword would
+        // reach into other names instead, which is what "NTERNATIO" once did.
+
+        // The owner corrected the research on this one: the search called it a
+        // government-transactions office and he says it is a tyre and car-service
+        // shop. His word is the evidence; the search was a guess with a URL.
+        // Seven visits, 1,550 riyals - the largest of this batch.
+        "AL ENJAZ AL FAWRI" to SaudiCategories.TRANSPORT,
+
+        // Restaurants and cafés.
+        "SALT U WALK" to SaudiCategories.FOOD,
+        "THE BLAK PECO" to SaudiCategories.FOOD,
+        "ADDRESS COFFEE" to SaudiCategories.FOOD,
+        // Miraque Gateway operates Tim Hortons in the Kingdom - the descriptor is
+        // the operator's legal name, not the brand on the shopfront. "Gateway" here
+        // is part of a company name, not a payment gateway.
+        "MIRAQE GATEWAY" to SaudiCategories.FOOD,
+        // The Moyasar gateway prefixes the merchant it is billing for; "MYSR JAHE"
+        // was already in his own learned rules for the same reason.
+        "MYSR AMMAR CAFE" to SaudiCategories.FOOD,
+
+        // Clothes, toys, furnishings, jewellery.
+        "AMERICAN EAGLE" to SaudiCategories.SHOPPING,
+        "SAIF EL DIN GAMES" to SaudiCategories.SHOPPING,
+        "NEWMAX" to SaudiCategories.SHOPPING,
+        "BINAT ALHESEN" to SaudiCategories.SHOPPING,
+        "MYSR EASINESS" to SaudiCategories.SHOPPING,
+        // النبع النقي - home water-treatment units and filters, so the thing bought
+        // is equipment rather than the water bill it saves.
+        "ALNABEA ALNAQI" to SaudiCategories.SHOPPING,
+        // The descriptor names the trade where nothing else could: the shop itself
+        // has no web presence, and "for gold and j..." is what the terminal sent.
+        "ARWAN FOR GOLD" to SaudiCategories.SHOPPING,
+
+        // Places that sell an outing.
+        "BILLY BEEZ" to SaudiCategories.ENTERTAINMENT,
+        "FUTURE PATH CLUB" to SaudiCategories.ENTERTAINMENT,
+        // عجائب البحار, which operates the Fakieh Aquarium.
+        "COMPANY AJAIB ALBIHAR" to SaudiCategories.ENTERTAINMENT,
+        // BAAN Holding, the entertainment-centre operator formerly Al Hokair.
+        "BAN HOLDING GROUP" to SaudiCategories.ENTERTAINMENT,
+
+        // The rest.
+        "WOQOOF" to SaudiCategories.TRANSPORT,          // parking
+        "SAFARI TELECOM" to SaudiCategories.BILLS,      // a Mobily franchise
+        "ARABIAN GROCERY" to SaudiCategories.GROCERIES, // operates Circle K here
+        "MECCA COMPLEX MEDICAL" to SaudiCategories.HEALTH,
+        // Alesayi Hospitality operates hotels, so a charge from it is a stay.
+        "ALESAYI HOSPITALITY" to SaudiCategories.TRAVEL,
+
         // Money sent abroad through Western Union out of the STC Pay wallet: 68
         // transfers, 94,126 riyals, every one of them wages for domestic staff, as
         // the owner confirmed. Filed by the CHANNEL rather than the recipient,
