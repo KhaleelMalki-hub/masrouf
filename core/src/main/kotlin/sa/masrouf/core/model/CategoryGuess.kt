@@ -962,6 +962,31 @@ object CategoryGuess {
         // Alesayi Hospitality operates hotels, so a charge from it is a stay.
         "ALESAYI HOSPITALITY" to SaudiCategories.TRAVEL,
 
+        // ---- Three the deep search found, and the history confirmed -----------
+        //
+        // The shallow pass had given up on all three. What settled two of them was
+        // not a better search but the owner's own history around the purchase - the
+        // method that once placed a Dubai terminal string by the boarding pass two
+        // days later.
+
+        // فضاء الإبداع - a stall operator at Boulevard World in Riyadh. He was
+        // standing there: six BLVD Worl purchases that same evening between 17:06
+        // and 22:48, East Food among them, and this at 23:56.
+        "FADAA ALIBDAA" to SaudiCategories.SHOPPING,
+
+        // فواصل المتطورة, which runs The DockX in the Red Sea Mall - an arcade that
+        // sells prepaid game cards in 100 and 200 riyal tiers. The afternoon around
+        // it is a mall trip in that mall: H&M at 15:00, Next at 15:21, this at
+        // 15:34, GOAT at 16:23, Claire's at 16:59, frozen yoghurt at 17:14.
+        "FAWASEL ADVANCES" to SaudiCategories.ENTERTAINMENT,
+
+        // درة الأصيل لتأجير السيارات. "FOR R" is FOR RENT A CAR, and the descriptor
+        // is exactly twenty characters - a clean truncation of the legal name. The
+        // week around it reads as a man driving his OWN car (Aldrees, Total, NAFT,
+        // a car wash), so this was put to him rather than shipped on the string,
+        // and he remembered: he did rent a car that week.
+        "DURRAH ALASEEL" to SaudiCategories.TRANSPORT,
+
         // Money sent abroad through Western Union out of the STC Pay wallet: 68
         // transfers, 94,126 riyals, every one of them wages for domestic staff, as
         // the owner confirmed. Filed by the CHANNEL rather than the recipient,

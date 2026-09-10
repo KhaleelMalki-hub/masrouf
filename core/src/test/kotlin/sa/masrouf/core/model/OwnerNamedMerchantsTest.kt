@@ -276,6 +276,11 @@ class OwnerNamedMerchantsTest {
             "ARABIAN G" to SaudiCategories.GROCERIES,
             "MECCA COM" to SaudiCategories.HEALTH,
             "ALESAYI H" to SaudiCategories.TRAVEL,
+            // the deep-search three: two placed by the history around them, one
+            // by the owner's memory of renting a car that week
+            "Fadaa Ali" to SaudiCategories.SHOPPING,
+            "FAWASEL A" to SaudiCategories.ENTERTAINMENT,
+            "DURRAH AL" to SaudiCategories.TRANSPORT,
         )
 
         val wrong = expected.mapNotNull { (stored, want) ->
