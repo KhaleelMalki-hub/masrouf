@@ -1,5 +1,15 @@
 package sa.masrouf.app.ui
 
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextOverflow
+import sa.masrouf.app.R
 import sa.masrouf.core.money.Money
 import java.math.RoundingMode
 import java.text.DecimalFormat
@@ -54,3 +64,37 @@ fun Money.forSpeech(currencyName: String): String = "${grouped()} $currencyName"
  * quietly smoothed away.
  */
 fun Money.grouped(): String = AMOUNT_FORMAT.format(toBigDecimal())
+
+/**
+ * An amount, drawn as it should be read and announced as it should be said.
+ *
+ * There was a `forSpeech` and two call sites. The other ten amounts in the app -
+ * every figure on the income screen, the card tiles, the legend, the strip's
+ * tooltip, an answer - were drawn straight and announced as bare numbers with
+ * nothing saying of what. The riyal sign is younger than every speech engine, so a
+ * screen reader meeting it says nothing at all: "six thousand one hundred and
+ * ninety six point one eight", and the listener has to assume the unit.
+ *
+ * One composable rather than a description at each site, for the reason the
+ * formatter itself is one function: the next amount added to a screen should get
+ * this without anyone remembering to ask for it.
+ */
+@Composable
+internal fun MoneyText(
+    amount: Money,
+    currencyLabel: String,
+    style: TextStyle,
+    modifier: Modifier = Modifier,
+    color: Color = Color.Unspecified,
+    maxLines: Int = 1,
+) {
+    val spoken = stringResource(R.string.currency_spoken)
+    Text(
+        text = amount.forDisplay(currencyLabel),
+        style = style,
+        color = color,
+        maxLines = maxLines,
+        overflow = TextOverflow.Ellipsis,
+        modifier = modifier.semantics { contentDescription = amount.forSpeech(spoken) },
+    )
+}

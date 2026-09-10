@@ -69,7 +69,6 @@
     <string name="add_expense">Record an expense</string>
     <string name="import_history">Read older bank messages</string>
     <string name="import_none">No new transactions in your messages</string>
-    <string name="file_history">File what\'s unfiled</string>
     <string name="history_all">All transactions</string>
     <string name="language_toggle">ع</string>
     <string name="language_switch">Switch language</string>

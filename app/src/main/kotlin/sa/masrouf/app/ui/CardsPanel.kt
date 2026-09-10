@@ -25,6 +25,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import sa.masrouf.app.R
@@ -67,6 +69,10 @@ fun CardsPanel(
             text = stringResource(R.string.cards_title),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            // A heading, so a screen reader can jump between the sections of a
+            // screen that can hold thirty slips and a whole month. There were none
+            // in the app at all.
+            modifier = Modifier.semantics { heading() },
         )
         // One height for every tile, set by the tallest content any of them can
         // carry: left to wrap, a card showing a limit stands taller than one whose
@@ -184,8 +190,9 @@ private fun CardTile(card: CardBalance, currencyLabel: String) {
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Text(
-                text = Money.ofHalalas(halalas).forDisplay(currencyLabel),
+            MoneyText(
+                amount = Money.ofHalalas(halalas),
+                currencyLabel = currencyLabel,
                 style = MaterialTheme.typography.titleMedium.merge(MoneyStyle),
             )
             // What is left means little without what it is left of. Shown only for

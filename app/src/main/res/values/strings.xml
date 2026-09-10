@@ -86,7 +86,6 @@
     <string name="add_expense">سجّل مصروف</string>
     <string name="import_history">اقرأ رسائل البنك القديمة</string>
     <string name="import_none">ما فيه عمليات جديدة في رسائلك</string>
-    <string name="file_history">صنّف ما لم يُصنَّف</string>
     <string name="history_all">كل العمليات</string>
     <string name="language_toggle">EN</string>
     <string name="language_switch">تغيير اللغة</string>

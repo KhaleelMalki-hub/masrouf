@@ -219,12 +219,18 @@ internal fun MonthPanel(
             },
         )
 
-        if (bands.isEmpty() && monthLoaded) {
-            Text(
-                text = stringResource(R.string.month_empty),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+        // Three states, not two. The guard used to be on the empty MESSAGE only, so
+        // while a month was still loading the else-branch ran and drew an empty
+        // legend under the hint "tap any category to see its transactions" -
+        // pointing at rows that were not there yet.
+        if (bands.isEmpty()) {
+            if (monthLoaded) {
+                Text(
+                    text = stringResource(R.string.month_empty),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         } else {
             BandLegend(
                 bands = bands,
@@ -303,8 +309,9 @@ private fun CardKindSplit(byCardKind: List<Pair<CardKind, Money>>, currencyLabel
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Text(
-                    text = amount.forDisplay(currencyLabel),
+                MoneyText(
+                    amount = amount,
+                    currencyLabel = currencyLabel,
                     style = MaterialTheme.typography.bodySmall.merge(MoneyStyle),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

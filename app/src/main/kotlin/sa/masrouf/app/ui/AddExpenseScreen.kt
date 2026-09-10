@@ -24,6 +24,7 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.background
 import androidx.activity.compose.BackHandler
@@ -332,7 +333,6 @@ fun AddExpenseScreen(
                 onImportHistory = {
                     if (canImportHistory) viewModel.importHistory() else onRequestHistoryAccess()
                 },
-                onFileHistory = viewModel::fileHistory,
                 onRefileAll = { confirming = DestructiveAction.RefileAll },
                 onEditSalary = { editingSalary = true },
             )
@@ -511,11 +511,18 @@ fun AddExpenseScreen(
                 // 24 and 12 points with nothing deciding which was which.
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                item {
-                    CardsPanel(
-                        cards = cardBalances,
-                        currencyLabel = currency,
-                    )
+                // The emptiness test belongs out here. Inside the item, the panel
+                // returned early and left a zero-height child that the list still
+                // charged 16dp of spacing for - a phantom gap above the month, and
+                // no way to tell "still reading" from "no open cards", which every
+                // other panel on this screen can.
+                if (cardBalances.isNotEmpty()) {
+                    item {
+                        CardsPanel(
+                            cards = cardBalances,
+                            currencyLabel = currency,
+                        )
+                    }
                 }
                 item {
                     MonthPanel(
@@ -550,6 +557,7 @@ fun AddExpenseScreen(
                                 Text(
                                     text = stringResource(R.string.pending_title),
                                     style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.semantics { heading() },
                                 )
                                 // Only offered once the queue is long enough that
                                 // working through it one at a time is not realistic.
@@ -631,6 +639,7 @@ fun AddExpenseScreen(
                         text = stringResource(R.string.history_all),
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.semantics { heading() },
                     )
                 }
 
@@ -744,7 +753,6 @@ fun AddExpenseScreen(
 private fun MoreMenu(
     importRunning: Boolean,
     onImportHistory: () -> Unit,
-    onFileHistory: () -> Unit,
     onRefileAll: () -> Unit,
     onEditSalary: () -> Unit,
 ) {
@@ -760,13 +768,6 @@ private fun MoreMenu(
                 enabled = !importRunning,
                 onClick = {
                     onImportHistory()
-                    open = false
-                },
-            )
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.file_history)) },
-                onClick = {
-                    onFileHistory()
                     open = false
                 },
             )
@@ -830,7 +831,6 @@ private fun AddExpenseTopBar(
     onThemeModeChange: (ThemeMode) -> Unit,
     importRunning: Boolean,
     onImportHistory: () -> Unit,
-    onFileHistory: () -> Unit,
     onRefileAll: () -> Unit,
     onEditSalary: () -> Unit,
     showHistoryActions: Boolean = true) {
@@ -844,7 +844,6 @@ private fun AddExpenseTopBar(
                 MoreMenu(
                     importRunning = importRunning,
                     onImportHistory = onImportHistory,
-                    onFileHistory = onFileHistory,
                     onRefileAll = onRefileAll,
                     onEditSalary = onEditSalary,
                 )

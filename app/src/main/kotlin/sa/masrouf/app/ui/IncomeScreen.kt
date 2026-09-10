@@ -19,6 +19,12 @@ import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material.icons.Icons
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -185,8 +191,9 @@ private fun LegendLine(colour: Color, label: String, amount: Money, currencyLabe
                 modifier = Modifier.padding(start = 12.dp),
             )
         }
-        Text(
-            text = amount.forDisplay(currencyLabel),
+        MoneyText(
+            amount = amount,
+            currencyLabel = currencyLabel,
             style = MaterialTheme.typography.bodyMedium.merge(MoneyStyle),
         )
     }
@@ -221,8 +228,9 @@ private fun YearCard(
                 verticalAlignment = Alignment.Bottom,
             ) {
                 Text(text = year.toString(), style = MaterialTheme.typography.titleMedium)
-                Text(
-                    text = (yearSalary + yearBonus).forDisplay(currencyLabel),
+                MoneyText(
+                    amount = yearSalary + yearBonus,
+                    currencyLabel = currencyLabel,
                     style = MaterialTheme.typography.titleSmall.merge(MoneyStyle),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -352,7 +360,14 @@ private fun MonthRow(
             modifier = Modifier.padding(start = SPLIT_LINE_INDENT, bottom = 4.dp),
         )
     }
-    if (expanded) {
+    // The same reveal the unfiled banner uses. Two disclosures in one app
+    // behaving differently is drift rather than taste, and this one shoved
+    // the rows below it without a frame of transition.
+    AnimatedVisibility(
+        visible = expanded,
+        enter = fadeIn(tween(Motion.SHORT)) + expandVertically(tween(Motion.MEDIUM, easing = Motion.standard)),
+        exit = fadeOut(tween(Motion.FADE_OUT)) + shrinkVertically(tween(Motion.SHORT, easing = Motion.standard)),
+    ) {
         for (deposit in deposits.sortedByDescending { it.occurredAt }) {
             DepositRow(deposit = deposit, currencyLabel = currencyLabel)
         }
@@ -398,8 +413,9 @@ private fun DepositRow(deposit: Transaction, currencyLabel: String) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(start = 8.dp).weight(1f),
         )
-        Text(
-            text = deposit.amount.forDisplay(currencyLabel),
+        MoneyText(
+            amount = deposit.amount,
+            currencyLabel = currencyLabel,
             style = MaterialTheme.typography.labelSmall.merge(MoneyStyle),
         )
         Spacer(Modifier.width(18.dp))

@@ -152,6 +152,7 @@ internal fun AskScreen(
                         text = stringResource(R.string.ask_examples_title),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.semantics { heading() },
                     )
                     // Vertical spacing as well as horizontal: these labels are
                     // twenty-odd characters and always wrap, and wrapped chips with

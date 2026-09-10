@@ -202,7 +202,15 @@ internal fun TransactionRow(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         color = MaterialTheme.colorScheme.onErrorContainer,
+                        // Weighted like the chip below, and for the reason the
+                        // comment there gives - it just arrived after that comment
+                        // was written. Unweighted and measured FIRST, this pill plus
+                        // the date exhausted the supporting line on an above-salary
+                        // row, the weighted chip was left zero width, and the card
+                        // vanished from the row entirely. Two compressible children
+                        // now share what the date leaves.
                         modifier = Modifier
+                            .weight(1f, fill = false)
                             .clip(MaterialTheme.shapes.extraSmall)
                             .background(MaterialTheme.colorScheme.errorContainer)
                             .padding(horizontal = 6.dp, vertical = 1.dp),

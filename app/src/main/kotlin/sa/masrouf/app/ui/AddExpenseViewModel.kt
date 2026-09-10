@@ -588,14 +588,6 @@ class AddExpenseViewModel(
         }
     }
 
-    /** Files every unfiled record whose merchant is recognised. */
-    fun fileHistory() {
-        viewModelScope.launch {
-            _importState.value = ImportState.Refiling
-            _importState.value = ImportState.Filed(repository.fileUncategorised())
-        }
-    }
-
     /**
      * Throws away the app's own filing and does it again with the current rules.
      *

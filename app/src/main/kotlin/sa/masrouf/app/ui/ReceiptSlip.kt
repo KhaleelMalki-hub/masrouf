@@ -24,6 +24,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
@@ -57,6 +59,7 @@ fun ReceiptSlip(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val isArabic = LocalConfiguration.current.locales[0].language == "ar"
     // The ID, not the Category, and saveable rather than remembered. A slip lives
     // in a LazyColumn item, so scrolling it out of view disposes a plain `remember`
     // - the user filed slip twelve, scrolled up to check the total, came back, and
@@ -102,7 +105,14 @@ fun ReceiptSlip(
             Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
                 Text(
                     text = merchant,
-                    style = MaterialTheme.typography.titleMedium,
+                    // Pinned to the layout direction, as the history row already is
+                    // and for the same reason: unpinned, a paragraph takes the
+                    // direction of its first strong letter, so a Latin merchant
+                    // aligned to the opposite edge from the Arabic slip around it
+                    // and the ellipsis fell on whichever end the name voted for.
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        textDirection = if (isArabic) TextDirection.Rtl else TextDirection.Ltr,
+                    ),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
