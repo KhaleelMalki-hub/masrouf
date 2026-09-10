@@ -735,11 +735,24 @@ general merchant filing drops the bank-scoped rules it supersedes.
 
 **Still open, deliberately.** Four long functions (`MonthPanel`, `CardTile`,
 `TransactionRow`, `MainActivity.onCreate`) could be split; none of them is confusing
-today, so the split waits for a reason better than a line count. `AL MUASHA` -
-4,672.45 riyals, 5 October 2025, Google Pay - has exhausted every channel on the
-phone and needs the owner's memory. And a baseline profile would help the cold start
-further, but it does nothing for a debug build and the release build already took
-the launch from 677ms to about 200.
+today, so the split waits for a reason better than a line count.
+
+~~And a baseline profile would help the cold start further~~ - **written 2026-09-10,
+and it was not the cold start it helped most.** Measured on the release build on a
+fresh install with no prior use: a scroll through the history was 4.99% janky at a
+90th percentile of 17ms. After `cmd package compile -m speed-profile -f` - that is,
+once the JIT had already seen the code - the identical scroll was 0.98% at 9ms. The
+app was never slow; it was slow UNTIL IT HAD RUN, and every install put the owner
+back at the start of that curve. The merged ART profile carried **zero** entries for
+`sa.masrouf`: the libraries ship their own and the app shipped none.
+
+With `app/src/main/baseline-prof.txt`, a fresh install measures **1.69% janky, 50th
+6ms, 90th 10ms, 95th 13ms, launch 194-222ms** - the warmed ceiling, immediately.
+
+Written by hand rather than generated, and the file says why: a macrobenchmark run
+needs `connectedAndroidTest`, which uninstalls the app it tests, which on the only
+device this app runs on would take twelve years of captured messages. `profileinstaller`
+is deliberately not added - it matters below API 31 and this phone is 34.
 
 ## Three directions the wording stated and the rules did not read
 
