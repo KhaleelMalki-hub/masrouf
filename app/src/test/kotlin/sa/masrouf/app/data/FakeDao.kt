@@ -246,6 +246,9 @@ class FakeDao : TransactionDao {
                 )
             }
 
+    override suspend fun bodyOf(id: String): String? =
+        state.value.firstOrNull { it.id == id }?.rawText
+
     override suspend fun anyMerchantLike(pattern: String): Boolean {
         val needle = pattern.trim('%')
         return state.value.any { it.merchantKey?.contains(needle, ignoreCase = true) == true }

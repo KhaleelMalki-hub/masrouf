@@ -217,4 +217,6 @@
     <string name="topic_coffee">Coffee</string>
     <string name="topic_delivery">Delivery</string>
     <string name="topic_pharmacy">Pharmacy</string>
+    <string name="ask_example_unfiled">show unfiled</string>
+    <string name="subject_unfiled">Unfiled</string>
 </resources>

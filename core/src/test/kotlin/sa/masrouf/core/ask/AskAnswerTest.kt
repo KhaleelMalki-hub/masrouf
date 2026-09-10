@@ -155,6 +155,25 @@ class AskAnswerTest {
         assertFalse(never.subjectSeenEver, "nothing by that name has ever been bought")
     }
 
+    /**
+     * An unfiled row is selected by the ABSENCE of a category, and a row filed as
+     * anything at all - including the ones a category makes non-spending - is not
+     * in the answer.
+     */
+    @Test
+    fun `unfiled selects what has no category and nothing else`() {
+        val answer = query(Subject.Unfiled).answeredFrom(
+            listOf(
+                row("40.00"),
+                row("60.00"),
+                row("900.00", category = SaudiCategories.FOOD.id),
+            ),
+        )
+
+        assertEquals(Money.ofMajor("100.00"), answer.total)
+        assertEquals(2, answer.count)
+    }
+
     @Test
     fun `rows come back newest first`() {
         val answer = query().answeredFrom(listOf(row("1.00"), row("2.00"), row("3.00")))

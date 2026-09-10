@@ -237,6 +237,9 @@ class AddExpenseViewModel(
         }
     }
 
+    /** What the bank wrote for one row. See `RefileSheet`'s `body`. */
+    suspend fun bodyOf(id: String): String? = repository.bodyOf(id)
+
     /** What the ask screen is showing. */
     sealed interface AskState {
         /** Nothing asked yet, or the question has been edited since. */

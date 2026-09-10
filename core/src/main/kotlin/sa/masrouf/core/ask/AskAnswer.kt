@@ -95,6 +95,7 @@ private fun AskQuery.matchesSubject(row: Transaction): Boolean = when (val s = s
     is Subject.OfCategory -> row.categoryId == s.category.id
     is Subject.OfTopic -> s.topic.claims(row.merchantRaw)
     is Subject.AtMerchant -> merchantMatches(row.merchantRaw, s.keyword)
+    is Subject.Unfiled -> row.categoryId == null
 }
 
 /**

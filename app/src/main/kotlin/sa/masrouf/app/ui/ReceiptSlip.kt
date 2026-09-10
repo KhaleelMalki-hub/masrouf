@@ -160,7 +160,7 @@ fun ReceiptSlip(
  * their own inbox - which is the entire reason for showing it.
  */
 @Composable
-private fun BankWords(raw: String, modifier: Modifier = Modifier) {
+internal fun BankWords(raw: String, modifier: Modifier = Modifier) {
     // A quiet inset, not a hole. `surfaceContainerLowest` under a dynamic dark
     // scheme is within a hair of pure black, and a black rectangle inside an
     // elevated card reads as a rendering fault, not as quoted material. One step

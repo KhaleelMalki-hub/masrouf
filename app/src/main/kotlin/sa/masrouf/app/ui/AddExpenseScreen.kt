@@ -11,6 +11,8 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -31,6 +33,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -67,13 +70,18 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
@@ -154,6 +162,8 @@ fun AddExpenseScreen(
     // transient result, and leave on their own. They used to be a line pinned at
     // the top of the list that stayed until the next action replaced it.
     val snackbarHost = remember { SnackbarHostState() }
+    // For telling a sheet to leave before it is removed. See `closeRefile`.
+    val scope = rememberCoroutineScope()
     val resultText = importResultText(importState)
     LaunchedEffect(importState) {
         if (resultText != null) {
@@ -184,20 +194,36 @@ fun AddExpenseScreen(
     }
 
     refiling?.let { target ->
+        // Hoisted so the sheet can be told to LEAVE. Closed by setting the state to
+        // null, it left composition in one frame and skipped M3's slide-out - on the
+        // commonest action in the app, at the moment the user most needs the motion
+        // that says "your tap did that". Dismissing by scrim, drag or back was
+        // always fine: M3 runs the hide itself and calls onDismissRequest after.
+        val refileSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        val closeRefile: () -> Unit = {
+            scope.launch { refileSheetState.hide() }.invokeOnCompletion { refiling = null }
+        }
         ModalBottomSheet(
             onDismissRequest = { refiling = null },
-            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            sheetState = refileSheetState,
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         ) {
+            // The spending path already carries the body; the ask path does not,
+            // so it is fetched for this one row while the sheet is open.
+            val body by produceState(target.rawText, target.id) {
+                value = target.rawText ?: viewModel.bodyOf(target.id)
+            }
             RefileSheet(
                 transaction = target,
+                currencyLabel = currency,
+                body = body,
                 onDelete = {
-                    refiling = null
+                    closeRefile()
                     confirming = DestructiveAction.Delete(target)
                 },
                 onForget = {
                     target.merchantKey?.let(viewModel::forgetMerchant)
-                    refiling = null
+                    closeRefile()
                 },
                 onPick = { category, scope ->
                     val key = target.merchantKey
@@ -209,7 +235,14 @@ fun AddExpenseScreen(
                             viewModel.fileMerchantAtBank(key, bank, category.id)
                         else -> viewModel.fileMerchant(key, category.id)
                     }
-                    refiling = null
+                    closeRefile()
+                    // The spending and income screens observe the database and
+                    // redraw themselves. An answer does not - it is a snapshot of a
+                    // question asked once - so filing a row from it would leave the
+                    // row you just filed still drawing its uncategorised disc, which
+                    // is the "stale answer beside a different question" the view
+                    // model refuses two lines away from where this lands.
+                    if (destination == Destination.ASK) viewModel.askQuestion()
                 },
             )
         }
@@ -350,9 +383,22 @@ fun AddExpenseScreen(
         },
         floatingActionButton = {
             // Only where it does something. A record is added to the spending
-            // history; the income screen is a reading of what the banks reported
-            // and has nothing to type into.
-            if (destination == Destination.SPENDING) {
+            // history; the other two destinations are readings and have nothing to
+            // type into.
+            //
+            // Animated rather than a bare `if`. The Scaffold does not animate this
+            // slot, so while the body was crossing over on a fade-through the button
+            // simply stopped existing in one frame - on the app's most-used
+            // transition, and against a comment two screens away that says the
+            // defect being fixed was the body "and the floating button" being
+            // replaced at once. The body was fixed then; this was not.
+            AnimatedVisibility(
+                visible = destination == Destination.SPENDING,
+                enter = scaleIn(tween(Motion.SHORT, easing = Motion.emphasizedDecelerate)) +
+                    fadeIn(tween(Motion.SHORT)),
+                exit = scaleOut(tween(Motion.FADE_OUT, easing = Motion.emphasizedAccelerate)) +
+                    fadeOut(tween(Motion.FADE_OUT)),
+            ) {
                 // Extended while the top of the page is in view, a plain FAB once
                 // the user is down in the history - M3's own behaviour for a
                 // scrolling list, and it stops the wider English label covering rows.
@@ -437,7 +483,11 @@ fun AddExpenseScreen(
                 state = listState,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding),
+                    .padding(padding)
+                    // The search field sits mid-list, and `enableEdgeToEdge` means
+                    // the window no longer resizes for the keyboard - so the field
+                    // could be focused and covered at the same time.
+                    .imePadding(),
                 // The Scaffold's PaddingValues covers the bars and never the floating
                 // button, so the last rows sat under it - and this app's rows end in a
                 // money value, which was being clipped to "12.25" and ".00". Padding
@@ -1030,6 +1080,12 @@ private fun SalaryDialog(
                     suffix = { Text(currencyLabel) },
                     isError = parsed is AmountInput.Result.Invalid,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    // The same defect the entry field was fixed for, in the second
+                    // money field nobody looked at again: digits carry no direction,
+                    // so in an Arabic paragraph the halala point typed on the way to
+                    // 19000.50 lands to the LEFT of the number and the caret jumps.
+                    // An amount is one left-to-right run in both languages.
+                    textStyle = LocalTextStyle.current.copy(textDirection = TextDirection.Ltr),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

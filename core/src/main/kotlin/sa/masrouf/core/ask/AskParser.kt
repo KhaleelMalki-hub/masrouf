@@ -77,6 +77,14 @@ object AskParser {
         "اعرض" to Measure.LIST,
         "وريني" to Measure.LIST,
         "قائمه" to Measure.LIST,
+        "HOW MANY" to Measure.COUNT,
+        "HOW MUCH" to Measure.TOTAL,
+        "LARGEST" to Measure.LARGEST,
+        "BIGGEST" to Measure.LARGEST,
+        "SHOW" to Measure.LIST,
+        "LIST" to Measure.LIST,
+        "TOTAL" to Measure.TOTAL,
+        "SPENT" to Measure.TOTAL,
         "كم" to Measure.TOTAL,
         "مجموع" to Measure.TOTAL,
         "اجمالي" to Measure.TOTAL,
@@ -85,12 +93,31 @@ object AskParser {
         "مصروف" to Measure.TOTAL,
     ).map { (word, measure) -> ArabicText.foldForMatching(word) to measure }
 
-    private val INCOME_WORDS = listOf("دخل", "دخلي", "راتب", "وصلني", "استلمت")
+    private val INCOME_WORDS = listOf("دخل", "دخلي", "راتب", "وصلني", "استلمت", "INCOME", "SALARY")
         .map(ArabicText::foldForMatching)
+
+    /**
+     * The rows with no category. See [Subject.Unfiled].
+     *
+     * Both with and without the definite article, because both are what a person
+     * types: "وش غير مصنف" and "اعرض غير المصنف" are the same question, and a table
+     * of substrings does not know that ال is an article rather than three letters
+     * of the word. Cheaper and clearer than stripping it, which would have to know
+     * which ال is an article - "الله" is not "له" with one.
+     */
+    private val UNFILED_WORDS = listOf(
+        "غير مصنف", "غير المصنف", "غير مصنفه", "غير المصنفه",
+        "UNFILED", "NOT FILED",
+        "بلا تصنيف", "بدون تصنيف", "ما صنفت", "لم اصنف",
+        "UNFILED", "UNCATEGORISED", "UNCATEGORIZED",
+    ).map(ArabicText::foldForMatching)
 
     // ---- what it is about ---------------------------------------------------
 
     private fun subjectOf(text: String): Subject {
+        // First, because it is an absence rather than a thing: "غير مصنف" contains
+        // no category word, but a question that says it means only one thing.
+        if (UNFILED_WORDS.any { it in text }) return Subject.Unfiled
         TOPIC_WORDS.firstOrNull { (word, _) -> word in text }
             ?.let { return Subject.OfTopic(it.second) }
         CATEGORY_WORDS.firstOrNull { (word, _) -> word in text }
@@ -105,6 +132,11 @@ object AskParser {
      * times bigger. See [Topic].
      */
     private val TOPIC_WORDS: List<Pair<String, Topic>> = listOf(
+        "PETROL" to Topic.FUEL,
+        "FUEL" to Topic.FUEL,
+        "COFFEE" to Topic.COFFEE,
+        "DELIVERY" to Topic.DELIVERY,
+        "PHARMACY" to Topic.PHARMACY,
         "بنزين" to Topic.FUEL,
         "وقود" to Topic.FUEL,
         "محطه" to Topic.FUEL,
@@ -121,6 +153,19 @@ object AskParser {
      * Several categories are deliberately absent: nobody asks "how much on other".
      */
     private val CATEGORY_WORDS: List<Pair<String, Category>> = listOf(
+        "GROCERIES" to SaudiCategories.GROCERIES,
+        "EATING OUT" to SaudiCategories.FOOD,
+        "RESTAURANTS" to SaudiCategories.FOOD,
+        "TRANSPORT" to SaudiCategories.TRANSPORT,
+        "BILLS" to SaudiCategories.BILLS,
+        "HEALTH" to SaudiCategories.HEALTH,
+        "SHOPPING" to SaudiCategories.SHOPPING,
+        "TRANSFERS" to SaudiCategories.TRANSFERS,
+        "CHARITY" to SaudiCategories.CHARITY,
+        "HOUSING" to SaudiCategories.HOUSING,
+        "EDUCATION" to SaudiCategories.EDUCATION,
+        "ENTERTAINMENT" to SaudiCategories.ENTERTAINMENT,
+        "TRAVEL" to SaudiCategories.TRAVEL,
         "بقاله" to SaudiCategories.GROCERIES,
         "اغذيه" to SaudiCategories.GROCERIES,
         "مطاعم" to SaudiCategories.FOOD,
@@ -198,18 +243,21 @@ object AskParser {
         lastNDays(text, today)?.let { return it }
 
         when {
-            has(text, "اليوم") -> return day(today, PeriodLabel.TODAY)
-            has(text, "امس") -> return day(today.minusDays(1), PeriodLabel.YESTERDAY)
-            has(text, "هذا الاسبوع") -> return Period.of(
+            has(text, "اليوم") || has(text, "TODAY") -> return day(today, PeriodLabel.TODAY)
+            has(text, "امس") || has(text, "YESTERDAY") ->
+                return day(today.minusDays(1), PeriodLabel.YESTERDAY)
+            has(text, "هذا الاسبوع") || has(text, "THIS WEEK") -> return Period.of(
                 today.minusDays(6), today.plusDays(1), PeriodLabel.THIS_WEEK,
             )
-            has(text, "الشهر الماضي") || has(text, "الشهر اللي راح") ->
+            has(text, "الشهر الماضي") || has(text, "الشهر اللي راح") || has(text, "LAST MONTH") ->
                 return month(today.minusMonths(1), PeriodLabel.LAST_MONTH)
-            has(text, "هذا الشهر") || has(text, "هذي الشهر") || has(text, "الشهر الحالي") ->
+            has(text, "هذا الشهر") || has(text, "هذي الشهر") || has(text, "الشهر الحالي") ||
+                has(text, "THIS MONTH") ->
                 return month(today, PeriodLabel.THIS_MONTH)
-            has(text, "السنه الماضيه") || has(text, "العام الماضي") ->
+            has(text, "السنه الماضيه") || has(text, "العام الماضي") || has(text, "LAST YEAR") ->
                 return year(today.year - 1, PeriodLabel.LAST_YEAR)
-            has(text, "هذي السنه") || has(text, "هذا العام") || has(text, "السنه الحاليه") ->
+            has(text, "هذي السنه") || has(text, "هذا العام") || has(text, "السنه الحاليه") ||
+                has(text, "THIS YEAR") ->
                 return year(today.year, PeriodLabel.THIS_YEAR)
         }
 

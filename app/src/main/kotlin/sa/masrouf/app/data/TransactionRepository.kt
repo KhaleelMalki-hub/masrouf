@@ -649,6 +649,9 @@ class TransactionRepository(
         return query.answeredFrom(rows, seenEver)
     }
 
+    /** What the bank wrote for one row, when the caller has the row but not its body. */
+    suspend fun bodyOf(id: String): String? = dao.bodyOf(id)
+
     /**
      * Renumbers reissued cards, so one card reads as one card.
      *

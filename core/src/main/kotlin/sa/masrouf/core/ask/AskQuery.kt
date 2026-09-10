@@ -60,6 +60,22 @@ sealed interface Subject {
 
     /** One merchant the user named, matched the way every other merchant is. */
     data class AtMerchant(val keyword: String) : Subject
+
+    /**
+     * The rows that have no category yet.
+     *
+     * Not a category and not a topic: an ABSENCE, which is why it needs its own
+     * member. It is here because filing is what this owner actually does with the
+     * app - about a thousand rows remain - and until now the only way to find that
+     * work was the unfiled banner on the month card, which counts one month. The
+     * rows are spread over a hundred and forty-six months, so finding them meant
+     * guessing which month held them, and nothing marked a month as unfinished.
+     *
+     * Asking for them turns this screen into the worklist: the answer already
+     * lists the rows, and every row already opens the same filing sheet with the
+     * same whole-merchant scope. No new screen, no new interaction.
+     */
+    data object Unfiled : Subject
 }
 
 /**

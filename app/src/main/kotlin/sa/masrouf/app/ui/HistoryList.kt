@@ -45,6 +45,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import sa.masrouf.app.R
@@ -285,6 +287,7 @@ internal fun HistoryFilters(
     activeFilter: HistoryFilter?,
     onClear: () -> Unit,
 ) {
+    val focus = LocalFocusManager.current
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedTextField(
             value = query,
@@ -298,6 +301,10 @@ internal fun HistoryFilters(
             shape = MaterialTheme.shapes.extraLarge,
             leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            // Compose defines no default action for Search, so the IME's action key
+            // did nothing at all. The filtering is live as you type, which leaves
+            // that key exactly one useful job: get the keyboard off the results.
+            keyboardActions = KeyboardActions(onSearch = { focus.clearFocus() }),
             modifier = Modifier.fillMaxWidth(),
         )
         if (activeFilter != null || query.isNotBlank()) {
@@ -336,6 +343,23 @@ internal fun HistoryFilters(
 @Composable
 internal fun RefileSheet(
     transaction: Transaction,
+    currencyLabel: String,
+    /**
+     * What the bank wrote, when it can be had.
+     *
+     * This sheet asks "what is this shop", and the merchant string is precisely the
+     * thing that failed to answer it - it is nine characters of a truncation. What
+     * actually resolved the hard ones in this history was always the rest of the
+     * message: the plaza named in the body, the terminal id, the amount and the
+     * hour. PRODUCT.md says to show the evidence when asking "is this right?"; the
+     * receipt slip does it for a pending record and this, the decision made a
+     * thousand more times, did not.
+     *
+     * Null on the ask screen until it arrives: that path reads rows without their
+     * bodies on purpose, so the caller fetches this one row's body when the sheet
+     * opens rather than carrying every body into memory to add up integers.
+     */
+    body: String?,
     onPick: (Category?, RefileScope) -> Unit,
     onForget: () -> Unit,
     onDelete: () -> Unit,
@@ -353,10 +377,22 @@ internal fun RefileSheet(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(
-            text = stringResource(R.string.refile_title, merchant),
+            text = stringResource(R.string.refile_title, merchant.bidiIsolated()),
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(horizontal = SHEET_EDGE),
         )
+        // The amount and the day, which cost nothing and place the purchase: this
+        // owner identified a shop from the trip around it more than once.
+        Text(
+            text = transaction.amount.forDisplay(currencyLabel) +
+                "  ·  " + transaction.occurredAt.dayLabel(),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = SHEET_EDGE),
+        )
+        if (body != null) {
+            BankWords(body, modifier = Modifier.padding(horizontal = SHEET_EDGE))
+        }
         if (transaction.merchantKey != null) {
             // How far the decision reaches. The whole merchant is the useful
             // default - one tap files forty rows - but a card network sends the

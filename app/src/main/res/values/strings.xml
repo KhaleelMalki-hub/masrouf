@@ -262,4 +262,6 @@
     <string name="topic_coffee">قهوة</string>
     <string name="topic_delivery">توصيل</string>
     <string name="topic_pharmacy">صيدلية</string>
+    <string name="ask_example_unfiled">اعرض غير المصنف</string>
+    <string name="subject_unfiled">غير المصنف</string>
 </resources>

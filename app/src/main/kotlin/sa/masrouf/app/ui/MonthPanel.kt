@@ -159,6 +159,15 @@ internal fun MonthPanel(
                         }
                     },
                     label = "monthTotal",
+                    // Weighted, and not filled. A Row measures its unweighted
+                    // children in order and hands the LAST one whatever is left, so
+                    // a six-figure month - or five figures at a larger font scale -
+                    // took the whole width and starved the riyal mark to nothing,
+                    // then clipped against the panel's own rounded corner. The same
+                    // mechanism the card chip was fixed for. `fill = false` so a
+                    // short total still sits beside its mark rather than pushing it
+                    // to the far edge.
+                    modifier = Modifier.weight(1f, fill = false),
                 ) { (_, shown) ->
                     Text(
                         text = shown,

@@ -82,6 +82,9 @@ internal fun AskScreen(
     modifier: Modifier = Modifier,
 ) {
     val examples = listOf(
+        // First on purpose. Filing is what this app is actually used for, and this
+        // is the only entry point to the work that is not "guess which month".
+        R.string.ask_example_unfiled,
         R.string.ask_example_fuel_month,
         R.string.ask_example_coffee_year,
         R.string.ask_example_largest,
@@ -349,6 +352,7 @@ private fun subjectLabel(answer: AskAnswer): String = when (val subject = answer
         },
     )
     is Subject.AtMerchant -> subject.keyword.bidiIsolated()
+    is Subject.Unfiled -> stringResource(R.string.subject_unfiled)
 }
 
 @Composable

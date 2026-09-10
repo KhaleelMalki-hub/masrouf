@@ -102,6 +102,17 @@ interface TransactionDao {
     @Query("SELECT EXISTS(SELECT 1 FROM transactions WHERE merchant_key LIKE :pattern)")
     suspend fun anyMerchantLike(pattern: String): Boolean
 
+    /**
+     * One row's message body, for the sheet that asks what a shop is.
+     *
+     * By id, one row, only when the sheet opens. The ask screen's own projection
+     * drops this column deliberately - it is most of the database - so the body is
+     * fetched for the single row being filed rather than for the four hundred being
+     * counted.
+     */
+    @Query("SELECT raw_text FROM transactions WHERE id = :id")
+    suspend fun bodyOf(id: String): String?
+
     @Query("SELECT * FROM transactions WHERE status = 'PENDING' ORDER BY occurred_at_millis DESC")
     fun observePending(): Flow<List<TransactionEntity>>
 

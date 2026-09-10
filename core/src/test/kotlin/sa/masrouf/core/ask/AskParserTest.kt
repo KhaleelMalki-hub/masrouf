@@ -118,6 +118,25 @@ class AskParserTest {
         )
     }
 
+    /**
+     * The worklist question. Filing is what this app is actually used for, and
+     * until this existed the only way to find unfiled rows was to guess which of a
+     * hundred and forty-six months held them.
+     */
+    @Test
+    fun `the rows with no category are a subject of their own`() {
+        assertEquals(Subject.Unfiled, ask("وش اللي غير مصنف")!!.subject)
+        assertEquals(Subject.Unfiled, ask("اعرض غير المصنف هذا الشهر")!!.subject)
+        assertEquals(Measure.LIST, ask("اعرض غير المصنف هذا الشهر")!!.measure)
+    }
+
+    /** It is an absence, so it must beat the category and merchant readings. */
+    @Test
+    fun `unfiled is not read as a category or a merchant`() {
+        val query = ask("كم صرفت على غير المصنف")!!
+        assertEquals(Subject.Unfiled, query.subject)
+    }
+
     @Test
     fun `a merchant the user names is matched as a merchant`() {
         assertEquals(Subject.AtMerchant("امازون"), ask("كم صرفت في امازون")!!.subject)
@@ -170,5 +189,22 @@ class AskParserTest {
     @Test
     fun `an unknown noun is looked up as a merchant, not answered as everything`() {
         assertEquals(Subject.AtMerchant("الفضاء"), ask("كم صرفت على الفضاء")!!.subject)
+    }
+
+    // ---- and in the other language ------------------------------------------
+
+    /**
+     * The app ships two first-class languages and its own English example chips
+     * were four-fifths unparseable: the vocabulary was Arabic only, so the app
+     * suggested four questions it would then refuse.
+     */
+    @Test
+    fun `the english examples the app suggests are questions it can answer`() {
+        assertEquals(Subject.OfTopic(Topic.FUEL), ask("how much on petrol this month")!!.subject)
+        assertEquals(PeriodLabel.THIS_MONTH, ask("how much on petrol this month")!!.period.label)
+        assertEquals(Subject.OfTopic(Topic.COFFEE), ask("how much on coffee 2025")!!.subject)
+        assertEquals(Measure.LARGEST, ask("largest amount last month")!!.measure)
+        assertEquals(Measure.COUNT, ask("how many times delivery this month")!!.measure)
+        assertEquals(Subject.Unfiled, ask("show unfiled")!!.subject)
     }
 }
