@@ -266,4 +266,6 @@
     <string name="source_manual">إدخال يدوي</string>
     <string name="source_statement">كشف حساب</string>
     <string name="import_examined">قُرئت %1$s رسالة</string>
+    <string name="legend_show_all">عرض كل الفئات (%1$s أخرى)</string>
+    <string name="legend_show_less">عرض أقل</string>
 </resources>

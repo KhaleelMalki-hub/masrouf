@@ -221,4 +221,6 @@
     <string name="source_manual">Typed in</string>
     <string name="source_statement">Statement</string>
     <string name="import_examined">%1$s messages read</string>
+    <string name="legend_show_all">Show all categories (%1$s more)</string>
+    <string name="legend_show_less">Show fewer</string>
 </resources>

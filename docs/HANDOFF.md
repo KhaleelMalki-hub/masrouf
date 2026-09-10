@@ -563,12 +563,17 @@ and said he did not want it: the months it fired on had eight or nine categories
 it cost a tap and a line of chrome to hide two rows the card had room for. There is
 no `legendRows` anywhere in the tree and there has not been since.
 
-**And the evidence that revert rested on has expired.** Measured 2026-09-10 on the
-live database: August and July 2026 carry **sixteen** spending categories, April
-fifteen, May and June thirteen. Thirteen to sixteen rows at 48dp is 620-770dp of
-legend, which pushes the pending queue and the history off the screen. The decision
-is the owner's and it stands until he changes it, but it was made about a different
-month than the one he has now.
+**The evidence that revert rested on expired, and the owner reinstated it.**
+Measured 2026-09-10 on the live database: August and July 2026 carry **sixteen**
+spending categories, April fifteen, May and June thirteen - against the eight or
+nine the revert was written about. Thirteen rows at 48dp is 624dp of legend before
+the strip and the total above it, which pushes the pending queue and the history off
+the screen. Shown the measurement, he asked for the ceiling back the same day.
+
+Restored whole from `3fb868f`: the six-row cap, the "show all" control, the pure
+`legendRows` selector and its five tests - including the exception that matters,
+which is that a filter landing below the cut opens the whole legend rather than
+hiding the row that says what the history below is narrowed by.
 
 Every size that fenced text in became a floor: `heightIn` on the legend row with
 its fill sized by `matchParentSize` rather than to the same constant, `widthIn` on

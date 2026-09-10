@@ -27,6 +27,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
+import sa.masrouf.app.R
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -176,6 +182,10 @@ fun BandLegend(
 ) {
     val largest = bands.maxOfOrNull { it.amount.halalas }?.takeIf { it > 0L } ?: 1L
 
+    var showAll by rememberSaveable { mutableStateOf(false) }
+    val visible = legendRows(bands, selected, showAll)
+    val hidden = bands.size - visible.size
+
 
     Column(
         modifier = modifier
@@ -186,7 +196,7 @@ fun BandLegend(
         // Keyed by the category, not by position. Without it, paging to a month
         // with a different mix animated row three's fill from food's share to
         // transport's while the icon and colour swapped instantly.
-        bands.forEach { band ->
+        visible.forEach { band ->
             key(band.category?.id ?: UNCATEGORISED_KEY) {
             BandRow(
                 colour = band.colour,
@@ -204,7 +214,49 @@ fun BandLegend(
             )
             }
         }
+        if (hidden > 0) {
+            TextButton(onClick = { showAll = true }) {
+                Text(stringResource(R.string.legend_show_all, hidden.toString()))
+            }
+        } else if (showAll && bands.size > LEGEND_CEILING) {
+            TextButton(onClick = { showAll = false }) {
+                Text(stringResource(R.string.legend_show_less))
+            }
+        }
     }
+}
+
+/**
+ * The legend rows a month card shows.
+ *
+ * A legend is as long as the month is varied, and a month can touch every category
+ * there is. Left uncapped it pushed the history the card sits above off the screen,
+ * so the card stops at [LEGEND_CEILING] rows and offers the rest on a tap.
+ *
+ * The exception is a filter that lands below the cut. Hiding the selected row would
+ * narrow the history below with nothing on screen saying what by, so a selection the
+ * ceiling would hide opens the whole legend instead.
+ *
+ * ## Removed once, and back on measurement
+ *
+ * This shipped in September 2026 and was reverted days later at the owner's request:
+ * the months it fired on carried eight or nine categories, so it cost a tap and a
+ * line of chrome to hide two rows the card had room for. That was true of that
+ * month. Measured again on 2026-09-10, after a year of filing: August and July carry
+ * SIXTEEN categories, April fifteen, May and June thirteen. Thirteen rows at 48dp is
+ * 624dp of legend before the strip and the total above it - the card alone is taller
+ * than the screen, and the pending queue and the history are pushed off the bottom.
+ *
+ * A ceiling earns its place when the list is unbounded in practice. It now is.
+ */
+internal fun legendRows(
+    bands: List<Band>,
+    selected: HistoryFilter?,
+    showAll: Boolean,
+): List<Band> {
+    if (showAll || bands.size <= LEGEND_CEILING) return bands
+    val kept = bands.take(LEGEND_CEILING)
+    return if (bands.drop(LEGEND_CEILING).any { it.isSelectedBy(selected) }) bands else kept
 }
 
 /**
@@ -324,3 +376,11 @@ private val BAND_CORNER = 6.dp
 
 /** No category is allowed to vanish entirely; see [MonthStrip]. */
 private const val MIN_VISIBLE_FRACTION = 0.012f
+
+/**
+ * How many legend rows a month card shows before it offers the rest on a tap.
+ *
+ * Six, which is what it was when this shipped the first time. The number was never
+ * the problem - the month was.
+ */
+internal const val LEGEND_CEILING = 6
