@@ -66,6 +66,42 @@ interface TransactionDao {
     )
     suspend fun neighbours(fromMillis: Long, untilMillis: Long): List<TransactionEntity>
 
+    /**
+     * The columns a question needs, and not the one that makes the table big.
+     *
+     * `raw_text` is most of this database - twelve years of message bodies - and a
+     * question about a year would otherwise pull all of them through memory to add
+     * up a column of integers. The ask screen never shows a body, so it never
+     * loads one.
+     *
+     * The date bounds are half-open, matching `Period`: a row cannot fall into two
+     * adjacent months. Null bounds mean the whole history, expressed as the widest
+     * possible range rather than as a second query, so there is one statement and
+     * one index scan either way.
+     */
+    @Query(
+        """
+        SELECT id, amount_halalas AS amountHalalas, direction, type,
+               occurred_at_millis AS occurredAtMillis, category_id AS categoryId,
+               merchant_raw AS merchantRaw, merchant_key AS merchantKey,
+               status, account_last4 AS accountLast4, bank_id AS bankId, currency
+        FROM transactions
+        WHERE occurred_at_millis >= :fromMillis AND occurred_at_millis < :untilMillis
+        ORDER BY occurred_at_millis DESC
+        """
+    )
+    suspend fun rowsForQuestion(fromMillis: Long, untilMillis: Long): List<AskRow>
+
+    /**
+     * Whether any row has ever named this merchant.
+     *
+     * One indexed LIKE rather than twelve years of rows, and it answers the only
+     * question the screen cannot answer from the period alone: "no shop by that
+     * name" and "nothing that month" are different sentences.
+     */
+    @Query("SELECT EXISTS(SELECT 1 FROM transactions WHERE merchant_key LIKE :pattern)")
+    suspend fun anyMerchantLike(pattern: String): Boolean
+
     @Query("SELECT * FROM transactions WHERE status = 'PENDING' ORDER BY occurred_at_millis DESC")
     fun observePending(): Flow<List<TransactionEntity>>
 

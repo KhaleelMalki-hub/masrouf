@@ -10,6 +10,11 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.map
 import sa.masrouf.core.capture.BankMessageParser
 import sa.masrouf.core.capture.MessageGate
+import sa.masrouf.core.ask.AskAnswer
+import sa.masrouf.core.ask.AskParser
+import sa.masrouf.core.ask.MerchantAliases
+import sa.masrouf.core.ask.Subject
+import sa.masrouf.core.ask.answeredFrom
 import sa.masrouf.core.capture.ParseResult
 import sa.masrouf.core.capture.RawMessage
 import sa.masrouf.core.capture.SaudiBanks
@@ -609,6 +614,39 @@ class TransactionRepository(
           }
         }
         return filled
+    }
+
+    /**
+     * Answers a question.
+     *
+     * The split is deliberate and is the whole design: SQL narrows by DATE, because
+     * that is what the index on `occurred_at_millis` is for, and `:core` decides
+     * MEANING - what counts as spending, what a topic claims, what a merchant name
+     * matches - because that is the module proven correct on any machine with a
+     * JDK. No arithmetic happens in this file.
+     *
+     * @return the answer, or null when the question was not understood. A refusal
+     *   is a result, not a failure: the alternative is a figure about the reader's
+     *   money that nobody can check.
+     */
+    suspend fun answer(question: String, today: LocalDate): AskAnswer? {
+        val query = AskParser.parse(question, today) ?: return null
+        val zone = RiyadhTime.ZONE
+        val from = query.period.from?.atStartOfDay(zone)?.toInstant()?.toEpochMilli() ?: Long.MIN_VALUE
+        val until = query.period.toExclusive?.atStartOfDay(zone)?.toInstant()?.toEpochMilli() ?: Long.MAX_VALUE
+
+        val rows = dao.rowsForQuestion(from, until).map { it.toModel() }
+
+        // Only a merchant the user typed can be a name this history has never seen.
+        // A category and a topic are the app's own vocabulary and always exist, so
+        // they cost no query at all.
+        val seenEver = when (val subject = query.subject) {
+            is Subject.AtMerchant -> dao.anyMerchantLike(
+                "%" + ArabicText.foldForMatching(MerchantAliases.resolve(subject.keyword)) + "%",
+            )
+            else -> true
+        }
+        return query.answeredFrom(rows, seenEver)
     }
 
     /**

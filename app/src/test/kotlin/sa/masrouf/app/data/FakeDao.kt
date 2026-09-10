@@ -225,6 +225,32 @@ class FakeDao : TransactionDao {
             .sortedByDescending { it.occurredAtMillis }
     }
 
+    override suspend fun rowsForQuestion(fromMillis: Long, untilMillis: Long): List<AskRow> =
+        state.value
+            .filter { it.occurredAtMillis >= fromMillis && it.occurredAtMillis < untilMillis }
+            .sortedByDescending { it.occurredAtMillis }
+            .map {
+                AskRow(
+                    id = it.id,
+                    amountHalalas = it.amountHalalas,
+                    direction = it.direction,
+                    type = it.type,
+                    occurredAtMillis = it.occurredAtMillis,
+                    categoryId = it.categoryId,
+                    merchantRaw = it.merchantRaw,
+                    merchantKey = it.merchantKey,
+                    status = it.status,
+                    accountLast4 = it.accountLast4,
+                    bankId = it.bankId,
+                    currency = it.currency,
+                )
+            }
+
+    override suspend fun anyMerchantLike(pattern: String): Boolean {
+        val needle = pattern.trim('%')
+        return state.value.any { it.merchantKey?.contains(needle, ignoreCase = true) == true }
+    }
+
     override suspend fun renumberCard(from: String, to: String): Int {
         val doomed = state.value.filter { it.accountLast4 == from }
         state.value = state.value.map { if (it in doomed) it.copy(accountLast4 = to) else it }
