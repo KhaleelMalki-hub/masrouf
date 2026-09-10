@@ -6,7 +6,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
 
 ## Where things stand
 
-- All tests green: **380** in `:core`, **197** in `:app`, **9** instrumented
+- All tests green: **381** in `:core`, **197** in `:app`, **9** instrumented
   (`:app:connectedDebugAndroidTest`).
 - **`connectedDebugAndroidTest` uninstalls the app and deletes its database.**
   It has already cost the owner's phone once. Use the `masrouf35` emulator, or
@@ -15,7 +15,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
   off adb often; check `adb devices` before installing.
 - Database schema version 6. One-off repairs are a set in `MasroufApp.Repair`,
   each stamped with the version that introduced it, taken as a union and run once
-  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **46**.
+  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **47**.
 - Real data on the phone: ~22,014 transactions, ~2,190 unfiled, and the owner's
   own learned merchant rules (34 and growing — he files one whenever a shop the
   shipped list cannot name comes up).
@@ -758,7 +758,11 @@ bank of seven.
 **لمسة شفرة** - a barber the terminal sends as the name of the plaza it sits in -
 is now a shipped rule rather than one row he filed by hand.
 
-**Read on the phone and not yet acted on:** `READ_SMS` is **not granted**. Every
+**`READ_SMS` was not granted, and now is.** Both SMS permissions were restored by
+adb this session, so the launch catch-up runs again. It had been silently doing
+nothing - see the lesson of 2026-09-01. If it comes back off, that is the thing to
+check first when captures stop arriving. The original text, kept because the
+commands are what matters: `READ_SMS` was **not granted**. Every
 inbox read returns quietly, so the launch catch-up has not been running. It was
 granted by adb once before and something has taken it back; the lesson of
 2026-09-01 is that a permission check which returns quietly is a feature that does
@@ -825,9 +829,18 @@ ceiling is 25 MB. See the backup section.
 
    **45 fixed one bank of seven** - the guard had gone into SNB's copy of a pattern
    seven profiles carry, so the re-parse put the card straight back on the other
-   113. It now lives in `BankMessageParser.firstMatch`. **Maintenance 46 is
-   installed and runs on his next launch**; expect those 113 to lose the card, and
-   the count of `merchant_key LIKE 'بطاق%'` to fall from 119 to near zero.
+   113. It now lives in `BankMessageParser.firstMatch`. **Maintenance 46 ran and is
+   verified**: no row anywhere carries a card as its party, no type moved, and of
+   the 40 merchant names the repair created 39 are real shops - Dunkin Donuts, a
+   Sasco station, Texas Chicken, Subway, a pharmacy, a salon.
+
+   The fortieth was a defect 46 created. Skipping the card makes the pattern walk
+   on, and on mada Pay's template - which names the card, the account and the
+   bank's link, and no shop at all - the walk reached
+   "للتفاصيل http://alah.li/mobile". Seventeen purchases were filed as BILLS by a
+   link. `NOT_A_PARTY` now refuses a URL as well as a card. **Maintenance 47 is
+   installed and runs on his next launch** (the phone dropped off adb); expect
+   those seventeen to lose the link and be re-filed.
 
    Still open under this number: **227 rows carry an account number** as their
    party, on templates none of the profiles reads.
