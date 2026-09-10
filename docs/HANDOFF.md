@@ -63,14 +63,24 @@ the party's real name in place of an account number on 1,300 rows.
 
 ## Facts the owner confirmed (do not re-ask)
 
-- **`Abdullah` (barq, POS) is a flowers and decoration shop → shopping.** Confirmed
-  2026-09-10. **Filed as THIS ONE only, and deliberately not as a keyword**: the
-  stored key is the bare first name `ABDULLAH`, which thirteen other merchants in
-  this history contain - `ABDULLAH ALHARTHI`, `MAJED ABDULLAH`, `YAQOOB
-  SAYEDABDULLAH` (3,015 riyals), `Abdulaziz Abdullah Est` (1,175) - most of them
-  transfers to people. A whole-merchant rule on it would file those as shopping.
-  There are two rows under this key, 250 and 50 riyals; nothing in either message
-  says whether the smaller one is the same shop.
+- **`Abdullah` is a flowers and decoration shop → shopping.** Confirmed by the owner
+  2026-09-10, and he has been before: two rows carry that exact descriptor - 250
+  riyals today through barq, and 50 riyals on 12 February 2025 on the AlRajhi card
+  through mada Pay. Both are in-person point-of-sale purchases.
+
+  **Filed with the WHOLE-MERCHANT scope, which is safe, and NOT as a shipped
+  keyword, which would not be.** The two match by different rules and the difference
+  is the whole point:
+
+  - The app's own rule is `WHERE merchant_key = :merchantKey` - exact equality - so
+    it reaches the rows whose key is exactly `ABDULLAH` and no others.
+  - A keyword in `CategoryGuess` goes through `MerchantMatch`, which matches by
+    containment and truncation. `ABDULLAH` is a bare first name and thirteen other
+    merchants in this history contain it - `ABDULLAH ALHARTHI`, `MAJED ABDULLAH`,
+    `YAQOOB SAYEDABDULLAH` (3,015 riyals), `Abdulaziz Abdullah Est` (1,175) - most
+    of them transfers to people. That rule would file all of them as shopping.
+
+  This is the distinction to remember whenever a merchant is a person's first name.
 
 - `Ammar` via Al Rajhi = café (weekly, 24 SAR); `AMMAR` via barq = bakery
   (rule `AMMAR@barq` → groceries).
