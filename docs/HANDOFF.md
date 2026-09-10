@@ -1,4 +1,4 @@
-# Handoff — 2026-09-02
+# Handoff — 2026-09-10
 
 State of the app and what is still open, so a new session can continue without
 re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
@@ -6,7 +6,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
 
 ## Where things stand
 
-- All tests green: **374** in `:core`, **191** in `:app`, **9** instrumented
+- All tests green: **376** in `:core`, **195** in `:app`, **9** instrumented
   (`:app:connectedDebugAndroidTest`).
 - **`connectedDebugAndroidTest` uninstalls the app and deletes its database.**
   It has already cost the owner's phone once. Use the `masrouf35` emulator, or
@@ -603,13 +603,18 @@ not it saved (and crashed the app on a failed insert); a category chosen on a pe
 slip was lost by scrolling; and confirming a slip stamped the app's own guess MANUAL,
 which made it immune to `refileAll`.
 
-**Still open, device-dependent.** Two findings need the phone before they can be
-settled, because two comments in the tree contradict each other and only one can be
-right: `BankWords`' `reverseScrolling = isRtl` (CardsPanel documents the same
-parameter as an empirically-found bug) and the `Crossfade` between destinations,
-which is a cross-dissolve where M3 specifies a sequential fade-through.
+**Both device-dependent findings are closed** (verified in the tree, 2026-09-10).
+`reverseScrolling` is gone from both call sites and each now carries the reasoning
+rather than the parameter: `CardsPanel.kt:86` records the two "fixes" that fought a
+problem that did not exist, and `ReceiptSlip.kt:196` records that it was argued
+rather than photographed, since the slip only draws for a pending record and the
+queue is empty. The `Crossfade` is gone too: `Motion.FADE_OUT`/`FADE_IN`/
+`FADE_IN_SCALE` are M3's sequential fade-through and `AddExpenseScreen.kt:387` uses
+them.
 
-**Deferred with reasons.** Indexes on `status`, `account_last4` and `merchant_key`
+**Deferred with reasons** — *superseded; see "Performance, and the build he was
+running" below, where the indexes, the plurals and the dead strings all landed.*
+Indexes on `status`, `account_last4` and `merchant_key`
 (a version 7 migration; `observePending` is a Flow re-running a full scan on every
 insert during a 22,000-message backfill). Six count strings that hardcode the
 singular Arabic noun where plurals exist. Fifteen dead strings. `MonthPanel`,
@@ -787,47 +792,53 @@ family produced. It is worth re-running whenever a bank changes its wording.
    Drahim is the explicit anti-reference.
 5. **Manual recurring payments** — explicitly not wanted ("ممكن مستقبلاً").
 
-## Open decision: getting the data to a new phone
+## Getting the data to a new phone — decided, 2026-09-10
 
-The owner asked for this and is thinking about it. The findings are here so the
-question does not have to be re-derived.
+The owner's answer: **"بسويه من ضمن باك اب قوقل"** — Android's own backup, not a
+file he has to make and carry. `allowBackup` is `true` and the app declares what
+may be copied.
 
-**Nothing is backed up today.** `allowBackup="false"`, and `dumpsys backup`
-confirms `sa.masrouf.app` is absent from the backup set. A new phone starts empty.
+What that protects is not the messages. Those arrive again with the SIM and the
+whole inbox is re-read. It is the **185 categories he filed by hand and the 35
+merchant rules he taught the app** — months of decisions that exist in no bank
+message and that nothing can recreate.
 
-What a phone change would cost, measured on the live database:
+- `res/xml/backup_content.xml` (API 26–30) and `res/xml/data_extraction_rules.xml`
+  (Android 12+) are an **allow-list**: `masrouf.db`, `masrouf.db-wal`,
+  `masrouf.settings.xml`, and nothing else, so a table added later does not join
+  the backup by default. One truth in two files because the platform reads two;
+  `BackupRulesTest` asserts they are identical, since the older file is the copy no
+  phone here tests.
+- Both routes are on. `cloud-backup` survives a phone that is lost or dead and
+  carries `disableIfNoEncryptionCapabilities="true"`; on Android 9+ the key is the
+  phone's own lock secret, so the copy in his Google account is one Google cannot
+  read. `device-transfer` is the direct phone-to-phone copy, which touches no
+  network and is not bounded by the quota.
+- `MasroufBackupAgent` runs `PRAGMA wal_checkpoint(TRUNCATE)` before the copy. Both
+  files are in the backup anyway, but the system copies them one after the other,
+  and a checkpoint happening in between is read as a torn main file with no error
+  anywhere. Best-effort: if the database cannot be opened, the backup still runs.
+- The settings file is included so `maintenanceVersion` survives; a restored
+  database that came back at 43 must not have every repair pass run over it again.
 
-| | recoverable |
-|---|---|
-| 21,977 rows captured from SMS | only if the messages themselves transfer |
-| 41 rows captured from notifications | no — notifications do not transfer |
-| **185 categories he filed by hand** | no — not in any message |
-| **35 learned merchant rules** | no — not in any message |
+**The one thing left to verify, and it needs the phone.** Auto Backup's ceiling is
+**25 MB per app**, and a dataset over it is simply not backed up — the system calls
+`onQuotaExceeded` and stops, which reads as a backup that works right up to the day
+it is needed. ~26,000 rows each carrying a message body could plausibly be near it.
+Measure after a checkpoint, and if it is over, the cloud half is off in practice and
+an explicit export is back on the table (the device-to-device half is unaffected):
 
-Those last two are the months of decisions that cannot be recreated: the employer
-as bonuses, the cabinet maker, the portrait studio, the recruiter.
+```bash
+adb shell run-as sa.masrouf.app ls -l databases/
+adb shell dumpsys backup | grep -i sa.masrouf   # that the app is in the backup set at all
+adb shell bmgr backupnow sa.masrouf.app         # force one, rather than waiting for idle
+```
 
-Two ways, and they are not equal:
-
-1. `allowBackup="true"` — automatic, and sends twelve years of his financial
-   history to Google's servers. It contradicts the first line of this project's
-   own privacy rule, and the app does not even hold the INTERNET permission.
-2. **An explicit export/import** — one file he makes, moves himself, and imports.
-   Also covers a factory reset, a reinstall, and a different manufacturer. Nothing
-   leaves his hand. Recommended, and the open question on it is whether the file
-   should be encrypted with a passphrase: it is safest where it is most exposed,
-   which is in transit between two devices, and the cost is a passphrase he must
-   remember.
-
-Related, and the same fix closes it: the build installed on his phone is `debug`
-(`flags=[ DEBUGGABLE ... ]`, verified). Anyone with the phone, a cable and USB
-debugging can read the whole SQLite file with `run-as` - no root, no exploit. A
-signed `release` build closes that, and `release` currently has no signingConfig
-so it cannot be built at all. Export/import is what makes a release build
-practical: without it there would be no way to move the data.
-
-Also unset: `android:dataExtractionRules`, which on Android 12+ governs
-device-to-device transfer separately from cloud backup.
+The other half of this closes with it: the build on his phone is `debug`, so anyone
+with the phone and a cable can read the database with `run-as`. `release` is now
+buildable and signed with the same key, so `adb install -r` of it replaces the debug
+build without touching the data — and with backup on, there is a way back even if
+something goes wrong.
 
 ## Known gaps
 

@@ -14,8 +14,8 @@ read it. Read it whole before writing anything.
 ## Commands
 
 ```bash
-./gradlew :core:test              # 374 tests, runs anywhere with a JDK
-./gradlew :app:testDebugUnitTest  # 191 tests, needs the Android SDK
+./gradlew :core:test              # 376 tests, runs anywhere with a JDK
+./gradlew :app:testDebugUnitTest  # 195 tests, needs the Android SDK
 ./gradlew :app:assembleDebug      # needs local.properties with sdk.dir
 ./gradlew :app:assembleRelease    # what the owner actually runs - R8, signed with
                                   # the debug key so it REPLACES rather than removes
@@ -198,7 +198,16 @@ This repository is **public**. Everything below follows from that.
   identify no one on their own. A credit limit is not covered by that and must not
   be. Neither is an account number, an IBAN, a bill reference or a SADAD number.
 - A comment quoting a real figure is the same leak as a constant holding it.
-- No server, no account, no external API. Data never leaves the device.
+- No server, no account, no external API. **One exception, decided by the owner on
+  2026-09-10: Android's own backup.** A new phone otherwise starts empty, and what
+  it would lose is not the messages - those come back with the SIM and are read
+  again - but the 185 categories he filed by hand and the 35 merchant rules he
+  taught the app, which exist in no bank message and cannot be recreated. What may
+  be copied is an allow-list of three files in `res/xml/backup_content.xml` and
+  `res/xml/data_extraction_rules.xml`, asserted identical by `BackupRulesTest`; the
+  cloud half carries `disableIfNoEncryptionCapabilities`, so on a device that cannot
+  encrypt it there is no backup at all. Nothing else about the app talks to a
+  network - it still holds no INTERNET permission.
 - Fixtures under `core/src/testFixtures/.../fixtures` are **redacted**: names replaced,
   OTP codes replaced with `000000`, balances invented. Message structure, amounts
   and card last-four are kept, because those are what is tested.

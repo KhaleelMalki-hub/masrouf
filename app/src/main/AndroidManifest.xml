@@ -16,10 +16,31 @@
     -->
     <uses-permission android:name="android.permission.READ_SMS" />
 
+    <!--
+      Backup is ON, and the allow-list beside it is what makes that acceptable.
+
+      This app held the opposite line until 2026-09-10: nothing left the device,
+      and a new phone therefore started empty. What that costs is not the
+      messages - those transfer with the SIM and are read again - but the 185
+      categories the owner filed by hand and the 35 merchant rules he taught the
+      app. Neither exists in any bank message. They are months of decisions and
+      nothing can recreate them.
+
+      `backup_content.xml` (API 26-30) and `data_extraction_rules.xml`
+      (Android 12+) name the three files that may be copied and nothing else, so
+      a future table does not join the backup by default. The cloud half refuses
+      to run on a device that cannot encrypt it; on Android 9 and above the key
+      is the phone's own lock secret, so the copy in his Google account is one
+      Google cannot read. `MasroufBackupAgent` checkpoints the write-ahead log
+      first, so what is copied is one consistent file.
+    -->
     <application
         android:enableOnBackInvokedCallback="true"
         android:name=".MasroufApp"
-        android:allowBackup="false"
+        android:allowBackup="true"
+        android:backupAgent=".data.MasroufBackupAgent"
+        android:fullBackupContent="@xml/backup_content"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"

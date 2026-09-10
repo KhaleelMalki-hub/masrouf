@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  What Android's backup takes, on Android 12 and above. See `backup_content.xml`
+  for why the list is an allow-list and why the write-ahead log is on it; the two
+  files must agree and `BackupRulesTest` asserts that they do.
+
+  Android 12 splits the decision in two, and both halves are wanted:
+
+  `cloud-backup` is the copy in the owner's Google account. It is what survives a
+  phone that is lost, stolen or dead, which is the case a phone-to-phone transfer
+  cannot help with. On Android 9 and above it is end-to-end encrypted with the
+  device's own lock secret, so the passphrase protecting it is the one already on
+  his screen and Google holds no key to it. `disableIfNoEncryptionCapabilities`
+  says that plainly: on a device that cannot encrypt the backup, there is to be no
+  backup. Sending this file unencrypted is worse than having no copy of it.
+
+  `device-transfer` is the direct copy made when he sets up a new phone beside the
+  old one. Nothing goes through a network at all, and it is not bounded by the
+  cloud quota.
+
+  The quota is the one thing to watch: 25 MB per app, and a dataset over it is not
+  backed up - the system calls `onQuotaExceeded` and simply stops, which reads as a
+  backup that is working right up until the day it is needed. Measure the database
+  after a checkpoint (`ls -l databases/masrouf.db`) before trusting the cloud half.
+-->
+<data-extraction-rules>
+    <cloud-backup disableIfNoEncryptionCapabilities="true">
+        <include domain="database" path="masrouf.db"/>
+        <include domain="database" path="masrouf.db-wal"/>
+        <include domain="sharedpref" path="masrouf.settings.xml"/>
+    </cloud-backup>
+    <device-transfer>
+        <include domain="database" path="masrouf.db"/>
+        <include domain="database" path="masrouf.db-wal"/>
+        <include domain="sharedpref" path="masrouf.settings.xml"/>
+    </device-transfer>
+</data-extraction-rules>

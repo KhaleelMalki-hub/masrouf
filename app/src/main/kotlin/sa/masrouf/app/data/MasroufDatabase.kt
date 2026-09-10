@@ -19,7 +19,12 @@ abstract class MasroufDatabase : RoomDatabase() {
     abstract fun merchantRules(): MerchantRuleDao
 
     companion object {
-        private const val NAME = "masrouf.db"
+        /**
+         * Also the name in `res/xml/backup_content.xml` and its Android 12 twin,
+         * which cannot reference a Kotlin constant. `BackupRulesTest` compares the
+         * two files against each other; [MasroufBackupAgent] reads this one.
+         */
+        const val NAME = "masrouf.db"
 
         /**
          * Adds the card fragment that deduplication needs.

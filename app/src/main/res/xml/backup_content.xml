@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  What Android's backup takes, on API 26 to 30.
+
+  `data_extraction_rules.xml` is the same list for Android 12 and above, which is
+  what the owner's phone reads; this file is what an older one would. The two are
+  asserted identical by `BackupRulesTest`, because a file only an untested phone
+  reads is exactly the copy that drifts unnoticed.
+
+  It is an ALLOW-LIST: naming any `include` means nothing else is taken. That is the
+  point. This app holds twelve years of one person's bank messages and the rule it
+  lived by until 2026-09-10 was that none of it ever left the device. Backup is now
+  on because a new phone otherwise starts empty - the 185 categories he filed by
+  hand and the 35 merchant rules he taught the app exist in no bank message and
+  cannot be recaptured - so what leaves is written down rather than left to a
+  default that would sweep up whatever the app stores next.
+
+  The write-ahead log is listed with the database because Room runs in WAL mode:
+  everything committed since the last checkpoint lives in that file alone, and a
+  database restored without it quietly loses the newest transactions.
+  `MasroufBackupAgent` checkpoints before the copy, so in practice the log is empty
+  and small - it is listed for the case where the checkpoint could not run.
+
+  The shared-memory file is deliberately absent. SQLite rebuilds it from the two
+  above, and a stale copy restored beside them is a liability, not a saving.
+-->
+<full-backup-content>
+    <include domain="database" path="masrouf.db"/>
+    <include domain="database" path="masrouf.db-wal"/>
+    <include domain="sharedpref" path="masrouf.settings.xml"/>
+</full-backup-content>
