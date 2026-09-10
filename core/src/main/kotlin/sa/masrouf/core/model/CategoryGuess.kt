@@ -1036,6 +1036,18 @@ object CategoryGuess {
         // counter. Filed on what he confirmed, not on what was found.
         "THINK CON" to SaudiCategories.SHOPPING,
 
+        // NahdiCare, the clinics arm of the same company as NMC above - confirmed
+        // by the owner. 872.15 riyals at three in the afternoon is a visit with
+        // labs behind it, not a pharmacy basket, which is why it files as health
+        // through a different keyword rather than being folded into NMC.
+        //
+        // The stored key is three characters, "NCC": the terminal writes
+        // "NCC 6903" and normalisation strips a SPACE-separated trailing number as
+        // a reference. NMC2075 keeps its number only because nothing separates it.
+        // Same protection as "N2" - under four characters, MerchantMatch requires a
+        // whole word, and nothing else in the history has NCC as one.
+        "NCC" to SaudiCategories.HEALTH,
+
         // Money sent abroad through Western Union out of the STC Pay wallet: 68
         // transfers, 94,126 riyals, every one of them wages for domestic staff, as
         // the owner confirmed. Filed by the CHANNEL rather than the recipient,

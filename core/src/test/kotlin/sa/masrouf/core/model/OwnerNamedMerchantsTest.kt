@@ -289,6 +289,7 @@ class OwnerNamedMerchantsTest {
             "NMC8121" to SaudiCategories.HEALTH,
             "N2-sa" to SaudiCategories.ENTERTAINMENT,
             "Think Con" to SaudiCategories.SHOPPING,
+            "NCC 6903" to SaudiCategories.HEALTH,
         )
 
         val wrong = expected.mapNotNull { (stored, want) ->

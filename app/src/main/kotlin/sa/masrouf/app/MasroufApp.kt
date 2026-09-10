@@ -340,7 +340,8 @@ class MasroufApp : Application() {
         // 51: the second deep pass - a Makkah clinic hiding behind a transliterated
         //     "مجمع", a ladies' salon named only by its register activity, Nahdi
         //     under its acronym, a gym and a mall shop he confirmed.
-        REFILE_ALL(51),
+        // 52: NahdiCare, the clinics arm, which he confirmed.
+        REFILE_ALL(52),
     }
 
     /**

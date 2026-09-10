@@ -15,7 +15,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
   off adb often; check `adb devices` before installing.
 - Database schema version 6. One-off repairs are a set in `MasroufApp.Repair`,
   each stamped with the version that introduced it, taken as a union and run once
-  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **49**.
+  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **52**.
 - Real data on the phone: ~22,014 transactions, ~2,190 unfiled, and the owner's
   own learned merchant rules (34 and growing — he files one whenever a shop the
   shipped list cannot name comes up).
@@ -857,8 +857,38 @@ Measured with prefix-only matching and a unanimity requirement: **26 rows**, and
 them `KHALEEL MALKI` → transfers, `ABDULLAH` → transfers, `ETHIOPIA` → travel. A whole
 mechanism for 26 rows, several wrong.
 
-**So the algorithmic levers are spent.** The app files 96.3% of its history. What is
-left is 974 names, one at a time - his memory, or a document that spells them out.
+**Then a deep research pass on the eleven the light one abandoned**, at roughly ten
+times the effort: Arabic reconstructions, truncation expansions, Saudi directories,
+Snapchat and Instagram, DNS on guessed domains. It reached six of eleven, and what
+CLOSED most of them was not the search:
+
+- `Fadaa Alibdaa` - a stall operator at Boulevard World, Riyadh. He was standing
+  there: six `BLVD Worl` purchases that evening, and this at 23:56.
+- `FAWASEL ADVANCES` - فواصل المتطورة, which runs The DockX arcade in the Red Sea
+  Mall. The afternoon around it is a trip through that mall - H&M 15:00, Next 15:21,
+  this 15:34, GOAT 16:23, Claire's 16:59.
+- `DURRAH ALASEEL` - "FOR R" is FOR RENT A CAR and the field is exactly twenty
+  characters. The week around it reads as a man driving his OWN car, so it went to
+  him as a question; he remembered renting one that week.
+- `Magma Fyo Klynk` - not broken English. مجمع → "Magma", كلينك → "Klynk": a medical
+  complex in Makkah. See the transliteration lesson.
+- `LABA LAMA WOMENS DEC` - the shop is still unidentified and probably always will
+  be, but "WOMENS DEC" is the register's English for للتزيين النسائي. The descriptor
+  names the trade without naming the business.
+- `NMC####` and `NCC 6903` - Nahdi Medical Company and NahdiCare under their
+  acronyms, the first raised from a low-confidence guess by his own
+  `Al Nahdi Pharmacy 2082` row, the second confirmed by him.
+
+Two he confirmed from memory (a gym, a shop in a mall) and three are still open:
+`KAYAN PRO` (1,039 riyals at 00:51), `BLACK-M AC FOR TEAM` (450 riyals, probably a
+sports venue - "FOR TEAM" reads as للألعاب الجماعية), and nothing else.
+
+**Where filing stands at maintenance 52**: unfiled 1,015 → **962**, and unfiled
+spending in the last twenty-four months **27,405.83 → 15,178.87 riyals, down 45%**.
+
+**The algorithmic levers are spent.** The app files 96.4% of its history and every
+remaining gain came from a NAME. What is left is his memory, or a document that
+spells one out.
 
 ## Open items
 
