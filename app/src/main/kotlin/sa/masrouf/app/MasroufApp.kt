@@ -337,7 +337,10 @@ class MasroufApp : Application() {
         //     corrected: الإنجاز الفوري is a tyre shop, not a paperwork office.
         // 50: three more from the deep search - two confirmed by the history around
         //     the purchase, one by his memory of renting a car that week.
-        REFILE_ALL(50),
+        // 51: the second deep pass - a Makkah clinic hiding behind a transliterated
+        //     "مجمع", a ladies' salon named only by its register activity, Nahdi
+        //     under its acronym, a gym and a mall shop he confirmed.
+        REFILE_ALL(51),
     }
 
     /**

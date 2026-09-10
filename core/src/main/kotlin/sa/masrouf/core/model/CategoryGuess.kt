@@ -987,6 +987,55 @@ object CategoryGuess {
         // and he remembered: he did rent a car that week.
         "DURRAH ALASEEL" to SaudiCategories.TRANSPORT,
 
+        // ---- The second deep pass, and what closed each one -------------------
+
+        // مجمع دكتور فيو كلينك الطبي, Makkah - dentistry, dermatology, laser.
+        //
+        // "Magma" is not magma: it is مجمع, and "Klynk" is كلينك. The descriptor was
+        // unreadable until someone noticed that a Saudi directory's own URL slug
+        // reads `mgmaa-dktor-fyo-klynk-altby` - the SAME transliteration engine that
+        // produced this POS string. Back-transliterating before searching is the
+        // technique; see LESSONS_LEARNED.
+        "MAGMA FYO KLYNK" to SaudiCategories.HEALTH,
+
+        // A ladies' salon. The SHOP was never identified and probably cannot be -
+        // no web presence - but it does not need to be: "WOMENS DEC" is the
+        // commercial register's own English for للتزيين النسائي, which is the
+        // activity label every Saudi ladies' salon is registered under. The
+        // descriptor names the trade even though it does not name the business.
+        "LABA LAMA WOMENS" to SaudiCategories.SERVICES,
+
+        // Nahdi Medical Company under its acronym, with a terminal number.
+        //
+        // The search rated this low. The owner's own history raised it: he already
+        // has "Al Nahdi Pharmacy 2082" filed as health, so Nahdi does write a
+        // four-digit number in this field, and 2059/2075 sit in the same range. The
+        // amounts - 18.60, 76.46, 105.96, 199.00 - are pharmacy-sized. Listed one
+        // by one rather than as a prefix: a keyword short enough to catch every
+        // NMC#### is short enough to catch other things, and the whole family is
+        // four rows. A fifth number arrives unfiled, which is the correct failure.
+        "NMC2075" to SaudiCategories.HEALTH,
+        "NMC2059" to SaudiCategories.HEALTH,
+        "NMC8121" to SaudiCategories.HEALTH,
+
+        // A gym subscription, confirmed by the owner. Filed as entertainment
+        // because that is where this app has always put a gym - LEEJAM and FITNESS
+        // are both there, and one month's spending must not split a category by
+        // which gym it was.
+        //
+        // The stored key is "N2": normalisation strips the "-sa" as a trailing
+        // reference, leaving two characters. That is safe only because
+        // MerchantMatch requires a keyword under four characters to match a WHOLE
+        // WORD - as a substring, "N2" would reach into any name containing it.
+        // Nothing else in a 26,000-record history has N2 as a word.
+        "N2" to SaudiCategories.ENTERTAINMENT,
+
+        // A shop in a mall, confirmed by the owner - which is all the category
+        // needs. The business itself was not identified: every Saudi "Think" the
+        // search found is a B2B firm that could not take 249 riyals across a
+        // counter. Filed on what he confirmed, not on what was found.
+        "THINK CON" to SaudiCategories.SHOPPING,
+
         // Money sent abroad through Western Union out of the STC Pay wallet: 68
         // transfers, 94,126 riyals, every one of them wages for domestic staff, as
         // the owner confirmed. Filed by the CHANNEL rather than the recipient,

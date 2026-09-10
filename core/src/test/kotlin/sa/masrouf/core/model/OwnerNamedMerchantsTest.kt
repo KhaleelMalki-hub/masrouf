@@ -281,6 +281,14 @@ class OwnerNamedMerchantsTest {
             "Fadaa Ali" to SaudiCategories.SHOPPING,
             "FAWASEL A" to SaudiCategories.ENTERTAINMENT,
             "DURRAH AL" to SaudiCategories.TRANSPORT,
+            // the second deep pass
+            "Magma Fyo" to SaudiCategories.HEALTH,
+            "LABA LAMA" to SaudiCategories.SERVICES,
+            "NMC2075" to SaudiCategories.HEALTH,
+            "NMC2059" to SaudiCategories.HEALTH,
+            "NMC8121" to SaudiCategories.HEALTH,
+            "N2-sa" to SaudiCategories.ENTERTAINMENT,
+            "Think Con" to SaudiCategories.SHOPPING,
         )
 
         val wrong = expected.mapNotNull { (stored, want) ->
@@ -306,5 +314,16 @@ class OwnerNamedMerchantsTest {
         // correctly - the control has to be a name no OTHER rule claims either.
         assertNull(CategoryGuess.forMerchant("AMERICAN WIDGET CO"))
         assertNull(CategoryGuess.forMerchant("SALT LAKE SUPPLIES"))
+        // "N2" is two characters, so it must match a whole word and never a
+        // fragment. These are names that CONTAIN n2 without it being a word, and
+        // they are the reason the length check in MerchantMatch is load-bearing.
+        //
+        // Both halves of each control were probed against the whole rule list
+        // first, which is the point of the lesson of 2026-09-10: "STATION2 GRILL"
+        // and "CARBON2 STORE" were the obvious choices and both are claimed - by
+        // the STATION rule and by STORE - so they would have failed here while
+        // saying nothing at all about "N2".
+        assertNull(CategoryGuess.forMerchant("CARBON2 QLTX"))
+        assertNull(CategoryGuess.forMerchant("ZEPHYR2 QLTX"))
     }
 }

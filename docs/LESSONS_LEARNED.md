@@ -839,3 +839,37 @@ not a failure to fix - it is the wrong control. Pick a name no rule claims, and 
 comment why the obvious control was rejected, so the next person does not put it back.
 **How to apply:** Every `assertNull`/`assertNotEquals` guarding a new keyword or pattern.
 **Source:** session 2026-09-10, `OwnerNamedMerchantsTest`
+
+### 2026-09-10 — Back-transliterate the descriptor before searching it
+**Practice worth keeping, not a mistake.** `Magma Fyo Klynk` looked like nonsense English
+and two research passes failed on it. It is a machine transliteration of
+`مجمع دكتور فيو كلينك` - **مجمع** ("complex") becomes "Magma", كلينك becomes "Klynk" - and
+it was cracked by noticing that a Saudi directory's own URL slug reads
+`mgmaa-dktor-fyo-klynk-altby`: the SAME transliteration engine that produced the card
+descriptor. Searching the Arabic form returned exactly one business, in a city the owner
+shops in.
+**Rule:** When a Saudi POS descriptor reads as broken English, do not search it again -
+reconstruct the Arabic it was transliterated FROM and search that. Known mappings:
+مجمع→Magma/Mgmaa, دكتور→Dktor, فيو→Fyo, كلينك→Klynk, الطبي→Altby, واو→oao.
+`kandal.sa/stores?q=<arabic>` is a working, fetchable Saudi directory search.
+**And a second, reusable one:** `WOMENS DEC` in a descriptor is the commercial register's
+English for **للتزيين النسائي** - a ladies' salon. A descriptor can name the TRADE through
+its register activity even when the business itself has no web presence at all, and the
+trade is what a category needs.
+**How to apply:** Any unidentified merchant string.
+**Source:** session 2026-09-10, deep research pass 2
+
+### 2026-09-10 — The corpus outranks the search, when the search is guessing
+**Practice worth keeping.** A research pass rated `NMC2075` as a low-confidence guess at
+Nahdi Medical Company - an initialism with no source tying it to a shopfront. The owner's
+own history settled it: he already had `Al Nahdi Pharmacy 2082` filed as health, so Nahdi
+does write a four-digit number in that field, 2059 and 2075 sit in the same range, and the
+amounts are pharmacy-sized. The same move confirmed two others in the same round - a stall
+operator placed by six purchases at the same venue that evening, and an arcade placed by
+the mall trip either side of it.
+**Rule:** Before accepting or rejecting a research verdict, query the history around the
+transaction and for sibling descriptors. A web result is a claim about a STRING; the
+corpus is a record of what the owner actually did, and it can raise a low-confidence guess
+to a fact or refuse a high-confidence one.
+**How to apply:** Every merchant identification, before it is shipped or discarded.
+**Source:** session 2026-09-10, `NMC####`, `FADAA ALIBDAA`, `FAWASEL ADVANCES`
