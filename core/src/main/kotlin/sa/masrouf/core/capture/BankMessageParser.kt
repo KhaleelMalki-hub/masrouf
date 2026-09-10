@@ -215,8 +215,14 @@ class BankMessageParser(private val profile: BankProfile) : MessageParser {
      * "للتفاصيل http://alah.li/mobile", which another profile's `^ل` pattern reads
      * as a party. Seventeen purchases were filed as BILLS by a link to the bank's
      * app. No merchant name contains a URL, so this costs nothing.
+     *
+     * The date is the third of the same family. barq sends a refund with its
+     * merchant field EMPTY - "لدى :" and then nothing - and the empty field folds
+     * into the line below it, so the party became "2026-07-15". One row today, but
+     * an empty labelled field is a thing every bank does eventually, and a date is
+     * never a shop.
      */
-    private val NOT_A_PARTY = Regex("""^بطاق|https?://""")
+    private val NOT_A_PARTY = Regex("""^بطاق|https?://|^\d{2,4}[-/]\d{1,2}[-/]\d{2,4}$""")
 
     /**
      * Banks mask identifiers with asterisks on either side ("****NAME", "NAME****",

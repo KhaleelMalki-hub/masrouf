@@ -582,6 +582,20 @@ Date:23-9-7 11:03"""
 من:OWNER NAME
 في:25-9-6 14:45"""
 
+    /**
+     * A refund whose merchant field is empty, and the date below it.
+     *
+     * barq sends "لدى :" with nothing after it, and the empty field folds into the
+     * line beneath - so the party became "2026-07-15". One row in 26,000, but an
+     * empty labelled field is a thing every bank does eventually and a date is
+     * never a shop.
+     */
+    const val BARQ_REFUND_EMPTY_MERCHANT = """عملية استرجاع
+بطاقة فيزا **7285
+مبلغ: 66.24 SAR
+لدى :
+2026-07-15"""
+
     /** Wallet top-up, sent in English. */
     const val BARQ_TOPUP_EN = """Money Added to your Barq wallet
 amount: 5000.0 SAR

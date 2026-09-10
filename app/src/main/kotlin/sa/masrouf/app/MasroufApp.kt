@@ -168,8 +168,15 @@ class MasroufApp : Application() {
          * no shop at all it reached "للتفاصيل http://alah.li/mobile", so seventeen
          * purchases were filed as BILLS by a link to the bank's app. Measured at
          * exactly those seventeen over all 26,434 stored bodies.
+         *
+         * Raised to 53 for a date. barq sends a refund with its merchant field
+         * empty - "لدى :" and nothing after it - and the empty field folds into
+         * the line beneath, so the party was "2026-07-15", stored under the key
+         * "2026". The numeric clear had been catching it all along and the
+         * re-parse had been putting it straight back; with the guard in
+         * `firstMatch` it cannot.
          */
-        REPAIR_PARTIES(47),
+        REPAIR_PARTIES(53),
 
         /** Balances never read out of bodies that carry one. */
         BACKFILL_BALANCES(1),
@@ -202,8 +209,11 @@ class MasroufApp : Application() {
          * Raised to 46 with it, for the same reason and by the same rule: the two
          * halves of one repair move together. And to 47 with it, for the same
          * reason a third time.
+         *
+         * And to 53, a fourth time, with the pass above: the two halves move
+         * together.
          */
-        REPARSE_BODIES(47),
+        REPARSE_BODIES(53),
 
         /** Salary deposits an older classifier read as transfers. */
         RETYPE_SALARY(3),
@@ -341,7 +351,8 @@ class MasroufApp : Application() {
         //     "مجمع", a ladies' salon named only by its register activity, Nahdi
         //     under its acronym, a gym and a mall shop he confirmed.
         // 52: NahdiCare, the clinics arm, which he confirmed.
-        REFILE_ALL(52),
+        // 53: the refund whose party was a date.
+        REFILE_ALL(53),
     }
 
     /**

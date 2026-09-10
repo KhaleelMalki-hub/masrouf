@@ -135,4 +135,10 @@ class UnlabelledPartyTest {
     fun `a footer link is not the party`() {
         assertNull(party(SaudiBanks.SNB, RealMessages.SNB_MADA_PAY_NO_SHOP))
     }
+
+    /** An empty merchant field takes the line below it, and a date is never a shop. */
+    @Test
+    fun `a date is not the party`() {
+        assertNull(party(SaudiBanks.BARQ, RealMessages.BARQ_REFUND_EMPTY_MERCHANT))
+    }
 }
