@@ -753,6 +753,25 @@ lying, not because it bought frames. The remaining unstable parameters are all r
 `List`/`Map` types on the income and month screens, which recompose per state change
 rather than per frame; fixing them would mean a new dependency for no measured gain.
 
+**The ask screen's own paths, measured 2026-09-10** - the typing and the submit,
+because they were written after the last performance round and had never been under
+a counter.
+
+Typing is comfortable: character by character, 1.9% janky, 50th 8ms, 90th 12ms, 95th
+14ms against a 16.7ms budget, and zero slow UI-thread frames.
+
+Submitting was not. It produced a single **101ms frame** - six frames' worth of
+budget in one hitch - because `repository.answer` had no dispatcher of its own.
+`viewModelScope.launch` runs on `Dispatchers.Main.immediate`, so the row mapping and
+the filter and sort in `answeredFrom` all ran on the UI thread. Every other query in
+the repository is on `computation` through `flowOn`; a suspend function needed it
+said out loud. With `withContext(computation)` the same submit is 90th 7ms.
+
+Re-measured on the heaviest question the screen can be asked - unfiled, all time,
+which scans the whole history and returns about a thousand rows: 50th 6ms, 90th
+14ms, 95th 36ms. The one slow frame is the first layout of two hundred rows, which
+is a one-off cost on an action the user took deliberately.
+
 **Still open, deliberately.** Four long functions (`MonthPanel`, `CardTile`,
 `TransactionRow`, `MainActivity.onCreate`) could be split; none of them is confusing
 today, so the split waits for a reason better than a line count.

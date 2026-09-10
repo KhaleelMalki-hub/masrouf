@@ -625,12 +625,21 @@ class TransactionRepository(
      * matches - because that is the module proven correct on any machine with a
      * JDK. No arithmetic happens in this file.
      *
+     * Off the main thread, and that is not optional. `viewModelScope.launch` runs on
+     * `Dispatchers.Main.immediate`, so without this the row mapping and the filter
+     * and sort in `answeredFrom` all ran on the UI thread - measured at a single
+     * **101ms frame** when submitting a question, which is six frames' worth of
+     * budget in one hitch. Every other query in this file is already on
+     * `computation` through `flowOn`; this one is a suspend function and needed
+     * saying out loud. It is the same lesson as "a flow transforms where it is
+     * collected", arriving in a shape that lesson did not cover.
+     *
      * @return the answer, or null when the question was not understood. A refusal
      *   is a result, not a failure: the alternative is a figure about the reader's
      *   money that nobody can check.
      */
-    suspend fun answer(question: String, today: LocalDate): AskAnswer? {
-        val query = AskParser.parse(question, today) ?: return null
+    suspend fun answer(question: String, today: LocalDate): AskAnswer? = withContext(computation) {
+        val query = AskParser.parse(question, today) ?: return@withContext null
         val zone = RiyadhTime.ZONE
         val from = query.period.from?.atStartOfDay(zone)?.toInstant()?.toEpochMilli() ?: Long.MIN_VALUE
         val until = query.period.toExclusive?.atStartOfDay(zone)?.toInstant()?.toEpochMilli() ?: Long.MAX_VALUE
@@ -646,7 +655,7 @@ class TransactionRepository(
             )
             else -> true
         }
-        return query.answeredFrom(rows, seenEver)
+        query.answeredFrom(rows, seenEver)
     }
 
     /** What the bank wrote for one row, when the caller has the row but not its body. */
