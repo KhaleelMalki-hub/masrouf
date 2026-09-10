@@ -733,3 +733,58 @@ confuse the next reader. When a comment cannot be verified now, say so in it —
 **How to apply:** Any time a comment is the reason to believe something.
 **Source:** session 2026-09-05, `ReceiptSlip` and `MonthStrip`.
 
+
+### 2026-09-10 — A guard written into one copy of a shared pattern fixes one bank
+**Mistake:** Seven bank profiles carry the same `^من ...` line pattern, because seven
+banks write a party that way. The guard that stops it reading the CARD instead of the
+shop went into SNB's copy - the profile being debugged - and the repair then ran, cleared
+113 rows on the other six banks, and the re-parse refilled every one of them with the same
+card it had just removed. The pass reported success. Only re-reading the database after it
+ran showed the rows unchanged.
+**Why:** The defect was diagnosed from one bank's message and fixed at the place that
+message was read, rather than at the place all seven are read. A duplicated pattern makes
+the local fix look complete: the test passes, the family it was written for is correct, and
+the six silent copies are invisible from inside it.
+**Rule:** Before fixing a pattern, grep for the pattern. If the same shape appears in more
+than one profile, the fix belongs where they converge - here `BankMessageParser.firstMatch`
+- not in the copy you are looking at. Then prove the central version alone produces exactly
+what the central-plus-local version produced, over the whole corpus, before deleting the
+local half.
+**How to apply:** Any change to `merchantPatterns`, `counterpartyPatterns`, `cardPatterns`
+or anything else `SaudiBanks` repeats per profile.
+**Source:** session 2026-09-10, maintenance 45 then 46
+
+### 2026-09-10 — A measurement harness that does not select the way production selects reports "no change"
+**Mistake:** The shadow-diff for the party fix reported zero rows changed, twice, and the
+patch looked inert. It was not: the harness called `parsers.firstNotNullOfOrNull { ... }`
+while `reparseStoredBodies` - the code whose behaviour was being measured - takes the parser
+that reads the MOST fields. With no sender stored, the first parser to answer was rarely the
+bank that wrote the message, so the harness was measuring a profile that had never produced
+the stored value.
+**Why:** The harness was written from the shape of the API rather than copied from the call
+site it stands in for. A wrong harness fails silently in the safest-looking direction:
+"nothing changed" reads as a patch that does nothing, not as a measurement that measured
+nothing.
+**Rule:** A corpus harness must reproduce the production call site EXACTLY - the same parser
+selection, the same configuration, the same inputs - and the way to be sure is to copy it,
+not to write something equivalent. When a diff comes back empty, suspect the harness before
+concluding the change is inert: check it against one row you already know the answer for.
+**How to apply:** Every old-versus-new corpus run.
+**Source:** session 2026-09-10, the card-as-party diff
+
+### 2026-09-10 — A label is not a beneficiary; an account number is not a name
+**Mistake:** The first rule for barq's wage transfers dropped the `من:` line whenever an
+`الى:` line was present anywhere in the message. Run over the stored history it moved 120
+rows, not the 31 expected: AlRajhi announces money arriving from another of the owner's own
+banks as `الى:3016 / من:KHALEEL MALKI`, where the destination is four digits and his name is
+the only thing in the message saying the money never left him. Eighty-nine transfers,
+221,895 riyals, would have been counted as spending.
+**Why:** The rule was written against the shape of one bank's template, where the `الى:`
+line happens to carry a person. The label was treated as evidence of a ROLE when it is only
+evidence of a field.
+**Rule:** When a rule turns on "the message says who it went to", require that the value be
+a NAME - at least one letter after the label - not merely that the label is present. And
+run it over the corpus before writing it into the code: the expected count is a prediction,
+and a diff four times larger than the prediction is the finding.
+**How to apply:** Any rule that reads a party's role from the field it sits in.
+**Source:** session 2026-09-10, `IntentClassifier.namesABeneficiary`

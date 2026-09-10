@@ -6,7 +6,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
 
 ## Where things stand
 
-- All tests green: **376** in `:core`, **195** in `:app`, **9** instrumented
+- All tests green: **380** in `:core`, **197** in `:app`, **9** instrumented
   (`:app:connectedDebugAndroidTest`).
 - **`connectedDebugAndroidTest` uninstalls the app and deletes its database.**
   It has already cost the owner's phone once. Use the `masrouf35` emulator, or
@@ -15,7 +15,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
   off adb often; check `adb devices` before installing.
 - Database schema version 6. One-off repairs are a set in `MasroufApp.Repair`,
   each stamped with the version that introduced it, taken as a union and run once
-  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **40**.
+  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **46**.
 - Real data on the phone: ~22,014 transactions, ~2,190 unfiled, and the owner's
   own learned merchant rules (34 and growing — he files one whenever a shop the
   shipped list cannot name comes up).
@@ -740,6 +740,38 @@ exactly one place - TRANSFER_OUT down 639, OWN_TRANSFER down 32, TRANSFER_IN up 
 disagreed about, all found by grouping messages by template and asking what each
 family produced. It is worth re-running whenever a bank changes its wording.
 
+## What this session did (2026-09-10)
+
+Three things closed and one measured.
+
+**Google backup, the owner's decision.** He asked for it inside Android's own
+backup rather than as a file he carries, so `allowBackup` is on with an allow-list
+of three files and a WAL checkpoint before the copy. See the section below for what
+travels and what still has to be verified.
+
+**A wage sent abroad is not his own money.** 31 rows, 49,580 riyals. Maintenance 44.
+
+**A card is not a shop.** 450 rows carried one; 179 of them were purchases that
+could never be filed. Maintenance 45, then 46 when 45 turned out to have fixed one
+bank of seven.
+
+**لمسة شفرة** - a barber the terminal sends as the name of the plaza it sits in -
+is now a shipped rule rather than one row he filed by hand.
+
+**Read on the phone and not yet acted on:** `READ_SMS` is **not granted**. Every
+inbox read returns quietly, so the launch catch-up has not been running. It was
+granted by adb once before and something has taken it back; the lesson of
+2026-09-01 is that a permission check which returns quietly is a feature that does
+not exist. Restore it with:
+
+```bash
+adb shell pm grant sa.masrouf.app android.permission.READ_SMS
+adb shell pm grant sa.masrouf.app android.permission.RECEIVE_SMS
+```
+
+**Also measured, not chased:** the database is **17.0 MB** and Auto Backup's
+ceiling is 25 MB. See the backup section.
+
 ## Open items
 
 0. **Every confirmed sender now has a profile** (urpay, meem, Vision Bank added
@@ -750,13 +782,13 @@ family produced. It is worth re-running whenever a bank changes its wording.
    owner's decision, 2026-09-02** ("these cards no longer matter to me; what
    matters is that their spending is recorded"). Do not re-ask. Their rows carry
    `bank_id` and file like any other.
-0. **30 barq Western Union transfers (2025-2026, ~45,000 riyals of wages) are
-   stored as OWN_TRANSFER.** barq writes the owner under `من:` as the SENDER and
-   the worker under `الى:`; the self-transfer demotion strips only lines that say
-   مرسل/From, so it sees his name and calls the wage his own money. Fix belongs in
-   `IntentClassifier.withoutSenderLines` (drop a `من:` line when an `الى:` line
-   names someone else) plus a RETYPE pass. Not done: it changes a rule shared by
-   every bank and needs its own corpus diff.
+0. ~~30 barq Western Union transfers stored as OWN_TRANSFER~~ **DONE 2026-09-10.**
+   31 rows, 49,580 riyals. `IntentClassifier` drops the `من:` line only when the
+   message NAMES a beneficiary - a letter after the label, not just the label, which
+   is what keeps AlRajhi's `الى:3016 / من:<him>` out of it (89 rows, 221,895 riyals,
+   that the first version of the rule would have turned into spending). Maintenance
+   44, verified on the phone: 31 rows moved and nothing else in the type
+   distribution changed.
 0. **Vision Bank credit transfers from himself** (4 rows, 4,195 riyals, `Sender:`
    is his own name) are TRANSFER_IN. Filing his own name as a transfer rule
    handles it in the app; a TRANSFER_IN demotion by sender line would be the code
@@ -783,8 +815,22 @@ family produced. It is worth re-running whenever a bank changes its wording.
    unfiled purchase returns nothing for it. What is left is the context: he refuelled
    at Aldrees half an hour before, bought 157.95 from Amazon six minutes before, and
    paid 4,672.45 in one tap. It needs his memory.
-2. **107 rows still carry an account number as their party.** Down from 2,014;
-   what remains uses templates none of the four bank profiles reads.
+2. **A party that was the CARD, not the shop - fixed 2026-09-10.** Bigger than
+   this list recorded: 450 rows, not the 66 "cosmetic" refunds noted under Known
+   gaps. SNB's 2017-2018 point-of-sale template writes two `من` lines, the card
+   then the shop, and the pattern took the first - so **179 purchases** carried a
+   card where a merchant belonged, unfileable, and the fallback filed all of them
+   as transfers. Maintenance 45 cleared 331 and gave 141 purchases and 70
+   withdrawals a real shop; 59 refunds correctly kept none.
+
+   **45 fixed one bank of seven** - the guard had gone into SNB's copy of a pattern
+   seven profiles carry, so the re-parse put the card straight back on the other
+   113. It now lives in `BankMessageParser.firstMatch`. **Maintenance 46 is
+   installed and runs on his next launch**; expect those 113 to lose the card, and
+   the count of `merchant_key LIKE 'بطاق%'` to fall from 119 to near zero.
+
+   Still open under this number: **227 rows carry an account number** as their
+   party, on templates none of the profiles reads.
 3. **One transaction of 37,000 (8 June 2026)** looks like a card settlement with
    no matching message in the archive. Left as spending, which errs high.
 4. **The "beyond M3" design proposal.** The app follows M3; whether to give it an
@@ -845,9 +891,10 @@ something goes wrong.
 - `MonthNavigationTest` fails rarely with "uncaught exceptions before the test
   started" - some earlier test leaks a late-throwing coroutine. Twice seen,
   green on every rerun and in isolation; not chased yet.
-- 66 cashback refunds still carry the word "بطاقه" as their party, and ~40 ENBD
-  card payments carry "XX8101": reparse fills missing parties but never
-  rewrites a wrong one. Cosmetic - all are non-spending types.
+- ~40 ENBD card payments carry "XX8101" as their party: reparse fills a missing
+  party but never rewrites a wrong one. Cosmetic - they are non-spending types.
+  (The "66 cashback refunds carrying بطاقه" that stood here was wrong twice over:
+  it was 450 rows, and 179 of them were PURCHASES, not refunds. See open item 2.)
 
 - `WEST` is three unrelated merchants and has no rule on purpose.
 - Statement import is not wired into the app; see the note in `CLAUDE.md` about
