@@ -6,7 +6,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
 
 ## Where things stand
 
-- All tests green: **383** in `:core`, **198** in `:app`, **9** instrumented
+- All tests green: **385** in `:core`, **198** in `:app`, **9** instrumented
   (`:app:connectedDebugAndroidTest`).
 - **`connectedDebugAndroidTest` uninstalls the app and deletes its database.**
   It has already cost the owner's phone once. Use the `masrouf35` emulator, or
@@ -15,7 +15,7 @@ re-deriving any of it. Read `CLAUDE.md` first for commands and rules, and
   off adb often; check `adb devices` before installing.
 - Database schema version 6. One-off repairs are a set in `MasroufApp.Repair`,
   each stamped with the version that introduced it, taken as a union and run once
-  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **48**.
+  in declaration order. `CURRENT_MAINTENANCE_VERSION` is **49**.
 - Real data on the phone: ~22,014 transactions, ~2,190 unfiled, and the owner's
   own learned merchant rules (34 and growing — he files one whenever a shop the
   shipped list cannot name comes up).
@@ -821,6 +821,44 @@ largest known gap in the history and the reason to do it.
 
 **Also measured, not chased:** the database is **17.0 MB** and Auto Backup's
 ceiling is 25 MB. See the backup section.
+
+## Filing, and the two clever ideas that failed (2026-09-10)
+
+The owner asked for every transaction to be linked to its category automatically,
+"بأعلى احترافية ومنطقية". The professional answer turned out to be mostly negative,
+so it is written down before the positive part.
+
+**What the statement bought.** Twenty-one shops the SMS could never name, because Al
+Rajhi truncates a merchant to nine characters - "AL ENJAZ A", "COMPANY A", "Binat-alh".
+Each was searched from the STATEMENT's descriptor and then put to the owner: he
+confirmed twenty and **corrected one** - الإنجاز الفوري is a tyre and car-service shop,
+not the government-paperwork office the research had found, with a URL. It was also the
+largest of the batch, seven visits and 1,550 riyals. A sourced guess is still a guess.
+
+Measured at maintenance 49: unfiled 1,015 → **974**, and unfiled spending in the last
+24 months 27,047.83 → **18,565.04**, so 8,482.79 riyals filed - a third of what was
+open. Every keyword was run against the whole merchant list first; none reaches a
+second shop.
+
+**Idea 1, rejected: match the owner's own rules the way the shipped list is matched.**
+His 35 learned rules are looked up by exact string equality (`learned[key]`) while
+`CategoryGuess` goes through `MerchantMatch`, which forgives truncation. That looks
+like an oversight. Measured over the history: passing his rules through the same
+matcher files **10 rows, 8 of them wrong** - his `INTERNATI` rule for a labour
+recruiter takes `WADI INTERNATIONAL GEN` (3,528 riyals), `International Regions`,
+`Keden International Co` and `SAIFUDIN INTERNATIONAL` to fees. That is the defect
+LESSONS_LEARNED already records, arriving by another road. **Exact matching for a
+learned rule is a feature**: the rule is a decision about one merchant, and widening
+it betrays the decision. Do not re-propose this.
+
+**Idea 2, rejected: file a row from a truncation-sibling already filed.** If
+"دانكن دونتس" is unfiled and "دانكن دوناتس" is filed as food, infer the category.
+Measured with prefix-only matching and a unanimity requirement: **26 rows**, and among
+them `KHALEEL MALKI` → transfers, `ABDULLAH` → transfers, `ETHIOPIA` → travel. A whole
+mechanism for 26 rows, several wrong.
+
+**So the algorithmic levers are spent.** The app files 96.3% of its history. What is
+left is 974 names, one at a time - his memory, or a document that spells them out.
 
 ## Open items
 

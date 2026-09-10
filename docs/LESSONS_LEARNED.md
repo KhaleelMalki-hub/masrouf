@@ -823,3 +823,19 @@ them cover disjoint date ranges and never appear together, suspect one object, a
 with a document that carries both - a statement, not another message.
 **How to apply:** Card numbers, account fragments, wallet ids, merchant ids.
 **Source:** session 2026-09-10, maintenance 48 and `CardIssuers.REISSUED`
+
+### 2026-09-10 — A negative control has to be negative for the right reason
+**Mistake:** A new merchant keyword was accompanied by a test asserting it does NOT reach
+unrelated names, and `AMERICAN GARAGE` was chosen as one of the controls. It failed: the
+name files as transport. Nothing was wrong with the new keyword - a shipped `GARAGE` rule
+had claimed it, correctly. The control was measuring the whole rule list, not the rule
+under test, and for a minute it read as evidence that the new keyword over-reached.
+**Why:** A control was picked for its resemblance to the keyword under test, without asking
+what ELSE in the system might claim it. In a list of several hundred rules, a plausible
+"unrelated" name is quite likely to be related to something.
+**Rule:** A control asserting "nothing files this" must be checked against the whole rule
+set first, not just against the rule being added. If it is claimed by another rule, that is
+not a failure to fix - it is the wrong control. Pick a name no rule claims, and say in a
+comment why the obvious control was rejected, so the next person does not put it back.
+**How to apply:** Every `assertNull`/`assertNotEquals` guarding a new keyword or pattern.
+**Source:** session 2026-09-10, `OwnerNamedMerchantsTest`
