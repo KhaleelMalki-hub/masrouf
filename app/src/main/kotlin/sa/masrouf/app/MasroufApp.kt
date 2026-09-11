@@ -352,7 +352,11 @@ class MasroufApp : Application() {
         //     under its acronym, a gym and a mall shop he confirmed.
         // 52: NahdiCare, the clinics arm, which he confirmed.
         // 53: the refund whose party was a date.
-        REFILE_ALL(53),
+        // 54: ORO, and CAF - the terminal's own truncation of CAFE, which the
+        //     shipped CAFE keyword could never reach.
+        // 55: twelve names the network cut short, each identified by its own longer
+        //     form already filed in this history.
+        REFILE_ALL(55),
     }
 
     /**

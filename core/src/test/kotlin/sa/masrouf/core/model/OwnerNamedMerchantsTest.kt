@@ -327,4 +327,73 @@ class OwnerNamedMerchantsTest {
         assertNull(CategoryGuess.forMerchant("CARBON2 QLTX"))
         assertNull(CategoryGuess.forMerchant("ZEPHYR2 QLTX"))
     }
+
+    /**
+     * Two cafes the list missed for opposite reasons, both named by the owner.
+     *
+     * `CAFE` was already shipped and could not reach "Toledo AlSharq Caf", because
+     * the card network cut the E: the truncation rule forgives a short MERCHANT
+     * against a long keyword, never a short keyword against a long merchant. And
+     * ORO is a brand of three letters.
+     */
+    @Test
+    fun `a truncated cafe and a three letter brand both reach food`() {
+        assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("Toledo AlSharq Caf"))
+        assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("ORO"))
+    }
+
+    /**
+     * And neither reaches inside a longer word. `ORO` sits inside MOROCCAN TASTE -
+     * eleven of his records and a restaurant, which would still be food, so the
+     * control is a name where the answer would be visibly wrong.
+     */
+    @Test
+    fun `three letter keywords stay whole words`() {
+        assertNull(CategoryGuess.forMerchant("OROBLU HOSIERY"))
+        assertNull(CategoryGuess.forMerchant("SCAFFOLD QLTX"))
+    }
+
+    /**
+     * The twelve the card network cut short, asserted on the SHORT form - which is
+     * the string the app is actually asked about.
+     */
+    @Test
+    fun `a truncated name is reached by its own longer form`() {
+        val expected = mapOf(
+            "MAKKAH 12 ALZA" to SaudiCategories.TRANSPORT,
+            "AL HATAB" to SaudiCategories.FOOD,
+            "KHOLUD CA" to SaudiCategories.FOOD,
+            "DAILY FOO" to SaudiCategories.FOOD,
+            "YASTERDY" to SaudiCategories.FOOD,
+            "ADAM SUPERMARKE" to SaudiCategories.GROCERIES,
+            "CREATIVITY PALACE MARK" to SaudiCategories.GROCERIES,
+            "ORANGE BE" to SaudiCategories.SHOPPING,
+            "JAMIL TAI" to SaudiCategories.SHOPPING,
+            "MFTAH ALA" to SaudiCategories.SHOPPING,
+            "MYFATOORAH" to SaudiCategories.SHOPPING,
+            "ETHIOPIA" to SaudiCategories.TRAVEL,
+        )
+
+        val wrong = expected.mapNotNull { (stored, want) ->
+            val got = CategoryGuess.forMerchant(stored)
+            if (got == want) null else "$stored: wanted ${want.id}, got ${got?.id}"
+        }
+
+        assertEquals(emptyList(), wrong)
+    }
+
+    /**
+     * And the one the same method got WRONG, kept as a test so nobody automates it.
+     *
+     * Run over the whole history, "unfiled name is a prefix of a filed name" also
+     * proposes ABDULLAH -> transfers, because "ABDULLAH FAISAL H ALHARTHI" is filed
+     * that way. ABDULLAH is the owner's florist. A truncated business name is
+     * identified by its longer self; a truncated person's name is identified as
+     * somebody else entirely, with the same confidence.
+     */
+    @Test
+    fun `a bare first name is not filed from a longer person's name`() {
+        assertNull(CategoryGuess.forMerchant("ABDULLAH"))
+        assertNull(CategoryGuess.forMerchant("MOHAMMAD"))
+    }
 }

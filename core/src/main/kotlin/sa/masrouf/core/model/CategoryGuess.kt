@@ -61,6 +61,15 @@ object CategoryGuess {
         "TALABAT" to SaudiCategories.FOOD,
         "KEETA" to SaudiCategories.FOOD,
         "CAFE" to SaudiCategories.FOOD,
+        // The terminal's own truncation of the word above. "Toledo AlSharq Caf" is
+        // a cafe and CAFE does not reach it - the network cut the E, and the
+        // truncation rule cannot help because it forgives a short MERCHANT against
+        // a long keyword, not the other way round.
+        //
+        // Three characters, so MerchantMatch requires it to be a whole WORD and it
+        // cannot reach inside another name. Checked against the whole merchant list:
+        // it takes CAF, DOSE CAF and TOLEDO ALSHARQ CAF, and nothing else.
+        "CAF" to SaudiCategories.FOOD,
         "COFFEE" to SaudiCategories.FOOD,
         "RESTAURANT" to SaudiCategories.FOOD,
         "مطعم" to SaudiCategories.FOOD,
@@ -886,6 +895,47 @@ object CategoryGuess {
         // string could ever have reached it. He had filed the one visit by hand and
         // no rule existed, so the next one would have arrived unfiled again.
         "MDHAR ALRBWAH" to SaudiCategories.SERVICES,
+        // ORO, a coffee brand - named by the owner 2026-09-10. Three characters,
+        // so it matches a whole word only: as a substring it would sit inside
+        // MOROCCAN TASTE, which is eleven of his records and a restaurant.
+        "ORO" to SaudiCategories.FOOD,
+
+        // ---- Named by their own longer form, 2026-09-11 -----------------------
+        //
+        // Twelve merchants the card network had cut short. Each was found by asking
+        // the history rather than the web: the stored name is a strict PREFIX of a
+        // longer name already filed in this same history, so "KHOLUD CA" is the
+        // "KHOLUD CAFETERIA" three rows above it and nothing else. The owner
+        // confirmed all twelve.
+        //
+        // Shipped as the FULL name on purpose. MerchantMatch accepts a truncation
+        // when the KEYWORD begins with the stored name, so the long form catches the
+        // short one AND whatever length the terminal cuts to next time; the short
+        // form would catch only itself. Each was run against the whole merchant list
+        // first and reaches nothing but its own spellings.
+        //
+        // What this method CANNOT do is the reason it is a list and not a rule: run
+        // over everything, it also proposes `ABDULLAH` -> transfers, because
+        // "ABDULLAH FAISAL H ALHARTHI" is filed that way. `ABDULLAH` is his florist.
+        // A truncated business name is identified by its longer self; a truncated
+        // PERSON's name is identified as somebody else.
+        "MAKKAH 12 ALZAIDI" to SaudiCategories.TRANSPORT,
+        "AL HATAB BAKERY" to SaudiCategories.FOOD,
+        "KHOLUD CAFETERIA" to SaudiCategories.FOOD,
+        "DAILY FOOD CO" to SaudiCategories.FOOD,
+        // منش بيكري, which the terminal sends as neither of those words. Named by
+        // the owner; nothing in the string could have reached it.
+        "YASTERDY" to SaudiCategories.FOOD,
+        "ADAM SUPERMARKET" to SaudiCategories.GROCERIES,
+        "CREATIVITY PALACE MARKET" to SaudiCategories.GROCERIES,
+        "ORANGE BED AND BATH" to SaudiCategories.SHOPPING,
+        "JAMIL TAILOR" to SaudiCategories.SHOPPING,
+        "MFTAH ALANAQA" to SaudiCategories.SHOPPING,
+        // A payment gateway rather than a shop, like MYSR - but unlike MYSR it does
+        // not name the merchant it bills for, so the category is the one the owner
+        // confirmed for the purchases behind it.
+        "MYFATOORAH" to SaudiCategories.SHOPPING,
+        "ETHIOPIAN AIRLINES" to SaudiCategories.TRAVEL,
         // اي هوم للمفروشات - furniture and home decor, Jeddah. The largest unfiled
         // record in the history at 4,672.45 riyals, and the last one on the list:
         // every channel on the phone had been exhausted, because the SMS truncates
