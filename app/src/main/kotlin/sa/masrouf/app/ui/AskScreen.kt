@@ -12,6 +12,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import sa.masrouf.core.ask.AskSort
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.Icons
+import androidx.compose.material3.Icon
+import androidx.compose.material3.FilterChip
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.CircularProgressIndicator
@@ -77,6 +86,7 @@ internal fun AskScreen(
     onQuestionChanged: (String) -> Unit,
     onAsk: () -> Unit,
     onRefile: (Transaction) -> Unit,
+    onSortBy: (AskSort) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val examples = listOf(
@@ -218,6 +228,48 @@ internal fun AskScreen(
                             .semantics { liveRegion = LiveRegionMode.Polite },
                         textAlign = TextAlign.Center,
                     )
+                }
+            }
+
+            // Over the rows, not under them: the complaint that produced it was
+            // "I scrolled and never found it", and a control below a two-hundred-row
+            // list is a control nobody reaches. Shown only when the order can
+            // actually change something, which two rows cannot.
+            if (state.answer.rows.size > 1) {
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = PANEL_PADDING, vertical = 4.dp)
+                            .selectableGroup(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        for (option in AskSort.entries) {
+                            val selected = state.answer.sort == option
+                            FilterChip(
+                                selected = selected,
+                                onClick = { onSortBy(option) },
+                                label = {
+                                    Text(
+                                        stringResource(
+                                            when (option) {
+                                                AskSort.NEWEST -> R.string.ask_sort_newest
+                                                AskSort.LARGEST -> R.string.ask_sort_largest
+                                            },
+                                        ),
+                                    )
+                                },
+                                leadingIcon = if (selected) {
+                                    { Icon(Icons.Filled.Check, contentDescription = null) }
+                                } else {
+                                    null
+                                },
+                                modifier = Modifier
+                                    .heightIn(min = 48.dp)
+                                    .semantics { role = Role.RadioButton },
+                            )
+                        }
+                    }
                 }
             }
 

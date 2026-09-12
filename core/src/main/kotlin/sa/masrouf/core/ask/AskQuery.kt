@@ -38,6 +38,36 @@ enum class Measure {
 /** Money leaving or money arriving. Spending unless the question says otherwise. */
 enum class Flow { SPENDING, INCOME }
 
+/**
+ * The order the matching records are shown in.
+ *
+ * It matters more than it looks, because the list is CAPPED. Sorting after the cap
+ * would order two hundred arbitrary rows; the sort therefore happens first and the
+ * cap takes the top of whichever order was asked for. Newest-first with a cap can
+ * hide the largest purchase in the answer entirely - which is exactly how the owner
+ * found this, scrolling for a 17,000-riyal row that was not on the screen.
+ */
+enum class AskSort {
+    /** Most recent first. What a question about a period usually means. */
+    NEWEST,
+
+    /** Biggest first. What a worklist means, and what "where did it go" means. */
+    LARGEST,
+    ;
+
+    companion object {
+        /**
+         * The order this subject is usually asked about.
+         *
+         * Unfiled is a worklist: the point is to deal with the big ones, and one
+         * tap on a 17,000-riyal merchant is worth a hundred taps on coffees.
+         * Everything else reads as a period, where recency is the natural order.
+         */
+        fun forSubject(subject: Subject): AskSort =
+            if (subject is Subject.Unfiled) LARGEST else NEWEST
+    }
+}
+
 /** Which rows the question is about. */
 sealed interface Subject {
 

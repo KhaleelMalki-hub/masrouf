@@ -179,4 +179,38 @@ class AskAnswerTest {
         val answer = query().answeredFrom(listOf(row("1.00"), row("2.00"), row("3.00")))
         assertEquals(listOf("3.00", "2.00", "1.00"), answer.rows.map { it.amount.toPlainString() })
     }
+
+    /**
+     * The defect the owner found by using it: the cap is applied to the SORTED
+     * list, so a list ordered by date and then capped can leave out the largest
+     * record entirely - and he went looking for a 17,000-riyal row that was not on
+     * the screen.
+     */
+    @Test
+    fun `sorting happens before the cap, not after it`() {
+        // 250 small recent rows, and one large old one that a date sort buries.
+        val rows = List(250) { row("1.00") } + listOf(row("17033.00").copy(
+            occurredAt = Instant.EPOCH,
+        ))
+
+        val byDate = query().answeredFrom(rows, sort = AskSort.NEWEST)
+        assertEquals(200, byDate.rows.size)
+        assertTrue(byDate.rows.none { it.amount == Money.ofMajor("17033.00") })
+
+        val bySize = query().answeredFrom(rows, sort = AskSort.LARGEST)
+        assertEquals(Money.ofMajor("17033.00"), bySize.rows.first().amount)
+        // and the figure is the same either way, because the cap is on what is SHOWN
+        assertEquals(byDate.total, bySize.total)
+    }
+
+    /**
+     * A worklist is about value, not recency: one tap on a seventeen-thousand-riyal
+     * merchant is worth a hundred taps on coffees.
+     */
+    @Test
+    fun `unfiled defaults to largest first and everything else to newest`() {
+        assertEquals(AskSort.LARGEST, AskSort.forSubject(Subject.Unfiled))
+        assertEquals(AskSort.NEWEST, AskSort.forSubject(Subject.Everything))
+        assertEquals(AskSort.NEWEST, AskSort.forSubject(Subject.OfTopic(Topic.FUEL)))
+    }
 }

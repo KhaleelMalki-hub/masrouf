@@ -191,8 +191,13 @@ fun AddExpenseScreen(
     // two were the exceptions it did not mention: a rotation or a tap on the
     // language button silently closed an open filing sheet.
     var refilingId by rememberSaveable { mutableStateOf<String?>(null) }
-    val refiling = remember(refilingId, recent, pending) {
-        refilingId?.let { id -> (recent + pending).firstOrNull { it.id == id } }
+    // The answer's rows belong here too. They are searched from the WHOLE history, so
+    // a row from two years ago is in neither `recent` nor `pending`; resolving against
+    // those two alone left the id set and the sheet never opened - the tap did
+    // nothing at all, on the one screen built for finding an old record to file.
+    val askRows = (askState as? AddExpenseViewModel.AskState.Answered)?.answer?.rows.orEmpty()
+    val refiling = remember(refilingId, recent, pending, askRows) {
+        refilingId?.let { id -> (recent + pending + askRows).firstOrNull { it.id == id } }
     }
     var editingSalary by rememberSaveable { mutableStateOf(false) }
 
@@ -501,6 +506,7 @@ fun AddExpenseScreen(
                     onQuestionChanged = viewModel::onQuestionChanged,
                     onAsk = viewModel::askQuestion,
                     onRefile = { refilingId = it.id },
+                    onSortBy = viewModel::sortAnswerBy,
                     modifier = Modifier.fillMaxSize(),
                 )
 

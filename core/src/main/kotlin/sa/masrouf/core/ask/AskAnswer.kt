@@ -22,6 +22,8 @@ data class AskAnswer(
     val largest: Transaction?,
     val rows: List<Transaction>,
     val moreRows: Int,
+    /** The order [rows] came back in. See [AskSort]. */
+    val sort: AskSort,
     /**
      * Whether the subject exists at all in this history.
      *
@@ -59,9 +61,17 @@ private const val ROW_CAP = 200
 fun AskQuery.answeredFrom(
     inPeriod: List<Transaction>,
     subjectSeenEver: Boolean = true,
+    sort: AskSort = AskSort.forSubject(subject),
 ): AskAnswer {
     val selected = inPeriod.filter { selects(it) }
-    val ordered = selected.sortedByDescending { it.occurredAt }
+    // Sorted BEFORE the cap, never after. The cap takes the top of the order that
+    // was asked for; applied the other way round it would cap by date and then
+    // reorder two hundred arbitrary rows, so the largest record in an answer could
+    // be absent from a list claiming to be sorted by size.
+    val ordered = when (sort) {
+        AskSort.NEWEST -> selected.sortedByDescending { it.occurredAt }
+        AskSort.LARGEST -> selected.sortedByDescending { it.amount.halalas }
+    }
     return AskAnswer(
         query = this,
         // Money is integer halalas and stays that way: summed as Long and wrapped
@@ -71,6 +81,7 @@ fun AskQuery.answeredFrom(
         largest = selected.maxByOrNull { it.amount.halalas },
         rows = ordered.take(ROW_CAP),
         moreRows = (ordered.size - ROW_CAP).coerceAtLeast(0),
+        sort = sort,
         subjectSeenEver = subjectSeenEver,
     )
 }

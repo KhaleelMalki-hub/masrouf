@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.map
 import sa.masrouf.core.capture.BankMessageParser
 import sa.masrouf.core.capture.MessageGate
 import sa.masrouf.core.ask.AskAnswer
+import sa.masrouf.core.ask.AskSort
 import sa.masrouf.core.ask.AskParser
 import sa.masrouf.core.ask.MerchantAliases
 import sa.masrouf.core.ask.Subject
@@ -638,7 +639,11 @@ class TransactionRepository(
      *   is a result, not a failure: the alternative is a figure about the reader's
      *   money that nobody can check.
      */
-    suspend fun answer(question: String, today: LocalDate): AskAnswer? = withContext(computation) {
+    suspend fun answer(
+        question: String,
+        today: LocalDate,
+        sort: AskSort? = null,
+    ): AskAnswer? = withContext(computation) {
         val query = AskParser.parse(question, today) ?: return@withContext null
         val zone = RiyadhTime.ZONE
         val from = query.period.from?.atStartOfDay(zone)?.toInstant()?.toEpochMilli() ?: Long.MIN_VALUE
@@ -655,7 +660,7 @@ class TransactionRepository(
             )
             else -> true
         }
-        query.answeredFrom(rows, seenEver)
+        query.answeredFrom(rows, seenEver, sort ?: AskSort.forSubject(query.subject))
     }
 
     /** What the bank wrote for one row, when the caller has the row but not its body. */

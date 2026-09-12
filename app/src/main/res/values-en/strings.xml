@@ -223,4 +223,6 @@
     <string name="import_examined">%1$s messages read</string>
     <string name="legend_show_all">Show all categories (%1$s more)</string>
     <string name="legend_show_less">Show fewer</string>
+    <string name="ask_sort_newest">Newest</string>
+    <string name="ask_sort_largest">Largest</string>
 </resources>

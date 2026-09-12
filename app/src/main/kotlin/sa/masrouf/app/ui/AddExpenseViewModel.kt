@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.flow.MutableSharedFlow
 import sa.masrouf.core.ask.AskAnswer
+import sa.masrouf.core.ask.AskSort
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -221,6 +222,8 @@ class AddExpenseViewModel(
         // An edited question makes the answer on screen stale, and a stale answer
         // beside a different question is the screen lying quietly. It goes.
         if (_answer.value != AskState.Unasked) _answer.value = AskState.Unasked
+        // A new question gets its own subject's order, not the last one's.
+        _askSort.value = null
     }
 
     /**
@@ -232,9 +235,27 @@ class AddExpenseViewModel(
         _answer.value = AskState.Thinking
         viewModelScope.launch {
             val today = LocalDate.now(clock)
-            val answered = repository.answer(text, today)
+            val answered = repository.answer(text, today, _askSort.value)
             _answer.value = answered?.let(AskState::Answered) ?: AskState.NotUnderstood
         }
+    }
+
+    /**
+     * The order the answer's rows come back in, or null for the subject's own default.
+     *
+     * Re-running the question rather than re-sorting the rows on screen is deliberate:
+     * the list is capped, so sorting what came back would order the top two hundred BY
+     * DATE and call the result "largest first", with the actual largest absent. The
+     * query is off the main thread already and reads a lean projection.
+     */
+    private val _askSort = MutableStateFlow<AskSort?>(null)
+    val askSort: StateFlow<AskSort?> = _askSort.asStateFlow()
+
+    /** Re-answers the question in [sort]. No-op when nothing has been asked. */
+    fun sortAnswerBy(sort: AskSort) {
+        if (_askSort.value == sort) return
+        _askSort.value = sort
+        if (_answer.value != AskState.Unasked) askQuestion()
     }
 
     /** What the bank wrote for one row. See `RefileSheet`'s `body`. */
