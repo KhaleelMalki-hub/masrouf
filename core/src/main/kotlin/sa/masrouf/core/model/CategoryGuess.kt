@@ -936,6 +936,12 @@ object CategoryGuess {
         // confirmed for the purchases behind it.
         "MYFATOORAH" to SaudiCategories.SHOPPING,
         "ETHIOPIAN AIRLINES" to SaudiCategories.TRAVEL,
+
+        // His own STC Pay wallet, named in Arabic. Two refunds INTO it were filed as
+        // bills, because "STC" sits inside the phrase and STC is a telecom company.
+        // A wallet is not a bill: the money is still his, and it is the same wallet
+        // already in OWN_WALLETS on the other leg.
+        "محفظة stc pay" to SaudiCategories.TRANSFERS,
         // اي هوم للمفروشات - furniture and home decor, Jeddah. The largest unfiled
         // record in the history at 4,672.45 riyals, and the last one on the list:
         // every channel on the phone had been exhausted, because the SMS truncates

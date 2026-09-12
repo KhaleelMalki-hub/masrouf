@@ -65,7 +65,38 @@ object MerchantMatch {
         if (gluedMerchant.contains(entry.glued)) return true
         // A truncated name is accepted when the keyword starts with it, which is
         // what truncation means: "HUNGERSTA" is HUNGERSTATION with the end cut off.
-        return gluedMerchant.length >= MIN_TRUNCATED_LENGTH && entry.glued.startsWith(gluedMerchant)
+        if (gluedMerchant.length < MIN_TRUNCATED_LENGTH) return false
+        if (!entry.glued.startsWith(gluedMerchant)) return false
+        return isTruncation(foldedMerchant, entry.folded)
+    }
+
+    /**
+     * Whether the merchant really is the keyword with its tail cut, rather than a
+     * complete word the keyword happens to begin with.
+     *
+     * Found by auditing what the app had already filed. "INTERNATIONAL" - the whole
+     * word, and all the terminal sent - was matched against the keyword
+     * "INTERNATIONAL OVEN" and filed as a bakery. It is a recruitment office, and
+     * the two purchases under it were 1,261 riyals and **17,033**.
+     *
+     * The difference is where the keyword carries on. A real truncation resumes
+     * INSIDE a word - "HUNGERSTA" continues "TION" - because a card network cuts a
+     * string at a fixed width and does not care about spaces. A keyword that
+     * continues with a NEW WORD was never truncated to this; the merchant is simply
+     * a complete word that the keyword begins with, and complete words are shared:
+     * INTERNATIONAL, NATIONAL, UNITED, AMERICAN, ORANGE, FOURTH all sit at the front
+     * of some keyword in this list, and one of them sat at the front of two
+     * keywords in two different categories.
+     *
+     * A multi-word merchant is exempt: "AL HATAB" against "AL HATAB BAKERY" resumes
+     * at a boundary too, but a name that already carries a space is specific enough
+     * that the coincidence does not happen - and twelve such pairs in this history
+     * were confirmed one by one by the owner.
+     */
+    private fun isTruncation(foldedMerchant: String, foldedKeyword: String): Boolean {
+        if (foldedMerchant.contains(' ')) return true
+        val remainder = foldedKeyword.removePrefix(foldedMerchant)
+        return !remainder.startsWith(' ')
     }
 
     /**

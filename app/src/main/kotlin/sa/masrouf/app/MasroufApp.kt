@@ -356,7 +356,11 @@ class MasroufApp : Application() {
         //     shipped CAFE keyword could never reach.
         // 55: twelve names the network cut short, each identified by its own longer
         //     form already filed in this history.
-        REFILE_ALL(55),
+        // 56: a truncation must resume INSIDE a word. "INTERNATIONAL" was filed as
+        //     a bakery on 18,294 riyals because it begins "INTERNATIONAL OVEN"; six
+        //     other bare generic words went the same way. They are unfiled now,
+        //     which is the honest state for a name nothing can identify.
+        REFILE_ALL(56),
     }
 
     /**

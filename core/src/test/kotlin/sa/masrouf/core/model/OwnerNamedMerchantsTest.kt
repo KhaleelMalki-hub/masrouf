@@ -260,7 +260,6 @@ class OwnerNamedMerchantsTest {
             "Address C" to SaudiCategories.FOOD,
             "Miraqe Ga" to SaudiCategories.FOOD,
             "MYSR*Amma" to SaudiCategories.FOOD,
-            "American" to SaudiCategories.SHOPPING,
             "SAIF EL D" to SaudiCategories.SHOPPING,
             "NEWMAX" to SaudiCategories.SHOPPING,
             "Binat-alh" to SaudiCategories.SHOPPING,
@@ -395,5 +394,41 @@ class OwnerNamedMerchantsTest {
     fun `a bare first name is not filed from a longer person's name`() {
         assertNull(CategoryGuess.forMerchant("ABDULLAH"))
         assertNull(CategoryGuess.forMerchant("MOHAMMAD"))
+    }
+
+    /**
+     * A single generic word is not a truncation, whatever keyword it begins.
+     *
+     * "INTERNATIONAL" - the whole word, and all the terminal sent - was matched
+     * against "INTERNATIONAL OVEN" and filed as a bakery. The two purchases under it
+     * were 1,261 riyals and 17,033, and it is a recruitment office: the owner said
+     * so, and his own history agrees, since "INTERNATIONAL RECRUI" sits beside it
+     * filed as fees at 15,000.
+     *
+     * It cannot be fixed by shipping the word as a keyword either. Fourteen
+     * merchants in this history contain INTERNATIONAL - a grocer, Alshaya, Aramex, a
+     * medical company, a bakery, the recruiter - carrying 72,000 riyals across five
+     * categories. That is what a four-letter-or-longer keyword does: it matches by
+     * containment. The bare word belongs to the owner's own filing, which matches
+     * the key exactly and reaches nothing else.
+     */
+    @Test
+    fun `a bare generic word is filed by nothing`() {
+        for (word in listOf("INTERNATIONAL", "NATIONAL", "UNITED", "ORANGE", "FOURTH", "AMERICAN")) {
+            assertNull(CategoryGuess.forMerchant(word), "$word should reach no rule")
+        }
+    }
+
+    /** And a real truncation - one that resumes inside a word - still works. */
+    @Test
+    fun `a tail cut mid-word is still a truncation`() {
+        assertEquals(SaudiCategories.FOOD, CategoryGuess.forMerchant("HUNGERSTA"))
+        assertEquals(SaudiCategories.TRANSPORT, CategoryGuess.forMerchant("MAKKAH 12 ALZA"))
+    }
+
+    /** A wallet is not a bill, however much of the telecom's name is in it. */
+    @Test
+    fun `his own wallet is a transfer`() {
+        assertEquals(SaudiCategories.TRANSFERS, CategoryGuess.forMerchant("محفظه STC PAY"))
     }
 }
