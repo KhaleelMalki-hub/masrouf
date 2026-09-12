@@ -270,4 +270,30 @@
     <string name="legend_show_less">عرض أقل</string>
     <string name="ask_sort_newest">الأحدث</string>
     <string name="ask_sort_largest">الأكبر مبلغاً</string>
+    <string name="import_statement">استيراد كشف حساب</string>
+    <string name="statement_refused">ما تم استيراد شيء — الملف لا يُقرأ: %1$s</string>
+    <plurals name="statement_added">
+        <item quantity="zero">لم تُضف عملية</item>
+        <item quantity="one">أُضيفت عملية واحدة</item>
+        <item quantity="two">أُضيفت عمليتان</item>
+        <item quantity="few">أُضيفت %1$s عمليات</item>
+        <item quantity="many">أُضيفت %1$s عملية</item>
+        <item quantity="other">أُضيفت %1$s عملية</item>
+    </plurals>
+    <plurals name="statement_known">
+        <item quantity="zero">ولا واحدة كانت موجودة</item>
+        <item quantity="one">وواحدة كانت موجودة</item>
+        <item quantity="two">واثنتان كانتا موجودتين</item>
+        <item quantity="few">و%1$s كانت موجودة</item>
+        <item quantity="many">و%1$s كانت موجودة</item>
+        <item quantity="other">و%1$s كانت موجودة</item>
+    </plurals>
+    <plurals name="statement_all_known">
+        <item quantity="zero">لا جديد في هذا الكشف</item>
+        <item quantity="one">لا جديد — العملية الوحيدة موجودة أصلاً</item>
+        <item quantity="two">لا جديد — العمليتان موجودتان أصلاً</item>
+        <item quantity="few">لا جديد — %1$s عمليات موجودة أصلاً</item>
+        <item quantity="many">لا جديد — %1$s عملية موجودة أصلاً</item>
+        <item quantity="other">لا جديد — %1$s عملية موجودة أصلاً</item>
+    </plurals>
 </resources>

@@ -28,6 +28,11 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.background
 import androidx.activity.compose.BackHandler
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
+import androidx.compose.ui.platform.LocalContext
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -201,6 +206,29 @@ fun AddExpenseScreen(
     }
     var editingSalary by rememberSaveable { mutableStateOf(false) }
 
+    // The system picker, so no storage permission is involved: the user hands over
+    // one file and the app can read that file and nothing else. Reading it here
+    // rather than in the view model because a `Uri` is only readable through a
+    // `ContentResolver`, which is an Android thing and does not belong there.
+    val resolver = LocalContext.current.contentResolver
+    val pickStatement = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri != null) {
+            scope.launch {
+                val text = withContext(Dispatchers.IO) {
+                    runCatching {
+                        resolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+                    }.getOrNull()
+                }
+                // A file that cannot be read is refused like any other unreadable
+                // statement, through the same line: an action that silently does
+                // nothing is the one failure mode this screen must not have.
+                viewModel.importStatement(text.orEmpty())
+            }
+        }
+    }
+
     if (editingSalary) {
         SalaryDialog(
             current = salary,
@@ -350,6 +378,7 @@ fun AddExpenseScreen(
                 onImportHistory = {
                     if (canImportHistory) viewModel.importHistory() else onRequestHistoryAccess()
                 },
+                onImportStatement = { pickStatement.launch(arrayOf("text/*")) },
                 onRefileAll = { confirming = DestructiveAction.RefileAll },
                 onEditSalary = { editingSalary = true },
             )
@@ -784,6 +813,7 @@ fun AddExpenseScreen(
 private fun MoreMenu(
     importRunning: Boolean,
     onImportHistory: () -> Unit,
+    onImportStatement: () -> Unit,
     onRefileAll: () -> Unit,
     onEditSalary: () -> Unit,
 ) {
@@ -799,6 +829,14 @@ private fun MoreMenu(
                 enabled = !importRunning,
                 onClick = {
                     onImportHistory()
+                    open = false
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.import_statement)) },
+                enabled = !importRunning,
+                onClick = {
+                    onImportStatement()
                     open = false
                 },
             )
@@ -850,6 +888,25 @@ private fun importResultText(state: AddExpenseViewModel.ImportState): String? = 
         else pluralStringResource(R.plurals.file_history_done, state.count, state.count.toString())
     is AddExpenseViewModel.ImportState.Confirmed ->
         pluralStringResource(R.plurals.confirm_all_done, state.count, state.count.toString())
+    is AddExpenseViewModel.ImportState.Statement ->
+        if (state.stored == 0 && state.duplicates > 0) {
+            // Not a failure, and worth saying so plainly: a statement whose rows
+            // this history already has is the expected result of importing the
+            // same file twice, and silence there reads as something broken.
+            pluralStringResource(
+                R.plurals.statement_all_known, state.duplicates, state.duplicates.toString(),
+            )
+        } else {
+            val added = pluralStringResource(
+                R.plurals.statement_added, state.stored, state.stored.toString(),
+            )
+            val known = pluralStringResource(
+                R.plurals.statement_known, state.duplicates, state.duplicates.toString(),
+            )
+            "$added $known"
+        }
+    is AddExpenseViewModel.ImportState.StatementRefused ->
+        stringResource(R.string.statement_refused, state.reason)
     else -> null
 }
 
@@ -862,6 +919,7 @@ private fun AddExpenseTopBar(
     onThemeModeChange: (ThemeMode) -> Unit,
     importRunning: Boolean,
     onImportHistory: () -> Unit,
+    onImportStatement: () -> Unit,
     onRefileAll: () -> Unit,
     onEditSalary: () -> Unit,
     showHistoryActions: Boolean = true) {
@@ -875,6 +933,7 @@ private fun AddExpenseTopBar(
                 MoreMenu(
                     importRunning = importRunning,
                     onImportHistory = onImportHistory,
+                    onImportStatement = onImportStatement,
                     onRefileAll = onRefileAll,
                     onEditSalary = onEditSalary,
                 )

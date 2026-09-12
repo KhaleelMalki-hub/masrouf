@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.flow.MutableSharedFlow
+import sa.masrouf.core.statement.StatementImporter
+import sa.masrouf.core.statement.StatementTsv
 import sa.masrouf.core.ask.AskAnswer
 import sa.masrouf.core.ask.AskSort
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -147,6 +149,20 @@ class AddExpenseViewModel(
         data class Done(val stored: Int, val examined: Int) : ImportState
         data class Filed(val count: Int) : ImportState
         data class Confirmed(val count: Int) : ImportState
+
+        /** A statement finished. `duplicates` is the count this history already had. */
+        data class Statement(val stored: Int, val duplicates: Int) : ImportState
+
+        /**
+         * A statement was refused, with the reason.
+         *
+         * Refusal is a first-class outcome rather than a silent no-op: the two ways
+         * it happens - an unreadable file, and a file whose running balance does not
+         * reconcile - are both cases where storing the rows anyway would put money
+         * that never moved into the totals, and the user is the only one who can
+         * tell which file they actually picked.
+         */
+        data class StatementRefused(val reason: String) : ImportState
     }
 
     private val _importState = MutableStateFlow<ImportState>(ImportState.Idle)
@@ -588,6 +604,40 @@ class AddExpenseViewModel(
             _importState.value = report
                 ?.let { ImportState.Done(stored = it.stored, examined = it.examined) }
                 ?: ImportState.Idle
+        }
+    }
+
+    /**
+     * Imports one exported bank statement.
+     *
+     * The reader does the validating and this does the reporting: a file that names
+     * no known layout, or whose balances do not reconcile, is refused with a reason
+     * rather than partly stored. Reading the debit column as the credit column
+     * turns every expense in the file into income without throwing, so "nothing
+     * happened, here is why" is the only safe failure.
+     */
+    fun importStatement(text: String) {
+        if (_importState.value is ImportState.Running) return
+
+        viewModelScope.launch {
+            _importState.value = ImportState.Running(0)
+            _importState.value = when (val read = StatementTsv.parse(text)) {
+                is StatementTsv.Outcome.Bad -> ImportState.StatementRefused(read.reason)
+                is StatementTsv.Outcome.Ok -> {
+                    val parsed = read.parsed
+                    val result = StatementImporter(parsed.layout)
+                        .import(parsed.rows, parsed.statementId, parsed.accountLast4)
+                    val outcome = repository.importStatement(result, parsed.accountLast4)
+                    when {
+                        outcome.refused -> ImportState.StatementRefused(
+                            // The count is the diagnosis. One row off is a row; most
+                            // rows off is the wrong column layout.
+                            "${result.entries.size - result.reconciledCount}/${result.entries.size}",
+                        )
+                        else -> ImportState.Statement(outcome.stored, outcome.duplicates)
+                    }
+                }
+            }
         }
     }
 

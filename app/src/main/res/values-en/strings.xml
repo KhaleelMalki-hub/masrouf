@@ -225,4 +225,18 @@
     <string name="legend_show_less">Show fewer</string>
     <string name="ask_sort_newest">Newest</string>
     <string name="ask_sort_largest">Largest</string>
+    <string name="import_statement">Import a statement</string>
+    <string name="statement_refused">Nothing imported — the file does not read: %1$s</string>
+    <plurals name="statement_added">
+        <item quantity="one">%1$s record added</item>
+        <item quantity="other">%1$s records added</item>
+    </plurals>
+    <plurals name="statement_known">
+        <item quantity="one">and %1$s was already here</item>
+        <item quantity="other">and %1$s were already here</item>
+    </plurals>
+    <plurals name="statement_all_known">
+        <item quantity="one">Nothing new — its %1$s record is already here</item>
+        <item quantity="other">Nothing new — all %1$s records are already here</item>
+    </plurals>
 </resources>

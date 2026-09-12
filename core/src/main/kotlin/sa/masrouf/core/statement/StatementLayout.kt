@@ -26,11 +26,38 @@ data class StatementRow(val index: Int, val cells: List<String>) {
 data class StatementLayout(
     val id: String,
     val expectedColumns: Int,
-    val balanceColumn: Int,
-    val debitColumn: Int,
-    val creditColumn: Int,
     val descriptionColumn: Int,
     val dateColumn: Int,
+    /**
+     * Absent on a card statement, which prints one signed amount instead of two
+     * columns and no running balance at all. Nullable rather than a placeholder
+     * index: a column number that is a lie stays readable, and every reader here
+     * ends in an amount of money.
+     */
+    val balanceColumn: Int? = null,
+    val debitColumn: Int? = null,
+    val creditColumn: Int? = null,
+    /**
+     * Set instead of [debitColumn] and [creditColumn] when the bank prints ONE
+     * amount column carrying its own sign.
+     *
+     * This is a different shape of risk, not a variation on the same one. Two
+     * columns can be read in the wrong order, which is why the running balance is
+     * checked; one signed column cannot - the direction travels with the number
+     * rather than with its position, so there is nothing to swap.
+     */
+    val signedAmountColumn: Int? = null,
+    /**
+     * A second printing of the same amount, checked against [signedAmountColumn]
+     * row by row.
+     *
+     * Card statements print the transaction amount and the posted amount, and in
+     * one currency those are the same number twice. That makes them a check on
+     * COLUMN ALIGNMENT - the failure a statement with no running balance otherwise
+     * has no defence against - though not on the arithmetic, which the file does
+     * not state.
+     */
+    val echoAmountColumn: Int? = null,
     /** Present only where the bank prints a separate transaction-type column. */
     val typeColumn: Int? = null,
     val parseDate: (String) -> LocalDate?,
@@ -131,5 +158,27 @@ object SaudiStatements {
 
     val EMIRATES_NBD_COLUMNS = ColumnRuler(listOf(98.0, 316.0, 391.0, 470.0))
 
-    val ALL: List<StatementLayout> = listOf(SNB, AL_RAJHI, D360, BARQ, EMIRATES_NBD)
+    /**
+     * An SNB credit-card statement. Five columns, day-first dates, and no running
+     * balance anywhere on the page - a card statement lists what the card did, not
+     * what an account held.
+     *
+     *     [posted amount, description, transaction amount, posting date, transaction date]
+     *
+     * Both amounts are signed and, in riyals, identical; they are checked against
+     * each other. The transaction date is the one used, as in [D360]: it is when
+     * the money moved, which is what the owner remembers and what any notification
+     * about the same purchase recorded.
+     */
+    val SNB_CARD = StatementLayout(
+        id = "snb-card",
+        expectedColumns = 5,
+        echoAmountColumn = 0,
+        descriptionColumn = 1,
+        signedAmountColumn = 2,
+        dateColumn = 4,
+        parseDate = ArabicDates::dayFirst,
+    )
+
+    val ALL: List<StatementLayout> = listOf(SNB, AL_RAJHI, D360, BARQ, EMIRATES_NBD, SNB_CARD)
 }

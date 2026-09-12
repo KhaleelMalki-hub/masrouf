@@ -69,25 +69,56 @@ class StatementImporter(private val layout: StatementLayout) {
         ) : Problem
     }
 
+    /**
+     * What actually vouched for a file, which is not the same question as whether
+     * it passed.
+     *
+     * Named and carried on the result rather than inferred from the layout,
+     * because "checked" and "we had nothing to check with" produce the identical
+     * count of zero failures, and only this distinguishes them.
+     */
+    enum class Verification {
+        /** Each row's balance follows from the row before it. Checks the arithmetic. */
+        RUNNING_BALANCE,
+
+        /** The amount is printed twice and the two agree. Checks column alignment only. */
+        ECHOED_AMOUNT,
+
+        /** The file states nothing that can be checked. Never trustworthy. */
+        NONE,
+    }
+
     data class Result(
         val entries: List<Entry>,
         val order: RowOrder,
         val problems: List<Problem>,
+        val verifiedBy: Verification,
     ) {
         val reconciledCount: Int get() = entries.count { it.reconciled }
 
         /**
-         * True when the file's own arithmetic agrees with how it was read.
+         * True when what the file says about itself agrees with how it was read.
          *
          * The gate for importing without asking the user to review every row.
          * A single unreconciled row is tolerated - statements do carry the odd
          * fee line outside the running total - but a systematic disagreement
          * means the layout is wrong and nothing should be trusted.
+         *
+         * A file that states nothing checkable is never trustworthy. That is
+         * stricter than it has to be and deliberately so: the alternative is
+         * importing hundreds of rows on the strength of having found no evidence
+         * against them, and no evidence is exactly what the wrong layout also
+         * produces.
+         *
+         * Row order only matters where the check is a walk along the balances.
+         * A signed-amount file carries its direction in each number, so the order
+         * of the rows says nothing about whether it was read correctly.
          */
         val trustworthy: Boolean
-            get() = entries.size >= MIN_ROWS_TO_JUDGE &&
+            get() = verifiedBy != Verification.NONE &&
+                entries.size >= MIN_ROWS_TO_JUDGE &&
                 reconciledCount >= entries.size - 1 &&
-                order != RowOrder.UNDETERMINED
+                (verifiedBy != Verification.RUNNING_BALANCE || order != RowOrder.UNDETERMINED)
     }
 
     /**
@@ -110,6 +141,45 @@ class StatementImporter(private val layout: StatementLayout) {
                 is ParseOutcome.Skip -> Unit
                 is ParseOutcome.Bad -> problems.add(Problem.Unreadable(row.index, outcome.reason))
             }
+        }
+
+        // What this file lets us check, decided from the layout that was used to
+        // read it rather than from the outcome - a file we could not check and a
+        // file that passed both produce no failures.
+        val verifiedBy = when {
+            layout.signedAmountColumn == null -> Verification.RUNNING_BALANCE
+            layout.echoAmountColumn != null -> Verification.ECHOED_AMOUNT
+            else -> Verification.NONE
+        }
+
+        if (verifiedBy != Verification.RUNNING_BALANCE) {
+            // No balances to walk, so no order to derive and none needed: every row
+            // carries its own date and its own sign. A row that survived parsing
+            // passed the echo check by definition - the ones that failed it are in
+            // `problems` and never became entries.
+            val checked = verifiedBy == Verification.ECHOED_AMOUNT
+            return Result(
+                entries = parsed.map { row ->
+                    Entry(
+                        rowIndex = row.index,
+                        draft = row.toDraft(accountLast4),
+                        fingerprint = Fingerprint.forStatementRow(
+                            statementId = statementId,
+                            rowIndex = row.index,
+                            date = row.date,
+                            amount = row.amount,
+                            direction = row.direction,
+                            last4 = accountLast4,
+                            merchantRaw = row.description,
+                        ),
+                        balanceAfter = null,
+                        reconciled = checked,
+                    )
+                },
+                order = RowOrder.UNDETERMINED,
+                problems = problems,
+                verifiedBy = verifiedBy,
+            )
         }
 
         val oldestFirstMatches = countReconciled(parsed, RowOrder.OLDEST_FIRST)
@@ -151,7 +221,7 @@ class StatementImporter(private val layout: StatementLayout) {
             )
         }
 
-        return Result(entries, order, problems)
+        return Result(entries, order, problems, verifiedBy)
     }
 
     // ---- Row parsing -------------------------------------------------------
@@ -187,8 +257,10 @@ class StatementImporter(private val layout: StatementLayout) {
         val dateText = row.cell(layout.dateColumn)
         val date = layout.parseDate(dateText) ?: return ParseOutcome.Skip
 
-        val debit = amountOrNull(row.cell(layout.debitColumn))
-        val credit = amountOrNull(row.cell(layout.creditColumn))
+        layout.signedAmountColumn?.let { return parseSignedRow(row, date, it) }
+
+        val debit = amountOrNull(row.cell(layout.debitColumn!!))
+        val credit = amountOrNull(row.cell(layout.creditColumn!!))
 
         val direction = when {
             debit != null && !debit.isZero && (credit == null || credit.isZero) -> Direction.DEBIT
@@ -211,10 +283,57 @@ class StatementImporter(private val layout: StatementLayout) {
                 direction = direction,
                 type = classify(listOf(typeText, description).joinToString("\n"), direction),
                 description = description,
-                balance = balanceOrNull(row.cell(layout.balanceColumn)),
+                balance = layout.balanceColumn?.let { balanceOrNull(row.cell(it)) },
             )
         )
     }
+
+    /**
+     * Reads a row whose amount carries its own sign.
+     *
+     * Money leaving is printed negative, which is the opposite of how it is stored
+     * - amounts are unsigned throughout this app and the direction is a field - so
+     * the sign is read and then dropped.
+     *
+     * The second printing of the amount is checked here rather than later because
+     * this is the only place that holds both cells. It is a check on ALIGNMENT,
+     * not on arithmetic: if the extractor shifted a column, the cell that should
+     * hold the same number holds a date or a name instead and this fails. A layout
+     * with no second printing parses but cannot be vouched for, which
+     * [Result.trustworthy] accounts for.
+     */
+    private fun parseSignedRow(row: StatementRow, date: LocalDate, amountColumn: Int): ParseOutcome {
+        val cell = ArabicText.normalize(row.cell(amountColumn))
+        val amount = amountOrNull(cell) ?: return ParseOutcome.Skip
+        if (amount.isZero) return ParseOutcome.Skip
+        val direction = directionOf(cell)
+
+        layout.echoAmountColumn?.let { echoColumn ->
+            val echoCell = ArabicText.normalize(row.cell(echoColumn))
+            val echo = amountOrNull(echoCell)
+                ?: return ParseOutcome.Bad("the amount is printed once but not twice")
+            if (echo != amount || directionOf(echoCell) != direction) {
+                return ParseOutcome.Bad("the two printed amounts disagree: $cell and $echoCell")
+            }
+        }
+
+        val description = readText(row.cell(layout.descriptionColumn))
+        return ParseOutcome.Ok(
+            ParsedRow(
+                index = row.index,
+                date = date,
+                amount = amount,
+                direction = direction,
+                type = classify(description, direction),
+                description = description,
+                balance = null,
+            )
+        )
+    }
+
+    /** Money leaving is printed negative. Anything else is money arriving. */
+    private fun directionOf(cell: String): Direction =
+        if (NEGATIVE_AMOUNT.containsMatchIn(cell)) Direction.DEBIT else Direction.CREDIT
 
     /**
      * The wording gives the kind of transaction; the column gives the direction.
@@ -324,6 +443,12 @@ class StatementImporter(private val layout: StatementLayout) {
 
         /** `1,234.56`, `5.00 SAR`, `+ 2,000.00`, `- 16.30` - the number, without its sign. */
         val AMOUNT_IN_CELL = Regex("""\d[\d,]*(?:\.\d{1,2})?""")
+
+        /**
+         * A minus before the digits, in either dash the banks print and with or
+         * without a space: `-153.20`, `SAR -153.20`, `- 153.20`.
+         */
+        val NEGATIVE_AMOUNT = Regex("""[-−]\s*\d""")
 
         /** A balance written `1,234.56Dr` - an overdrawn, and therefore negative, balance. */
         val DEBIT_BALANCE_SUFFIX = Regex("""\d\s*DR\b""", RegexOption.IGNORE_CASE)

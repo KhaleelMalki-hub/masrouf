@@ -62,7 +62,7 @@ class RowAssemblerTest {
     )
 
     private val barqAssembler =
-        RowAssembler(SaudiStatements.BARQ_COLUMNS, anchorColumn = SaudiStatements.BARQ.balanceColumn)
+        RowAssembler(SaudiStatements.BARQ_COLUMNS, anchorColumn = SaudiStatements.BARQ.balanceColumn!!)
 
     @Test
     fun `barq rows are rebuilt from loose words`() {
@@ -106,10 +106,10 @@ class RowAssemblerTest {
     fun `barq debit and credit land in different columns`() {
         val rows = barqAssembler.assemble(barqWords)
 
-        assertEquals("4000.00", rows[0].cells[SaudiStatements.BARQ.debitColumn])
-        assertEquals("", rows[0].cells[SaudiStatements.BARQ.creditColumn])
-        assertEquals("5000.00", rows[1].cells[SaudiStatements.BARQ.creditColumn])
-        assertEquals("", rows[1].cells[SaudiStatements.BARQ.debitColumn])
+        assertEquals("4000.00", rows[0].cells[SaudiStatements.BARQ.debitColumn!!])
+        assertEquals("", rows[0].cells[SaudiStatements.BARQ.creditColumn!!])
+        assertEquals("5000.00", rows[1].cells[SaudiStatements.BARQ.creditColumn!!])
+        assertEquals("", rows[1].cells[SaudiStatements.BARQ.debitColumn!!])
     }
 
     @Test
@@ -158,7 +158,7 @@ class RowAssemblerTest {
 
     private val enbdAssembler = RowAssembler(
         SaudiStatements.EMIRATES_NBD_COLUMNS,
-        anchorColumn = SaudiStatements.EMIRATES_NBD.balanceColumn,
+        anchorColumn = SaudiStatements.EMIRATES_NBD.balanceColumn!!,
     )
 
     @Test
