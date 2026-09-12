@@ -27,7 +27,9 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.background
-import androidx.activity.compose.BackHandler
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.activity.compose.PredictiveBackHandler
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
 import androidx.compose.ui.platform.LocalContext
@@ -97,6 +99,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import sa.masrouf.app.R
 import sa.masrouf.core.model.Transaction
 import sa.masrouf.core.money.Money
+
+/** How far M3's back preview shrinks the page at the end of a completed gesture. */
+private const val BACK_PREVIEW_SCALE = 0.9f
 
 /**
  * The landing page.
@@ -205,6 +210,9 @@ fun AddExpenseScreen(
         refilingId?.let { id -> (recent + pending + askRows).firstOrNull { it.id == id } }
     }
     var editingSalary by rememberSaveable { mutableStateOf(false) }
+    // How far through a back gesture the thumb is, 0 until one starts. Deliberately
+    // not saveable: a gesture does not survive the process that was reading it.
+    var backProgress by remember { mutableFloatStateOf(0f) }
 
     // The system picker, so no storage permission is involved: the user hands over
     // one file and the app can read that file and nothing else. Reading it here
@@ -492,6 +500,14 @@ fun AddExpenseScreen(
         // first and grows the new screen into it.
         AnimatedContent(
             targetState = destination,
+            // M3's back preview: the page shrinks towards its centre as the gesture
+            // travels, so the depth the system is about to reveal is already legible
+            // before the user commits to it.
+            modifier = Modifier.graphicsLayer {
+                val shrink = 1f - (1f - BACK_PREVIEW_SCALE) * backProgress
+                scaleX = shrink
+                scaleY = shrink
+            },
             transitionSpec = {
                 (
                     fadeIn(tween(Motion.FADE_IN, Motion.FADE_OUT, Motion.emphasizedDecelerate)) +
@@ -769,8 +785,26 @@ fun AddExpenseScreen(
     // Back returns to the start destination before it leaves the app. A two-item
     // navigation bar is read as two tabs, and back out of a tab is how every other
     // Android app behaves.
-    BackHandler(enabled = destination != Destination.SPENDING) {
-        destination = Destination.SPENDING
+    //
+    // Predictive, not a plain BackHandler. The manifest has opted this app into the
+    // platform's back callback, which is what lets the system draw its own preview
+    // when back will leave the app - but a `BackHandler` that consumes the gesture
+    // gives the user nothing back for the part of it they can see and cancel. So
+    // the gesture drives the exit rather than triggering it: the screen shrinks as
+    // the thumb travels, snaps back if the thumb returns, and only commits when the
+    // gesture completes.
+    PredictiveBackHandler(enabled = destination != Destination.SPENDING) { progress ->
+        try {
+            progress.collect { backProgress = it.progress }
+            destination = Destination.SPENDING
+        } finally {
+            // Also the cancellation path, which is the one the user sees most: a
+            // half-made gesture must put the screen back exactly, not leave it
+            // shrunk. `finally` covers the throw that a cancelled gesture raises,
+            // and that throw is deliberately NOT caught - swallowing it would
+            // detach this handler from the dispatcher for good.
+            backProgress = 0f
+        }
     }
 
     // The sheet closes when a record is stored, never when Save is merely tapped.

@@ -48,6 +48,8 @@ fun CategoryChips(
     ) {
         items(SaudiCategories.ALL, key = { it.id }) { category ->
             val isSelected = category.id == selected?.id
+            val band = bandColour(category)
+            val onBand = onBandColour(band)
             FilterChip(
                 selected = isSelected,
                 onClick = { onSelect(if (isSelected) null else category) },
@@ -62,15 +64,20 @@ fun CategoryChips(
                 colors = FilterChipDefaults.filterChipColors(
                     // The category's own dye, so choosing one is the same colour
                     // event as seeing it in the strip.
-                    selectedContainerColor = bandColour(category),
-                    selectedLabelColor = MaterialTheme.colorScheme.surface,
+                    selectedContainerColor = band,
+                    // Measured against that dye rather than taken from the scheme.
+                    // `surface` was right in the dark theme by coincidence and
+                    // wrong in the light one, where the gold of BONUS reached 3.04
+                    // and the chosen chip carried the least readable word on the
+                    // screen. See [onBandColour].
+                    selectedLabelColor = onBand,
                     // The icon takes the label's colour. Left to the default it
                     // was `onSecondaryContainer` - a scheme tone with no
                     // relationship to the band it sits on, so the glyph and the
                     // word beside it were two different colours on one dye, and
                     // under a dynamic palette the glyph could land on its own
                     // background.
-                    selectedLeadingIconColor = MaterialTheme.colorScheme.surface,
+                    selectedLeadingIconColor = onBand,
                 ),
                 modifier = Modifier.heightIn(min = 48.dp),
             )

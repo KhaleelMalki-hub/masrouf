@@ -1,17 +1,23 @@
 package sa.masrouf.app.ui
 
+import android.app.Activity
+import android.graphics.drawable.ColorDrawable
 import android.os.Build
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -129,27 +135,56 @@ private val MasroufArabic = FontFamily(
 )
 
 /** The M3 scale, with every role set in Masrouf Arabic so nothing falls back. */
+/**
+ * Arabic in a line box sized for Latin.
+ *
+ * Compose distributes a role's line height around the font's Latin metrics and
+ * trims what falls outside. Arabic does not fit inside those metrics: a lam-alef
+ * reaches higher than a capital and a final ya hangs lower than a descender, and in
+ * the single-line boxes this app is built from - chips, list rows, the card's
+ * last-four - the trimmed part is a real stroke of a real letter, not padding.
+ *
+ * Centring the text in its line box and trimming nothing is what M3 prescribes for
+ * scripts whose extents exceed the Latin ones. It costs a little vertical space and
+ * it is the difference between a hamza that is there and one that is shaved off.
+ */
+private val ArabicLineHeight = LineHeightStyle(
+    alignment = LineHeightStyle.Alignment.Center,
+    trim = LineHeightStyle.Trim.None,
+)
+
+/** The app's face and Arabic-safe line box, keeping whatever the role already set. */
+private fun TextStyle.arabic(
+    fontWeight: FontWeight? = this.fontWeight,
+    letterSpacing: TextUnit = this.letterSpacing,
+): TextStyle = copy(
+    fontFamily = MasroufArabic,
+    fontWeight = fontWeight,
+    letterSpacing = letterSpacing,
+    lineHeightStyle = ArabicLineHeight,
+)
+
 private val MasroufTypography = Typography().run {
     copy(
-        displayLarge = displayLarge.copy(fontFamily = MasroufArabic),
-        displayMedium = displayMedium.copy(
-            fontFamily = MasroufArabic, fontWeight = FontWeight.Bold, letterSpacing = (-1.5).sp,
+        displayLarge = displayLarge.arabic(),
+        displayMedium = displayMedium.arabic(
+            fontWeight = FontWeight.Bold, letterSpacing = (-1.5).sp,
         ),
-        displaySmall = displaySmall.copy(fontFamily = MasroufArabic, fontWeight = FontWeight.Bold),
-        headlineLarge = headlineLarge.copy(fontFamily = MasroufArabic),
-        headlineMedium = headlineMedium.copy(fontFamily = MasroufArabic, fontWeight = FontWeight.SemiBold),
-        headlineSmall = headlineSmall.copy(fontFamily = MasroufArabic, fontWeight = FontWeight.SemiBold),
-        titleLarge = titleLarge.copy(fontFamily = MasroufArabic, fontWeight = FontWeight.SemiBold),
-        titleMedium = titleMedium.copy(fontFamily = MasroufArabic, fontWeight = FontWeight.Medium),
-        titleSmall = titleSmall.copy(fontFamily = MasroufArabic, fontWeight = FontWeight.Medium),
-        bodyLarge = bodyLarge.copy(fontFamily = MasroufArabic),
-        bodyMedium = bodyMedium.copy(fontFamily = MasroufArabic),
-        bodySmall = bodySmall.copy(fontFamily = MasroufArabic),
-        labelLarge = labelLarge.copy(fontFamily = MasroufArabic, fontWeight = FontWeight.Medium),
-        labelMedium = labelMedium.copy(
-            fontFamily = MasroufArabic, fontWeight = FontWeight.Medium, letterSpacing = 0.5.sp,
+        displaySmall = displaySmall.arabic(fontWeight = FontWeight.Bold),
+        headlineLarge = headlineLarge.arabic(),
+        headlineMedium = headlineMedium.arabic(fontWeight = FontWeight.SemiBold),
+        headlineSmall = headlineSmall.arabic(fontWeight = FontWeight.SemiBold),
+        titleLarge = titleLarge.arabic(fontWeight = FontWeight.SemiBold),
+        titleMedium = titleMedium.arabic(fontWeight = FontWeight.Medium),
+        titleSmall = titleSmall.arabic(fontWeight = FontWeight.Medium),
+        bodyLarge = bodyLarge.arabic(),
+        bodyMedium = bodyMedium.arabic(),
+        bodySmall = bodySmall.arabic(),
+        labelLarge = labelLarge.arabic(fontWeight = FontWeight.Medium),
+        labelMedium = labelMedium.arabic(
+            fontWeight = FontWeight.Medium, letterSpacing = 0.5.sp,
         ),
-        labelSmall = labelSmall.copy(fontFamily = MasroufArabic, fontWeight = FontWeight.Medium),
+        labelSmall = labelSmall.arabic(fontWeight = FontWeight.Medium),
     )
 }
 
@@ -195,6 +230,24 @@ fun MasroufTheme(
         dark -> DarkScheme
         else -> LightScheme
     }
+    // The window's own background, set from the scheme that is about to paint over
+    // it. The XML theme carries a fixed pair of colours for the instant before any
+    // of this runs, and under Material You those are the wrong colours: the scheme
+    // comes from the wallpaper while the window still holds the app's seeded
+    // near-white, so a cold start on a strongly tinted device flashed one surface
+    // and settled on another.
+    //
+    // Taken from `scheme` rather than from a system colour resource chosen to
+    // match it. Which `system_neutral1_*` token equals M3's surface is a mapping
+    // this app would be copying and could get wrong, and the copy would go on
+    // being wrong silently; the scheme in hand cannot disagree with itself.
+    val surface = scheme.surface
+    val window = (context as? Activity)?.window
+    DisposableEffect(window, surface) {
+        window?.setBackgroundDrawable(ColorDrawable(surface.toArgb()))
+        onDispose {}
+    }
+
     MaterialTheme(
         colorScheme = scheme,
         typography = MasroufTypography,

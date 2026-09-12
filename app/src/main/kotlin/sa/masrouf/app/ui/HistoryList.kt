@@ -426,6 +426,13 @@ internal fun RefileSheet(
                         selected = scope == value,
                         onClick = { scope = value },
                         shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
+                        // M3 draws this control 40dp tall and Compose does not grow
+                        // it to the 48dp minimum touch target the way it grows a
+                        // chip. Every other chip in this app raises that floor and
+                        // says why; this is the one control that was left at the
+                        // drawing's height, and it is the control that decides
+                        // whether one tap files one row or forty.
+                        modifier = Modifier.heightIn(min = 48.dp),
                     ) { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 }
             }

@@ -4,6 +4,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import sa.masrouf.core.model.Category
 import sa.masrouf.core.model.SaudiCategories
 
@@ -90,6 +91,40 @@ private fun Color.luminance(): Float = 0.2126f * red + 0.7152f * green + 0.0722f
 fun bandColour(category: Category?): Color {
     val bands = if (isDarkScheme()) DarkBands else LightBands
     return category?.let { bands[it.id] } ?: uncategorisedColour()
+}
+
+/**
+ * What to write ON a band: whichever of black or white the eye can actually read.
+ *
+ * A band is a colour of this app's own choosing, not a scheme role, so no `on-`
+ * token corresponds to it - and the one that was used, `surface`, is the right
+ * answer only by coincidence. The coincidence held in the dark theme, where every
+ * band clears 7:1 against a near-black surface, and failed in the light one: the
+ * gold of BONUS reached 3.04 against near-white, under the 4.5 that WCAG asks for
+ * body text, so the word on the chip the user had just chosen was the least
+ * legible thing on the screen.
+ *
+ * Computed rather than tabulated. A hand-written second palette of label colours
+ * drifts from the first the moment one band is retuned, and the drift is invisible
+ * until someone measures it - which is how the coincidence lasted this long.
+ */
+fun onBandColour(band: Color): Color =
+    if (contrastRatio(band, Color.White) >= contrastRatio(band, Color.Black)) {
+        Color.White
+    } else {
+        Color.Black
+    }
+
+/**
+ * WCAG 2.1 contrast, `(lighter + 0.05) / (darker + 0.05)`.
+ *
+ * Both colours are taken as opaque. Every band is, and a ratio computed against a
+ * translucent colour would describe a colour nobody sees.
+ */
+fun contrastRatio(a: Color, b: Color): Float {
+    val first = a.luminance()
+    val second = b.luminance()
+    return (maxOf(first, second) + 0.05f) / (minOf(first, second) + 0.05f)
 }
 
 /**

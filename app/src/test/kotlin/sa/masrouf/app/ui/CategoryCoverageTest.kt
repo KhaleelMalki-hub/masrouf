@@ -182,4 +182,28 @@ class CategoryCoverageTest {
             "these format a number with %d, which is Arabic-Indic under ar-SA; pass a String into %s",
         )
     }
+
+    /**
+     * Every band must be readable with the label [onBandColour] picks for it.
+     *
+     * The floor is WCAG AA for body text. It is a guard on the PALETTE, not on the
+     * chooser: retuning one band towards its own label's colour is a change that
+     * looks fine in a diff, ships, and is only visible to whoever happens to select
+     * that category on that theme. The gold of BONUS spent a release at 3.04 that
+     * way, while the dark theme's identical code cleared 7:1.
+     */
+    @Test
+    fun `every band is readable with the label chosen for it`() {
+        val floor = 4.5f
+        listOf("light" to LightBands, "dark" to DarkBands).forEach { (theme, bands) ->
+            val failing = bands.mapNotNull { (id, band) ->
+                val ratio = contrastRatio(band, onBandColour(band))
+                if (ratio < floor) "$id ${"%.2f".format(ratio)}" else null
+            }
+            assertTrue(
+                failing.isEmpty(),
+                "$theme: bands whose own label is unreadable on them (floor $floor): $failing",
+            )
+        }
+    }
 }

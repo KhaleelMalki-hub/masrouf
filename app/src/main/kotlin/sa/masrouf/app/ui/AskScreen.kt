@@ -11,6 +11,9 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import sa.masrouf.core.ask.AskSort
@@ -120,13 +123,17 @@ internal fun AskScreen(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = PANEL_PADDING),
                 label = { Text(stringResource(R.string.ask_hint)) },
                 singleLine = true,
-                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                    imeAction = ImeAction.Search,
-                ),
+                // The same field as the history's search, because it is the same
+                // gesture. It shipped as a plain bordered box beside a pill with a
+                // magnifier on the screen one tab over, which read as two different
+                // kinds of control for one kind of question.
+                shape = MaterialTheme.shapes.extraLarge,
+                leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 // The question is committed; nothing more is being typed, and the
                 // answer this screen exists to show would otherwise land under a
                 // keyboard covering half of it.
-                keyboardActions = androidx.compose.foundation.text.KeyboardActions(
+                keyboardActions = KeyboardActions(
                     onSearch = {
                         focus.clearFocus()
                         onAsk()
@@ -280,6 +287,17 @@ internal fun AskScreen(
                     cards = cards,
                     salary = salary,
                     onRefile = { onRefile(transaction) },
+                    // Filing a row from here re-runs the question, so the row the
+                    // user just dealt with leaves the list under their thumb. It
+                    // vanished instantly and took the rows below it up with it,
+                    // which reads as the list losing its place rather than as one
+                    // record being done. The other two lists in this app animate
+                    // the same event with the same three specs.
+                    modifier = Modifier.animateItem(
+                        fadeInSpec = tween(Motion.SHORT, easing = Motion.emphasizedDecelerate),
+                        fadeOutSpec = tween(Motion.SHORT, easing = Motion.emphasizedAccelerate),
+                        placementSpec = tween(Motion.MEDIUM, easing = Motion.standard),
+                    ),
                 )
             }
 
