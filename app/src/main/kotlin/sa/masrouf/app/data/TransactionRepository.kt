@@ -20,6 +20,7 @@ import sa.masrouf.core.capture.ParseResult
 import sa.masrouf.core.capture.RawMessage
 import sa.masrouf.core.capture.SaudiBanks
 import sa.masrouf.core.capture.BalanceReader
+import sa.masrouf.core.statement.StatementImporter
 import sa.masrouf.core.dedup.DuplicateDetector
 import sa.masrouf.core.dedup.EventSignature
 import sa.masrouf.core.dedup.Fingerprint
@@ -665,6 +666,128 @@ class TransactionRepository(
 
     /** What the bank wrote for one row, when the caller has the row but not its body. */
     suspend fun bodyOf(id: String): String? = dao.bodyOf(id)
+
+    /**
+     * Stores the rows of an imported statement that this history does not already have.
+     *
+     * ## Why this is one call and not a loop over [recordCaptured]
+     *
+     * Per-row would be the obvious shape and it is the wrong one, for two reasons
+     * that both end in a wrong number rather than an error.
+     *
+     * The first is the lock. `recordCaptured` takes `captureLock` per row, so an
+     * SMS arriving mid-import interleaves: it reads its neighbour window before the
+     * statement row that duplicates it has been written, finds nothing, and both
+     * are stored. A statement is hundreds of rows wide and takes real time, which
+     * makes that window large rather than theoretical. Held once, across the whole
+     * file, the import is atomic against capture.
+     *
+     * The second is that a statement duplicates ITSELF. Two identical purchases at
+     * the same shop on the same day are two real rows in the file, and reconciling
+     * one row at a time against the database would let the first be stored and then
+     * match the second against it. [DuplicateDetector.reconcile] is given both
+     * lists whole precisely so it can pair each incoming row with at most one
+     * stored record, and passing lists of one throws that away.
+     *
+     * ## What it refuses
+     *
+     * Nothing at all when the importer does not trust its own reading. A statement
+     * whose running balance does not reconcile is a statement read with the wrong
+     * column layout, and the signature of that is every debit stored as a credit -
+     * hundreds of rows of income this owner never received, indistinguishable
+     * afterwards from the real thing. The caller is expected to have shown the user
+     * the reconciliation before reaching here; this is the second lock on the same
+     * door, because the cost of being wrong is silent and permanent.
+     *
+     * Rows are stored CONFIRMED, not PENDING. A statement is the bank's own ledger
+     * rather than a guess about a text message: there is nothing for the user to
+     * confirm, and dropping hundreds of rows into the pending strip would bury the
+     * handful of captures that genuinely need a decision.
+     *
+     * @return how many rows were new and stored.
+     */
+    suspend fun importStatement(
+        result: StatementImporter.Result,
+        accountLast4: String? = null,
+    ): StatementImport = captureLock.withLock {
+        if (!result.trustworthy) {
+            return@withLock StatementImport(stored = 0, duplicates = 0, refused = true)
+        }
+
+        val entities = result.entries
+            // A row the file's own arithmetic disowns does not become money, even
+            // inside a statement that reconciles overall.
+            .filter { it.reconciled }
+            .map { entry -> entry.toEntity(accountLast4) }
+        if (entities.isEmpty()) {
+            return@withLock StatementImport(stored = 0, duplicates = 0, refused = false)
+        }
+
+        // One window spanning the whole file plus the neighbour margin, rather than
+        // one query per row: a statement covers a month and this is the same set of
+        // rows either way.
+        val occurredAt = entities.map { it.occurredAtMillis }
+        val neighbours = dao.neighbours(
+            occurredAt.min() - NEIGHBOUR_WINDOW.toMillis(),
+            occurredAt.max() + NEIGHBOUR_WINDOW.toMillis(),
+        )
+
+        val reconciled = detector.reconcile(
+            existing = neighbours.mapNotNull { it.toSignatureOrNull() },
+            incoming = entities.map { it.toSignature() },
+        )
+
+        var stored = 0
+        inTransaction {
+            reconciled.newIncoming.forEach { index ->
+                // The unique index on the fingerprint is the backstop for the same
+                // file imported twice: `Fingerprint.forStatementRow` is derived from
+                // the file's content hash and the row, so a re-import produces the
+                // same fingerprints and inserts nothing. -1 is that index refusing,
+                // which is a success here, not a failure.
+                if (dao.insert(entities[index]) != -1L) stored++
+            }
+        }
+        StatementImport(
+            stored = stored,
+            duplicates = entities.size - reconciled.newIncoming.size,
+            refused = false,
+        )
+    }
+
+    /**
+     * Turns one verified statement row into a storable record.
+     *
+     * The learned category is applied here for the same reason [recordCaptured]
+     * applies it: a decision the user already made about a merchant outranks the
+     * built-in guess. The guess still runs underneath it, so an import lands
+     * already filed wherever the app can tell.
+     */
+    private suspend fun StatementImporter.Entry.toEntity(accountLast4: String?): TransactionEntity {
+        val merchantKey = draft.merchantRaw
+            ?.let(ArabicText::normalizeMerchant)
+            ?.takeIf { it.isNotBlank() }
+        val category = merchantKey?.let { learnedCategory(it, bankId = null) }
+            ?: CategoryGuess.suggest(draft.merchantRaw, draft.type)?.id
+        return Transaction(
+            id = UUID.randomUUID().toString(),
+            amount = draft.amount,
+            direction = draft.direction,
+            type = draft.type,
+            occurredAt = draft.occurredAt,
+            accountId = null,
+            categoryId = category,
+            merchantRaw = draft.merchantRaw,
+            merchantKey = merchantKey,
+            note = draft.note,
+            source = Source.STATEMENT,
+            status = Status.CONFIRMED,
+            fingerprint = fingerprint,
+            rawText = draft.rawText,
+            accountLast4 = draft.accountLast4 ?: accountLast4,
+        ).toEntity(draft.accountLast4 ?: accountLast4)
+            .copy(balanceHalalas = balanceAfter?.halalas, balanceKind = BalanceReader.Kind.ACCOUNT.name)
+    }
 
     /**
      * Renumbers reissued cards, so one card reads as one card.
