@@ -369,8 +369,16 @@ private fun MonthRow(
         enter = fadeIn(tween(Motion.SHORT)) + expandVertically(tween(Motion.MEDIUM, easing = Motion.standard)),
         exit = fadeOut(tween(Motion.FADE_OUT)) + shrinkVertically(tween(Motion.SHORT, easing = Motion.standard)),
     ) {
-        for (deposit in deposits.sortedByDescending { it.occurredAt }) {
-            DepositRow(deposit = deposit, currencyLabel = currencyLabel)
+        // A Column, because AnimatedVisibility's content slot is a BOX. Every
+        // deposit in the loop was laid out at the same origin and drawn over the
+        // one before it: two figures, two dates and two labels superimposed on one
+        // line, which is unreadable and also states a month's salary and its bonus
+        // as one overlapping number. A month with a single deposit does not expand,
+        // so the only case this reveal exists for was the broken one.
+        Column {
+            for (deposit in deposits.sortedByDescending { it.occurredAt }) {
+                DepositRow(deposit = deposit, currencyLabel = currencyLabel)
+            }
         }
     }
     }
