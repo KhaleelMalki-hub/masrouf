@@ -54,14 +54,30 @@ enum class Topic(val keywords: List<String>) {
         ),
     ),
 
-    /** Food ordered to the door, which is a habit people ask about by itself. */
+    /**
+     * Food ordered to the door, which is a habit people ask about by itself.
+     *
+     * Ninja is deliberately absent. It delivers a supermarket basket rather than a
+     * restaurant meal, its sixty records here file as groceries and its own name is
+     * "Ninja Retail Company" - so counting it here made one app answer "how much on
+     * delivery" and "how much on groceries" with the same riyals, and neither
+     * number looked wrong on its own page.
+     */
     DELIVERY(
-        listOf("HUNGERSTATION", "KEETA", "JAHEZ", "MRSOOL", "TALABAT", "NINJA FOO", "ANA NINJA"),
+        listOf("HUNGERSTATION", "KEETA", "JAHEZ", "MRSOOL", "TALABAT"),
     ),
 
-    /** A pharmacy counter. */
+    /**
+     * A pharmacy counter.
+     *
+     * "INNOVATIVE" was here and is not any more. Nothing in this history or outside
+     * it establishes that Innovative Union Company is a pharmacy, and its four
+     * records carry no category rule of their own - so the ask screen counted them
+     * as pharmacy spending while the strip filed them by transaction type. Naming a
+     * merchant in a topic is a claim to know what it is, and this was a belief.
+     */
     PHARMACY(
-        listOf("NAHDI", "NMC2", "NMC8", "DAWAA", "ALDAWAA", "WHITES", "INNOVATIVE"),
+        listOf("NAHDI", "NMC2", "NMC8", "DAWAA", "ALDAWAA", "WHITES"),
     ),
     ;
 

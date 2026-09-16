@@ -431,4 +431,32 @@ class OwnerNamedMerchantsTest {
     fun `his own wallet is a transfer`() {
         assertEquals(SaudiCategories.TRANSFERS, CategoryGuess.forMerchant("محفظه STC PAY"))
     }
+
+    /**
+     * HOSPITALITY contains HOSPITAL and means the opposite kind of business.
+     *
+     * Nineteen records of catering companies were filed as hospital visits, and a
+     * family name did the same thing to a cafeteria: النهدي is the pharmacy chain
+     * and also a surname, and the general rule claimed a 2016 sandwich.
+     *
+     * Both are the same defect - a general keyword swallowing a specific merchant -
+     * and both are fixed the same way, by a specific rule placed above it. This
+     * asserts the ORDER holds, which is the part a later edit can quietly undo.
+     */
+    @Test
+    fun `a specific merchant is not swallowed by the general keyword above its head`() {
+        mapOf(
+            "B hospitality Company" to SaudiCategories.FOOD,
+            "ESNAD HOSPITALITY CO" to SaudiCategories.FOOD,
+            "Sankari Hospitality 03" to SaudiCategories.FOOD,
+            "KHOLUD CAFETERIA" to SaudiCategories.FOOD,
+            "Kholud Hamad Al Nahdi MAKKAH" to SaudiCategories.FOOD,
+            // and the general rules still do their own work
+            "ALRAFIE HOSPITAL" to SaudiCategories.HEALTH,
+            "AL NAHDI PHARMACY" to SaudiCategories.HEALTH,
+            "NAHDIONLINE COM" to SaudiCategories.HEALTH,
+        ).forEach { (merchant, expected) ->
+            assertEquals(expected, CategoryGuess.forMerchant(merchant), merchant)
+        }
+    }
 }

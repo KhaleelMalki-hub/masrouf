@@ -31,7 +31,12 @@ class MerchantNames20260902Test {
     @Test
     fun `a truncated merchant matches a keyword that begins with it`() {
         assertEquals(SaudiCategories.HEALTH, cat("ZAKI OPTI"))
-        assertEquals(SaudiCategories.HEALTH, cat("ESNAD HOS"))
+        // Was asserted as HEALTH here, from the truncation alone: "HOS" begins
+        // "HOSPITAL", so the cut name was read as a hospital. The history holds the
+        // uncut one - "ESNAD HOSPITALITY CO" - and hospitality is the opposite kind
+        // of business. The expectation was resting on the defect it was written
+        // beside, which is why it went green for a fortnight.
+        assertEquals(SaudiCategories.FOOD, cat("ESNAD HOS"))
         assertEquals(SaudiCategories.SHOPPING, cat("ALHOMAIDH"))
     }
 

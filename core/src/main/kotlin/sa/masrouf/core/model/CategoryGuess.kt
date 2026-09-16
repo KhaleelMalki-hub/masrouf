@@ -111,6 +111,11 @@ object CategoryGuess {
 
         // Health
         "PHARMACY" to SaudiCategories.HEALTH,
+        // ABOVE "NAHDI", because النهدي is a family name as well as the pharmacy
+        // chain, and this history holds one of each: the same cafeteria appears as
+        // "KHOLUD CAFETERIA" and, on an older card, as its owner's full name. The
+        // general rule filed a 2016 sandwich as a pharmacy visit.
+        "KHOLUD" to SaudiCategories.FOOD,
         "NAHDI" to SaudiCategories.HEALTH,
         // صيدلية النور. The trailing letter is deliberate: it is where the card
         // network cuts the name, and it is what separates this pharmacy from
@@ -118,8 +123,21 @@ object CategoryGuess {
         // alone would file both.
         "AL NOOR T" to SaudiCategories.HEALTH,
         "DAWAA" to SaudiCategories.HEALTH,
+        // Whites Pharmacy. Listed as a pharmacy by the ask screen since that screen
+        // was written, with no category rule to agree with it.
+        "WHITES PHARMAC" to SaudiCategories.HEALTH,
         "POLYCLINI" to SaudiCategories.HEALTH,
         "CLINIC" to SaudiCategories.HEALTH,
+        // ABOVE "HOSPITAL", all of them, because HOSPITALITY contains HOSPITAL and
+        // has nothing to do with it: nineteen records of catering companies filed
+        // as hospital visits, from five riyals to two hundred. Named one by one
+        // rather than as a bare "HOSPITALITY" rule, because the word covers hotels
+        // as well as catering - this history's own ALESAYI HOSPITALITY is travel -
+        // and a blanket category would trade one wrong answer for another.
+        "B HOSPITALITY" to SaudiCategories.FOOD,
+        "ESNAD HOSPITALITY" to SaudiCategories.FOOD,
+        "SANKARI HOSPITALITY" to SaudiCategories.FOOD,
+        "HOSPITALITY CO" to SaudiCategories.FOOD,
         "HOSPITAL" to SaudiCategories.HEALTH,
         "MEDICAL" to SaudiCategories.HEALTH,
         "صيدلية" to SaudiCategories.HEALTH,
@@ -1125,6 +1143,15 @@ object CategoryGuess {
         "ارباح شركة" to SaudiCategories.INVESTMENT,
         "أرباح شركة" to SaudiCategories.INVESTMENT,
     ))
+
+    /**
+     * The shipped merchant rules, for the guard that checks this list against the
+     * ask screen's topics. Exposed rather than duplicated: a test holding its own
+     * copy of the keywords proves that two of my lists agree, which is not the
+     * question - the question is whether THIS list agrees with the other one.
+     */
+    internal val keywords: List<Pair<String, Category>>
+        get() = RULES.entries.map { it.folded to it.value }
 
     /**
      * @return a suggested category, or null when nothing matches. Callers must

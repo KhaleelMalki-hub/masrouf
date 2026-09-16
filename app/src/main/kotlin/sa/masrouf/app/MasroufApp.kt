@@ -360,7 +360,18 @@ class MasroufApp : Application() {
         //     a bakery on 18,294 riyals because it begins "INTERNATIONAL OVEN"; six
         //     other bare generic words went the same way. They are unfiled now,
         //     which is the honest state for a name nothing can identify.
-        REFILE_ALL(56),
+        // 57: a cafeteria is not a pharmacy because its owner is called Al Nahdi,
+        //     and Ninja delivers a supermarket basket rather than a restaurant
+        //     meal - so it left the delivery topic, where it had been answering
+        //     "how much on delivery" with the same riyals as "how much on
+        //     groceries". Whites gained the category rule its topic membership had
+        //     been claiming since that screen was written.
+        // 58: HOSPITALITY contains HOSPITAL and means the opposite kind of
+        //     business. Nineteen records of catering companies, five riyals to two
+        //     hundred, were filed as hospital visits - and the test that should
+        //     have caught it asserted the wrong answer, because it was written from
+        //     the cut name "ESNAD HOS" while the history holds the uncut one.
+        REFILE_ALL(58),
     }
 
     /**
