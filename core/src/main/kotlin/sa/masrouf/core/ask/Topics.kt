@@ -70,11 +70,12 @@ enum class Topic(val keywords: List<String>) {
     /**
      * A pharmacy counter.
      *
-     * "INNOVATIVE" was here and is not any more. Nothing in this history or outside
-     * it establishes that Innovative Union Company is a pharmacy, and its four
-     * records carry no category rule of their own - so the ask screen counted them
-     * as pharmacy spending while the strip filed them by transaction type. Naming a
-     * merchant in a topic is a claim to know what it is, and this was a belief.
+     * "INNOVATIVE" was here and is not any more. It is الاتحاد المبتكرة, an
+     * Alhokair company that runs restaurants - looked up and confirmed by the owner
+     * in the batch [ConfirmedMerchants20260902] records, which files it as eating
+     * out. So this list called four restaurant bills pharmacy spending while the
+     * category strip put them where they belong, and both screens were answering
+     * the same question differently.
      */
     PHARMACY(
         listOf("NAHDI", "NMC2", "NMC8", "DAWAA", "ALDAWAA", "WHITES"),
