@@ -896,11 +896,22 @@ stored purchases on the card, a 200,905 gap where this method accounts for 145,7
 and the 104 the other way are unexplained - some will be a date outside the
 four-day window, some a purchase the statement posts differently.
 
-**Nothing was imported.** Statement import is not wired into the app, and CLAUDE.md
-says why that is not a small job: `DuplicateDetector.reconcile` takes a LIST on
-purpose, so a whole file must reconcile inside one lock, and importing with
-`forEach { recordCaptured(it) }` would silently merge real money. This is now the
-largest known gap in the history and the reason to do it.
+**Nothing was imported that day**, because no import path existed yet.
+
+Both halves of that have since changed, and this paragraph is kept only so the
+figures above are not read as still open.
+
+**The path was built on 2026-09-12** - `TransactionRepository.importStatement`, one
+batch call under one `captureLock`, refusing outright any file whose running balance
+does not reconcile. Its input is a TSV file, so a PDF statement is still converted
+outside the app.
+
+**The backfill was closed by the owner on 2026-09-19, and it was his call to make.**
+He does not want old statements chased: the phone's own messages are the source and
+they work, and collecting PDFs for cards the bank has since closed is manual effort
+for history he will not act on. The ~116k shortfall measured above is **historical
+only** - it does not touch any month the live capture has covered. The feature stays
+for the day he wants one file in. **Do not propose a statement backfill again.**
 
 **Also measured, not chased:** the database is **17.0 MB** and Auto Backup's
 ceiling is 25 MB. See the backup section.
@@ -1128,6 +1139,8 @@ something goes wrong.
   it was 450 rows, and 179 of them were PURCHASES, not refunds. See open item 2.)
 
 - `WEST` is three unrelated merchants and has no rule on purpose.
-- Statement import is not wired into the app; see the note in `CLAUDE.md` about
-  reconciling a whole file inside one lock before it is.
+- Statement import takes a **TSV** file; converting a PDF statement to TSV is still a
+  manual step outside the app. Not a gap the owner wants closed - he decided against
+  a statement backfill on 2026-09-19, and the reasoning is recorded above and in
+  `CLAUDE.md`.
 - Instrumented tests run on a device only, and there is no CI.

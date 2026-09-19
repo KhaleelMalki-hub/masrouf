@@ -237,13 +237,23 @@ This repository is **public**. Everything below follows from that.
 - Dismissing deletes the row, which frees its fingerprint, so an identical message
   redelivered later reappears. It needs the same second on the device clock, so it
   is rare; closing it properly means a `REJECTED` value on the core `Status` enum.
-- Statement import is not wired into the app. Two consequences: `DuplicateDetector`'s
-  one-day window is exercised only by the message paths, and `recordCaptured` still
-  reconciles one record at a time. `DuplicateDetector.reconcile` takes a *list* on
-  purpose - it pairs candidates as a multiset so two identical top-ups in one import
-  produce two merges rather than one. Importing with `forEach { recordCaptured(it) }`
-  would defeat that and silently merge real money. Whoever wires statement import
-  must add a batch call that reconciles the whole file at once, inside the same lock.
+- Statement import **is** wired, since 2026-09-12: `TransactionRepository.importStatement`,
+  one batch call rather than a loop over `recordCaptured`. `DuplicateDetector.reconcile`
+  takes a *list* on purpose - it pairs candidates as a multiset, so two identical
+  purchases in one file stay two rows rather than collapsing into one merge - and the
+  whole file reconciles inside a single `captureLock`, which is what stops an SMS
+  arriving mid-import from being stored twice. Nothing is stored when the importer does
+  not trust its own reading: a statement whose running balance does not reconcile was
+  read with the wrong column layout, and the signature of that is every debit stored as
+  a credit. Rows land CONFIRMED, because a statement is the bank's own ledger rather
+  than a guess about a text message. **Its input is a TSV file** - converting a PDF
+  statement to TSV is still a manual step outside the app.
+- **The owner has decided against a statement backfill (2026-09-19). Do not propose
+  one again.** The phone's own messages are the source and they work; collecting PDFs
+  for cards the bank has since closed is manual work for history he will not act on.
+  The measured shortfall (~116k SAR on the AlRajhi card across two years, `docs/HANDOFF.md`)
+  is historical only and does not touch any month the live capture has covered. The
+  feature stays for the day he wants one file in.
 - Nothing has been edited, only deleted and re-entered. Deleting a captured record
   destroys its `rawText`, the one field that cannot be typed back.
 - No accounts and no date picker (a manual record is timestamped when it is saved).
